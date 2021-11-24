@@ -19,7 +19,7 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 def get_top1m_whitelist():
-    """Downloads the Tranco TOP1M Whitelist and returns all whitelisted URLS."""
+    """Downloads the Tranco TOP1M Whitelist and returns all whitelisted URLs."""
     logging.info("Downloading TOP1M list...")
     try:
       resp = urlopen("https://tranco-list.eu/top-1m.csv.zip")
@@ -32,7 +32,7 @@ def get_top1m_whitelist():
 
 def google_lookup_api_payload(url_list):
     """
-    For a given list of URLS, generate a POST request payload for Google Safe Browsing Lookup API endpoint.
+    For a given list of URLs, generate a POST request payload for Google Safe Browsing Lookup API endpoint.
     API Reference: https://developers.google.com/safe-browsing/v4/lookup-api
     """
     data = {
@@ -64,8 +64,8 @@ def google_lookup_api_payload(url_list):
     return data
 
 def get_unsafe_URLs(urls):
-    """Find all URLS in Tranco TOP1M deemed by Google Safe Browsing API to be unsafe."""
-    # Split list of URLS into sublists of maximum size 500 (to adhere to API limit)
+    """Find all URLs in Tranco TOP1M deemed by Google Safe Browsing API to be unsafe."""
+    # Split list of URLs into sublists of maximum size 500 (to adhere to API limit)
     url_batches = list(chunks(urls,500))
     logging.info(f'{len(url_batches)} batches')
     results = []
@@ -87,7 +87,7 @@ def get_unsafe_URLs(urls):
 def write_unsafe_urls_to_file(unsafe_urls,top1m_urls):
     """
     Writes list of URLs marked unsafe by Google, and original list of TOP1M URLs to JSON file.
-    Also writes list of URLS marked unsafe by Google to TXT file.
+    Also writes list of URLs marked unsafe by Google to TXT file.
     """
     unsafe = list(itertools.chain(*[res.json()['matches'] for res in unsafe_urls if len(list(res.json().keys())) != 0 ]))
     unsafe = list(set([x['threat']['url'] for x in unsafe]))
@@ -101,9 +101,9 @@ def write_unsafe_urls_to_file(unsafe_urls,top1m_urls):
 if __name__=='__main__':
   logging.basicConfig(level=logging.INFO)
 
-  parser = argparse.ArgumentParser(description='Find all URLS in Tranco TOP1M deemed by Google Safe Browsing API to be unsafe.')
+  parser = argparse.ArgumentParser(description='Find all URLs in Tranco TOP1M deemed by Google Safe Browsing API to be unsafe.')
   parser.add_argument('--mode', required=True, choices=['testing', 'full'], 
-  help='testing: Lookup last 5000 URLS from Tranco TOP1M list on Google Safe Browsing API | full: Lookup all 1000,000 URLS on Google Safe Browsing API')
+  help='testing: Lookup last 5000 URLs from Tranco TOP1M list on Google Safe Browsing API | full: Lookup all 1000,000 URLs on Google Safe Browsing API')
   args = parser.parse_args()
 
   top1m_urls = get_top1m_whitelist()[-5000 if args.mode == 'testing' else 0:]
