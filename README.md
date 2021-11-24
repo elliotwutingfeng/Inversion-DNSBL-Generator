@@ -10,7 +10,7 @@ Python script to find all URLs in [Tranco TOP1M](https://tranco-list.eu) deemed 
 2. `git clone` and `cd` into the project directory, then run the following
 
 ```bash
-echo "<your-google-api-key-here>" >> .env
+echo "API_KEY=<your-google-api-key-here>" >> .env
 pip3 install requirements.txt
 ```
 
