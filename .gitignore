@@ -1,3 +1,4 @@
 .env
 URLs_marked_unsafe_by_Google.json
 URLs_marked_unsafe_by_Google.txt
+__pycache__/
