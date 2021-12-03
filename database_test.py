@@ -1,59 +1,48 @@
 ## This script demonstrates the basic features of the database
 import ray
 import time
+import logging
 
 from db_utils import (
-create_connection, 
-create_table,database,
-sql_create_urls_table,
-sql_create_updatelog_table,
-add_urls,get_all_urls,
+initialise_database,
+add_URLs,get_all_URLs,
 update_malicious_URLs,
 update_activity_URLs
 )
 from alivecheck import check_activity_URLs
+from filewriter import write_all_unsafe_urls_to_file
 from safebrowsing import get_unsafe_URLs
 from top1m_utils import get_top1m_whitelist
 
+if __name__=='__main__':
+    ray.shutdown()
+    ray.init(include_dashboard=False)
+    conn = initialise_database()
+    # Fetch today's TOP1M
+    logging.info("Fetching TOP1M")
+    top1m_urls = get_top1m_whitelist()
+    #top1m_urls = ["google.com","yahoo.com","halo.com","daolulianghua.com"] # daolulianghua.com is unsafe
 
-ray.shutdown()
-ray.init(include_dashboard=False,num_cpus=4)
+    updateTime = time.time()
 
-# Create database with 2 tables
-conn = create_connection(database)
-# initialise tables
-if conn is not None:
-    # create urls table
-    create_table(conn, sql_create_urls_table)
+    # UPSERT database with today's TOP1M
+    logging.info("Adding URLs to DB")
+    project_id = add_URLs(conn, top1m_urls, updateTime)
+    all_urls = get_all_URLs(conn)
 
-    # create updatelog table
-    create_table(conn, sql_create_updatelog_table)
-else:
-    print("Error! cannot create the database connection.")
+    # Identify malicious URLs, UPDATE them in the DB
+    logging.info("Updating malicious URLs")
+    unsafe_urls = get_unsafe_URLs(all_urls)
+    update_malicious_URLs(conn, unsafe_urls, updateTime)
 
-# Fetch today's TOP1M
-print("Fetching TOP1M")
-top1m_urls = get_top1m_whitelist()
-#top1m_urls = ["google.com","yahoo.com","halo.com","daolulianghua.com"] # daolulianghua.com is unsafe
+    # Fping all URLs, UPDATE them in the DB (TODO: Too slow!)
+    # alive_urls,_ = check_activity_URLs(all_urls)
+    # update_activity_URLs(conn, alive_urls, updateTime)
 
-updateTime = time.time()
+    # Generate TXT blocklist
+    write_all_unsafe_urls_to_file(unsafe_urls)
 
-# UPSERT database with today's TOP1M
-print("Adding URLs to DB")
-project_id = add_urls(conn, top1m_urls, updateTime)
-all_urls = get_all_urls(conn)
+    # push to GitHub
+    # TODO
 
-# Identify malicious URLs, UPDATE them in the DB
-print("Updating malicious URLs")
-unsafe_urls = get_unsafe_URLs(all_urls)
-update_malicious_URLs(conn, unsafe_urls, updateTime)
-
-# Fping all URLs, UPDATE them in the DB (lastReachAttempt,lastReachable)
-alive_urls,_ = check_activity_URLs(all_urls)
-update_activity_URLs(conn, alive_urls, updateTime)
-
-# Generate TXT blocklist, push to GitHub
-# TODO
-
-
-ray.shutdown()
+    ray.shutdown()

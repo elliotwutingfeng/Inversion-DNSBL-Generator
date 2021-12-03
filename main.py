@@ -4,11 +4,11 @@ import ray
 
 from top1m_utils import get_top1m_whitelist
 from safebrowsing import get_unsafe_URLs
-from filewriter import write_unsafe_urls_to_file
+from filewriter import write_top1m_unsafe_urls_to_file
 
 if __name__=='__main__':
     ray.shutdown()
-    ray.init(include_dashboard=False,num_cpus=4)
+    ray.init(include_dashboard=False)
 
     logging.basicConfig(level=logging.INFO)
 
@@ -21,5 +21,5 @@ if __name__=='__main__':
 
     top1m_urls = get_top1m_whitelist()[-testing_quantity if args.mode == 'testing' else 0:]
     unsafe_urls = get_unsafe_URLs(top1m_urls)
-    write_unsafe_urls_to_file(unsafe_urls,top1m_urls)
+    write_top1m_unsafe_urls_to_file(unsafe_urls,top1m_urls)
     ray.shutdown()

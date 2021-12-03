@@ -1,5 +1,9 @@
 import sqlite3
 from sqlite3 import Error
+import logging
+
+# sqlite> .header on
+# sqlite> .mode column
 
 database = "urls.db"
 sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
@@ -24,7 +28,7 @@ def create_connection(db_file=None):
     try:
         conn = sqlite3.connect(':memory:' if db_file==None else db_file)
     except Error as e:
-        print(e)
+        logging.error(e)
 
     return conn
 
@@ -38,9 +42,24 @@ def create_table(conn, create_table_sql):
         c = conn.cursor()
         c.execute(create_table_sql)
     except Error as e:
-        print(e)
+        logging.error(e)
 
-def add_urls(conn, urls, updateTime):
+def initialise_database():
+    # Create database with 2 tables
+    conn = create_connection(database)
+    # initialise tables
+    if conn is not None:
+        # create urls table
+        create_table(conn, sql_create_urls_table)
+
+        # create updatelog table
+        create_table(conn, sql_create_updatelog_table)
+    else:
+        logging.error("Error! cannot create the database connection.")
+
+    return conn
+
+def add_URLs(conn, urls, updateTime):
     """
     Add a list of urls into the urls table
     If any given url already exists, update its lastListed field
@@ -58,7 +77,7 @@ def add_urls(conn, urls, updateTime):
     conn.commit()
     return cur.lastrowid
 
-def get_all_urls(conn):
+def get_all_URLs(conn):
     """
     Returns list of all urls currently in DB
     """

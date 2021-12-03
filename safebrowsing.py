@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 from dotenv import dotenv_values
 from ray_utils import execute_tasks
 import requests
@@ -51,7 +52,6 @@ def google_lookup_api_payload(url_list: list[str]) -> dict:
 @ray.remote
 def google_api_lookup(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> Response:
     """Returns Google Safe Browsing API threatMatches for a given list of URLs
-    
     """
     data = google_lookup_api_payload(url_batch)
     try:
@@ -61,6 +61,7 @@ def google_api_lookup(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> 
         raise SystemExit(e)
     if res.status_code != 200:
         raise SystemExit(Exception("Error: Google API Response Code is not 200, Actual: " + str(res.status_code) ))
+    time.sleep(2) # To prevent rate limiting
     actor_id.update.remote(1) # Update progressbar
     return res
 
