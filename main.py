@@ -2,7 +2,7 @@ import logging
 import argparse
 import ray
 
-from top1m_utils import get_top1m_whitelist
+from url_utils import get_top1m_whitelist
 from safebrowsing import get_unsafe_URLs
 from filewriter import write_top1m_unsafe_urls_to_file
 

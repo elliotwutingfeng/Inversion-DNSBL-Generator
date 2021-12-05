@@ -21,6 +21,6 @@ def write_all_unsafe_urls_to_file(unsafe_urls: list[str]) -> None:
     """
     Writes all database URLs marked unsafe by Google to TXT file.
     """
-    logging.info(f'{len(unsafe_urls)} URLs marked unsafe by Google Safe Browsing API.')
+    logging.info(f'{len(unsafe_urls)} URLs confirmed to be marked unsafe by Google Safe Browsing API.')
     with open('blocklist.txt', 'w') as outfile:
         outfile.writelines("\n".join(unsafe_urls))

@@ -59,6 +59,7 @@ def identify_suspected_urls(conn):
         cur = conn.cursor()
         cur.execute(f"SELECT url from urls INNER JOIN hashPrefixes WHERE substring(urls.hash,1,?) = hashPrefixes.hashPrefix;",(prefixSize,))
         suspected_urls += [x[0] for x in cur.fetchall()]
+    logging.info(f"{len(suspected_urls)} URLs potentially marked unsafe by Google Safe Browsing API.")
     return suspected_urls
 
 def create_connection(db_file=None):
