@@ -57,7 +57,7 @@ def identify_suspected_urls(conn):
     for prefixSize in prefixSizes:
     # Find all urls with matching hash_prefixes
         cur = conn.cursor()
-        cur.execute(f"SELECT url from urls INNER JOIN hashPrefixes WHERE substring(urls.hash,1,{prefixSize}) = hashPrefixes.hashPrefix;")
+        cur.execute(f"SELECT url from urls INNER JOIN hashPrefixes WHERE substring(urls.hash,1,?) = hashPrefixes.hashPrefix;",(prefixSize,))
         suspected_urls += [x[0] for x in cur.fetchall()]
     return suspected_urls
 
