@@ -71,7 +71,7 @@ def google_api_lookup(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> 
     return res
 
 def get_unsafe_URLs(urls: list[str]) -> list[str]:
-    """Find all URLs in Tranco TOP1M deemed by Google Safe Browsing API to be unsafe."""
+    """Find all URLs in a given list of URLs deemed by Google Safe Browsing API to be unsafe."""
     # Split list of URLs into sublists of maximum size 500 (to adhere to API limit)
     url_batches = list(chunks(urls,500))
     logging.info(f'{len(url_batches)} batches')

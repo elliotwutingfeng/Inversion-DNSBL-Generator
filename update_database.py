@@ -19,7 +19,7 @@ from url_utils import get_top10m_whitelist, get_top1m_whitelist
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-if __name__=='__main__':
+def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     conn = initialise_database()
@@ -47,15 +47,20 @@ if __name__=='__main__':
     logging.info("Updating malicious URLs")
     update_malicious_URLs(conn, unsafe_urls, updateTime)
 
-    # Fping all URLs, UPDATE them in the DB (TODO: Too slow!)
-    # all_urls = get_all_URLs(conn)
-    # alive_urls,_ = check_activity_URLs(all_urls)
-    # update_activity_URLs(conn, alive_urls, updateTime)
-
     # Generate TXT blocklist
+    logging.info("Writing malicious URLs to blocklist.txt")
     write_all_unsafe_urls_to_file(unsafe_urls)
+
+    # Fping unsafe_urls URLs, UPDATE them in the DB
+    #logging.info("Checking online statuses of malicious URLs")
+    # all_urls = get_all_URLs(conn)
+    #alive_urls,_ = check_activity_URLs(unsafe_urls)
+    #update_activity_URLs(conn, alive_urls, updateTime)
 
     # push to GitHub
     # TODO
     
     ray.shutdown()
+
+if __name__=='__main__':
+    update_database()
