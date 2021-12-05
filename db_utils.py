@@ -1,22 +1,65 @@
 import sqlite3
 from sqlite3 import Error
 import logging
+from hashlib import sha256
 
 # sqlite> .header on
 # sqlite> .mode column
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def compute_url_hash(url):
+    return sha256(f"{url}/".encode()).digest()
 
 database = "urls.db"
 sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
                                     url text PRIMARY KEY,
                                     lastListed integer,
                                     lastMalicious integer,
-                                    lastReachable integer
+                                    lastReachable integer,
+                                    hash blob
                                 );"""
 
 sql_create_updatelog_table = """CREATE TABLE IF NOT EXISTS updatelog (
                                 id integer PRIMARY KEY,
                                 updated integer NOT NULL
                             );"""
+
+sql_create_hashPrefixes_table = """CREATE TABLE IF NOT EXISTS hashPrefixes (
+                                id integer PRIMARY KEY,
+                                hashPrefix blob,
+                                prefixSize integer
+                            );"""
+
+def add_hash_prefixes(conn, hash_prefixes):
+    """
+    Replace hashPrefixes table contents with list of hash prefixes
+    """
+    sql = '''
+    INSERT INTO hashPrefixes (id,hashPrefix,prefixSize)
+    VALUES (?, ?, ?);
+    '''
+    
+    cur = conn.cursor()
+    cur.execute("DELETE FROM hashPrefixes;")
+    cur.executemany(sql,((None,hashPrefix,len(hashPrefix)) for hashPrefix in list(hash_prefixes)))
+    conn.commit()
+    return cur.lastrowid
+
+def identify_suspected_urls(conn):
+    # Find all prefixSizes
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT prefixSize from hashPrefixes;")
+    prefixSizes = [x[0] for x in cur.fetchall()]
+
+    suspected_urls = []
+    for prefixSize in prefixSizes:
+    # Find all urls with matching hash_prefixes
+        cur = conn.cursor()
+        cur.execute(f"SELECT url from urls INNER JOIN hashPrefixes WHERE substring(urls.hash,1,{prefixSize}) = hashPrefixes.hashPrefix;")
+        suspected_urls += [x[0] for x in cur.fetchall()]
+    return suspected_urls
 
 def create_connection(db_file=None):
     """ create a database connection to the SQLite database
@@ -54,6 +97,10 @@ def initialise_database():
 
         # create updatelog table
         create_table(conn, sql_create_updatelog_table)
+
+        # create hashPrefixes table
+        create_table(conn, sql_create_hashPrefixes_table)
+
     else:
         logging.error("Error! cannot create the database connection.")
 
@@ -65,15 +112,15 @@ def add_URLs(conn, urls, updateTime):
     If any given url already exists, update its lastListed field
     """
     sql = '''
-    INSERT INTO urls (url, lastListed)
-  VALUES (?, ?)
-  ON CONFLICT(url)
-  DO UPDATE SET lastListed=excluded.lastListed
+    INSERT INTO urls (url, lastListed, hash)
+    VALUES (?, ?, ?)
+    ON CONFLICT(url)
+    DO UPDATE SET lastListed=excluded.lastListed
     '''
     lastListed = updateTime
     
     cur = conn.cursor()
-    cur.executemany(sql,((url,lastListed) for url in urls))
+    cur.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
     conn.commit()
     return cur.lastrowid
 
@@ -97,9 +144,9 @@ def update_malicious_URLs(conn, unsafe_urls, updateTime):
     """
     number_of_unsafe_urls = len(unsafe_urls)
     sql = f'''
-UPDATE urls
-SET lastMalicious = ?
-WHERE url IN ({','.join('?'*number_of_unsafe_urls)})
+    UPDATE urls
+    SET lastMalicious = ?
+    WHERE url IN ({','.join('?'*number_of_unsafe_urls)})
     '''
 
     cur = conn.cursor()
@@ -114,9 +161,9 @@ def update_activity_URLs(conn, alive_urls, updateTime):
     """
     number_of_alive_urls = len(alive_urls)
     sql = f'''
-UPDATE urls
-SET lastReachable = ?
-WHERE url IN ({','.join('?'*number_of_alive_urls)})
+    UPDATE urls
+    SET lastReachable = ?
+    WHERE url IN ({','.join('?'*number_of_alive_urls)})
     '''
 
     cur = conn.cursor()

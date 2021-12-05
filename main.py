@@ -6,6 +6,9 @@ from top1m_utils import get_top1m_whitelist
 from safebrowsing import get_unsafe_URLs
 from filewriter import write_top1m_unsafe_urls_to_file
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 if __name__=='__main__':
     ray.shutdown()
     ray.init(include_dashboard=False)

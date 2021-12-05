@@ -2,6 +2,9 @@ from __future__ import annotations
 import logging
 import json
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 def write_top1m_unsafe_urls_to_file(unsafe_urls: list[str],top1m_urls: list[str]) -> None:
     """
     Writes current TOP1M URLs marked unsafe by Google, and current TOP1M URLs to JSON file.

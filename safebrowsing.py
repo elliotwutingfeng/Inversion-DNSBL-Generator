@@ -7,10 +7,15 @@ from requests.models import Response
 import itertools
 import logging
 import ray
+from tqdm import tqdm
+import base64
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 API_KEY = dotenv_values(".env")['API_KEY']
 
+######## Safe Browsing Lookup API ########
 def chunks(lst: list, n: int) -> list:
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
@@ -74,3 +79,54 @@ def get_unsafe_URLs(urls: list[str]) -> list[str]:
     unsafe = list(itertools.chain(*[res.json()['matches'] for res in results if len(list(res.json().keys())) != 0 ]))
     unsafe_urls = list(set([x['threat']['url'].replace("https://","").replace("http://","") for x in unsafe]))
     return unsafe_urls
+
+######## Safe Browsing Update API ########
+def retrieve_combinations():
+    '''Before sending a request to the Safe Browsing servers, 
+    the client should retrieve the names of the currently available Safe Browsing lists.
+    This will help ensure that the parameters or type combinations specified in the request are valid.
+    '''
+    threatlist_combinations = requests.get(f"https://safebrowsing.googleapis.com/v4/threatLists?key={API_KEY}").json()['threatLists']
+    url_threatlist_combinations = [x for x in threatlist_combinations if x['threatEntryType']=='URL']    
+    return url_threatlist_combinations
+
+def post_threatListUpdates(url_threatlist_combinations):
+    req_body = {
+      "client": {
+              "clientId":      "yourcompanyname",
+              "clientVersion": "1.5.2"
+            },
+      "listUpdateRequests": url_threatlist_combinations
+    }
+    res = requests.post(f"https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?key={API_KEY}",json=req_body)
+    assert(res.status_code == 200)
+    res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
+    logging.info(f"Minimum wait duration: {res_json['minimumWaitDuration']}")
+    return res_json
+
+def get_malicious_hashes(listUpdateResponses):
+    hashes = set()
+    prefixSizes = []
+    for x in tqdm(listUpdateResponses):
+
+        y = x['additions'][0]['rawHashes']
+        prefixSize = y['prefixSize']
+        rawHashes = base64.b64decode(y['rawHashes'].encode('ascii'))
+        
+        hashes_list = sorted([rawHashes[i:i+prefixSize] for i in range(0, len(rawHashes), prefixSize)])
+        hashes.update(hashes_list)
+        prefixSizes += [prefixSize]
+    
+    # The uncompressed threat entries in hash format of a particular prefix length. 
+    # Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes, 
+    # but some hashes are lengthened if they collide with the hash of a popular URL.
+    assert(set([len(x) for x in hashes]) == set(prefixSizes))
+    return hashes
+
+def get_malicious_hash_prefixes():
+    """Download latest malicious hash prefixes from Google Safe Browsing API"""
+    url_threatlist_combinations = retrieve_combinations()
+    res_json = post_threatListUpdates(url_threatlist_combinations)
+    listUpdateResponses = res_json['listUpdateResponses']
+    hashes = get_malicious_hashes(listUpdateResponses)
+    return hashes
