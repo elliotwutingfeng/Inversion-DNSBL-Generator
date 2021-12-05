@@ -12,8 +12,8 @@ update_malicious_URLs,
 update_activity_URLs
 )
 from alivecheck import check_activity_URLs
-from filewriter import write_all_unsafe_urls_to_file
-from safebrowsing import get_malicious_hash_prefixes, get_unsafe_URLs
+from filewriter import write_all_malicious_urls_to_file
+from safebrowsing import get_malicious_hash_prefixes, get_malicious_URLs
 from url_utils import get_top10m_whitelist, get_top1m_whitelist
 
 logger = logging.getLogger()
@@ -42,19 +42,19 @@ def update_database():
     logging.info("Identify suspected malicious URLs")
     suspected_urls = identify_suspected_urls(conn)
     logging.info("Verify suspected malicious URLs")
-    unsafe_urls = get_unsafe_URLs(suspected_urls)
+    malicious_urls = get_malicious_URLs(suspected_urls)
     del suspected_urls
     logging.info("Updating malicious URLs")
-    update_malicious_URLs(conn, unsafe_urls, updateTime)
+    update_malicious_URLs(conn, malicious_urls, updateTime)
 
     # Generate TXT blocklist
-    logging.info("Writing malicious URLs to blocklist.txt")
-    write_all_unsafe_urls_to_file(unsafe_urls)
+    logging.info("Writing malicious URLs to URLs_marked_malicious_by_Google.txt")
+    write_all_malicious_urls_to_file(malicious_urls)
 
-    # Fping unsafe_urls URLs, UPDATE them in the DB
+    # Fping malicious_urls URLs, UPDATE them in the DB
     #logging.info("Checking online statuses of malicious URLs")
     # all_urls = get_all_URLs(conn)
-    #alive_urls,_ = check_activity_URLs(unsafe_urls)
+    #alive_urls,_ = check_activity_URLs(malicious_urls)
     #update_activity_URLs(conn, alive_urls, updateTime)
 
     # push to GitHub

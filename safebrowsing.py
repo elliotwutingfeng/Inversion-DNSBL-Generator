@@ -70,15 +70,15 @@ def google_api_lookup(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> 
     actor_id.update.remote(1) # Update progressbar
     return res
 
-def get_unsafe_URLs(urls: list[str]) -> list[str]:
-    """Find all URLs in a given list of URLs deemed by Google Safe Browsing API to be unsafe."""
+def get_malicious_URLs(urls: list[str]) -> list[str]:
+    """Find all URLs in a given list of URLs deemed by Google Safe Browsing API to be malicious."""
     # Split list of URLs into sublists of maximum size 500 (to adhere to API limit)
     url_batches = list(chunks(urls,500))
     logging.info(f'{len(url_batches)} batches')
     results = execute_tasks(url_batches,google_api_lookup)
-    unsafe = list(itertools.chain(*[res.json()['matches'] for res in results if len(list(res.json().keys())) != 0 ]))
-    unsafe_urls = list(set([x['threat']['url'].replace("https://","").replace("http://","") for x in unsafe]))
-    return unsafe_urls
+    malicious = list(itertools.chain(*[res.json()['matches'] for res in results if len(list(res.json().keys())) != 0 ]))
+    malicious_urls = list(set([x['threat']['url'].replace("https://","").replace("http://","") for x in malicious]))
+    return malicious_urls
 
 ######## Safe Browsing Update API ########
 def retrieve_combinations():

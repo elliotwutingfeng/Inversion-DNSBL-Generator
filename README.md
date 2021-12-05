@@ -27,9 +27,9 @@ pip3 install requirements.txt
 ## How to use
 
 ```bash
-# TESTING mode: Generate blocklist.txt based on last 4000 URLs from Tranco TOP1M list
+# TESTING mode: Generate URLs_marked_malicious_by_Google.txt based on last 4000 URLs from Tranco TOP1M list
 python3 main.py --mode testing
-# FULL mode: Update local database with latest TOP1M+TOP10M URLs and generate blocklist.txt from local database
+# FULL mode: Update local database with latest TOP1M+TOP10M URLs and generate URLs_marked_malicious_by_Google.txt from local database
 python3 main.py --mode full
 ```
 

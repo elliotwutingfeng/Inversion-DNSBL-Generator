@@ -59,7 +59,7 @@ def identify_suspected_urls(conn):
         cur = conn.cursor()
         cur.execute(f"SELECT url from urls INNER JOIN hashPrefixes WHERE substring(urls.hash,1,?) = hashPrefixes.hashPrefix;",(prefixSize,))
         suspected_urls += [x[0] for x in cur.fetchall()]
-    logging.info(f"{len(suspected_urls)} URLs potentially marked unsafe by Google Safe Browsing API.")
+    logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by Google Safe Browsing API.")
     return suspected_urls
 
 def create_connection(db_file=None):
@@ -138,20 +138,20 @@ def get_all_URLs(conn):
     urls = [row[0] for row in cur.fetchall()]
     return urls
 
-def update_malicious_URLs(conn, unsafe_urls, updateTime):
+def update_malicious_URLs(conn, malicious_urls, updateTime):
     """
     Updates malicious status of all urls currently in DB
-    i.e. urls found in unsafe_urls, set lastMalicious value to updateTime
+    i.e. urls found in malicious_urls, set lastMalicious value to updateTime
     """
-    number_of_unsafe_urls = len(unsafe_urls)
+    number_of_malicious_urls = len(malicious_urls)
     sql = f'''
     UPDATE urls
     SET lastMalicious = ?
-    WHERE url IN ({','.join('?'*number_of_unsafe_urls)})
+    WHERE url IN ({','.join('?'*number_of_malicious_urls)})
     '''
 
     cur = conn.cursor()
-    cur.execute(sql,(updateTime,*unsafe_urls))
+    cur.execute(sql,(updateTime,*malicious_urls))
     conn.commit()
     return cur.lastrowid
 

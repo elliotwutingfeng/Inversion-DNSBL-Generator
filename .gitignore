@@ -1,7 +1,6 @@
 .env
-URLs_marked_unsafe_by_Google.json
-URLs_marked_unsafe_by_Google.txt
-blocklist.txt
+URLs_marked_malicious_by_Google.json
+URLs_marked_malicious_by_Google.txt
 __pycache__/
 urls.db
 urls.db-journal
