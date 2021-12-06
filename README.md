@@ -35,8 +35,13 @@ python3 main.py --mode testing
 python3 main.py --mode full
 ```
 
+## User Protection Notice
+
+Google works to provide the most accurate and up-to-date information about unsafe web resources. However, Google cannot guarantee that its information is comprehensive and error-free: some risky sites may not be identified, and some safe sites may be identified in error.
+
 ## References
 
 - https://developers.google.com/safe-browsing
+- https://developers.google.com/safe-browsing/v4/usage-limits
 - https://tranco-list.eu
 - https://www.domcop.com/top-10-million-domains
