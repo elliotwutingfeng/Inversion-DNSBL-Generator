@@ -1,17 +1,19 @@
-# Popular URLs marked as malicious by Google Safe Browsing API
+# Google Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
 
 ## Overview
 
-Python script to periodically update a local SQLite database with popular URLs sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API to generate a malicious URL blocklist for applications like pfBlockerNG/Pi-hole etc. Uses [Ray](http://www.ray.io/) to make parallel requests with pipelining to the Google Safe Browsing API.
+Python script to periodically update a local SQLite database with URLs sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net).
 
-## Popular URL sources
+Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the Google Safe Browsing API.
 
-- Tranco TOP1M : https://tranco-list.eu
+## URL sources
+
 - DomCop TOP10M : https://www.domcop.com/top-10-million-domains
+- Tranco TOP1M : https://tranco-list.eu
 
 ## Requirements
 
-- Python 3.7.6
+- Tested on Python 3.8.6
 - x86-64 CPU; for Python Ray support
 - You will need to [obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 
@@ -35,6 +37,6 @@ python3 main.py --mode full
 
 ## References
 
+- https://developers.google.com/safe-browsing
 - https://tranco-list.eu
 - https://www.domcop.com/top-10-million-domains
-- https://developers.google.com/safe-browsing/v4/lookup-api
