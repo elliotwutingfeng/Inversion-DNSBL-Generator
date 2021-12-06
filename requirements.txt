@@ -1,7 +1,5 @@
 python-dotenv==0.19.2
 requests==2.26.0
 tqdm==4.62.3
-ray==0.8.7
-ray-core==1.2.0
-ray-tune==1.2.0
+ray==1.9.0
 tldextract==3.1.2
