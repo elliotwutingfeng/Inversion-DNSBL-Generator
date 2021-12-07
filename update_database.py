@@ -34,14 +34,15 @@ def update_database():
     del top10m_urls
     
     # Update malicious URL hash DB
+    logging.info("Downloading malicious URL hashes")
     hash_prefixes = get_malicious_hash_prefixes()
     add_hash_prefixes(conn, hash_prefixes)
     del hash_prefixes
 
     # Identify malicious URLs, UPDATE them in the DB
-    logging.info("Identify suspected malicious URLs")
+    logging.info("Identifying suspected malicious URLs")
     suspected_urls = identify_suspected_urls(conn)
-    logging.info("Verify suspected malicious URLs")
+    logging.info("Verifying suspected malicious URLs")
     malicious_urls = get_malicious_URLs(suspected_urls)
     del suspected_urls
     logging.info("Updating malicious URLs")
@@ -52,10 +53,10 @@ def update_database():
     write_all_malicious_urls_to_file(malicious_urls)
 
     # Fping malicious_urls URLs, UPDATE them in the DB
-    #logging.info("Checking online statuses of malicious URLs")
+    logging.info("Checking host statuses of malicious URLs")
     # all_urls = get_all_URLs(conn)
-    #alive_urls,_ = check_activity_URLs(malicious_urls)
-    #update_activity_URLs(conn, alive_urls, updateTime)
+    alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
+    update_activity_URLs(conn, alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
 
     # push to GitHub
     # TODO

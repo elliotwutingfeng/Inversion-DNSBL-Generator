@@ -47,6 +47,6 @@ def get_top10m_whitelist() -> list[str]:
 
 if __name__=='__main__':
     top1m_urls = get_top1m_whitelist()
-    print(len(top1m_urls))
+    logging.info(len(top1m_urls))
     top10m_urls = get_top10m_whitelist()
-    print(len(top10m_urls))
+    logging.info(len(top10m_urls))

@@ -1,7 +1,11 @@
 import ray
 import subprocess
+import logging
 
 from ray_utils import execute_tasks
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 @ray.remote
 def fping(url,pba):
@@ -11,18 +15,46 @@ def fping(url,pba):
     pba.update.remote(1)
     return output
 
-def check_activity_URLs(all_urls):
-    # Identify alive and dead urls with fping
-    results = execute_tasks(all_urls,fping)
-    alive_urls = []
-    dead_urls = []
+def check_activity_URLs(dangerous_urls):
+    # Check URL host statuses with fping
+    results = execute_tasks(dangerous_urls,fping)
+    alive_and_not_dns_blocked_urls = []
+    alive_and_dns_blocked_urls = []
+    unreachable_urls = []
+    name_not_known_urls = []
+    unknown_urls = []
     for result in results:
         url = result.args.split(" ")[1]
         #stdout = result.stdout.decode()
-        #stderr = result.stderr.decode()
+        stderr = result.stderr.decode()
         returncode = result.returncode
+
         if returncode == 0:
-            alive_urls.append(url)
+            if "[<- 127.0.0.1]" not in stderr:
+                alive_and_not_dns_blocked_urls.append(url) # Host reachable
+            else:
+                alive_and_dns_blocked_urls.append(url) # Host reachable but blocked by local DNSBL
+        elif returncode == 1:
+            unreachable_urls.append(url) # Host unreachable
+        elif returncode == 2:
+            name_not_known_urls.append(url) # IP address not found
         else:
-            dead_urls.append(url)
-    return alive_urls,dead_urls
+            unknown_urls.append(url)
+
+    logging.info(f"Alive and unblocked URLS: {len(alive_and_not_dns_blocked_urls)}")
+    logging.info(f"Alive and blocked URLS: {len(alive_and_dns_blocked_urls)}")
+    logging.info(f"Unreachable URLS: {len(unreachable_urls)}")
+    logging.info(f"Name Not Known URLS: {len(name_not_known_urls)}")
+    logging.info(f"Unknown URLS: {len(unknown_urls)}")
+    
+    return alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,unreachable_urls,name_not_known_urls,unknown_urls
+
+if __name__=='__main__':
+    ray.shutdown()
+    ray.init(include_dashboard=False)
+
+    with open('./URLs_marked_malicious_by_Google.txt','r') as f:
+        dangerous_urls = [x.strip() for x in f.readlines()]
+    alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,unreachable_urls,name_not_known_urls,unknown_urls = check_activity_URLs(dangerous_urls)
+
+    ray.shutdown()
