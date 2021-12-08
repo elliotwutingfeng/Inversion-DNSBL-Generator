@@ -46,14 +46,14 @@ def check_activity_URLs(dangerous_urls):
     logging.info(f"Unreachable URLS: {len(unreachable_urls)}")
     logging.info(f"Name Not Known URLS: {len(name_not_known_urls)}")
     logging.info(f"Unknown URLS: {len(unknown_urls)}")
-    
+
     return alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,unreachable_urls,name_not_known_urls,unknown_urls
 
 if __name__=='__main__':
     ray.shutdown()
     ray.init(include_dashboard=False)
 
-    with open('./URLs_marked_malicious_by_Google.txt','r') as f:
+    with open('./URLs_marked_malicious_by_Safe_Browsing.txt','r') as f:
         dangerous_urls = [x.strip() for x in f.readlines()]
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,unreachable_urls,name_not_known_urls,unknown_urls = check_activity_URLs(dangerous_urls)
 
