@@ -25,18 +25,17 @@ class SafeBrowsing:
     def __init__(self,vendor):
         self.vendor = vendor
         if vendor == "Google":
-          self.threatMatchesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}"
-          self.threatListsEndpoint = f"https://safebrowsing.googleapis.com/v4/threatLists?key={GOOGLE_API_KEY}"
-          self.threatListUpdatesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?key={GOOGLE_API_KEY}"
-          self.maximum_url_batch_size = 500
+            self.threatMatchesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}"
+            self.threatListsEndpoint = f"https://safebrowsing.googleapis.com/v4/threatLists?key={GOOGLE_API_KEY}"
+            self.threatListUpdatesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?key={GOOGLE_API_KEY}"
+            self.maximum_url_batch_size = 500
         elif vendor == "Yandex":
-          self.threatMatchesEndpoint = f"https://sba.yandex.net/v4/threatMatches:find?key={YANDEX_API_KEY}"
-          self.threatListsEndpoint = f"https://sba.yandex.net/v4/threatLists?key={YANDEX_API_KEY}"
-          self.threatListUpdatesEndpoint = f"https://sba.yandex.net/v4/threatListUpdates:fetch?key={YANDEX_API_KEY}"
-          self.maximum_url_batch_size = 300 # Tested to be 300 URLs even though API docs states it as 500 ¯\_(ツ)_/¯
+            self.threatMatchesEndpoint = f"https://sba.yandex.net/v4/threatMatches:find?key={YANDEX_API_KEY}"
+            self.threatListsEndpoint = f"https://sba.yandex.net/v4/threatLists?key={YANDEX_API_KEY}"
+            self.threatListUpdatesEndpoint = f"https://sba.yandex.net/v4/threatListUpdates:fetch?key={YANDEX_API_KEY}"
+            self.maximum_url_batch_size = 300 # Tested to be 300 URLs even though API docs states it as 500 ¯\_(ツ)_/¯
         else:
           raise ValueError('vendor must be "Google" or "Yandex"')
-        self.headers = {'Accept':'*/*','Accept-Encoding':'gzip, deflate, br','Connection':'keep-alive','user-agent':'Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0'}
 
     ######## Safe Browsing Lookup API ########
     @staticmethod
@@ -85,8 +84,7 @@ class SafeBrowsing:
           data = SafeBrowsing.threatMatches_payload(url_batch)
           try:
               # Make POST request for each sublist of URLs
-              res = requests.post(self.threatMatchesEndpoint,json=data,
-              headers=self.headers)
+              res = requests.post(self.threatMatchesEndpoint,json=data)
           except requests.exceptions.RequestException as e:
               raise SystemExit(e)
           if res.status_code != 200:
@@ -119,9 +117,10 @@ class SafeBrowsing:
         Yandex API Reference: https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/update-threatlist.html
         '''
         threatlist_combinations = requests.get(self.threatListsEndpoint).json()['threatLists']
-        url_threatlist_combinations = [x for x in threatlist_combinations 
-        if x['threatEntryType']=='URL' 
-        and ((x['threatType']=="ANY" and x['platformType'] =="ANY_PLATFORM") or (x['platformType']=="PLATFORM_TYPE_UNSPECIFIED"))]
+
+        url_threatlist_combinations = [x for x in threatlist_combinations
+        if x['threatEntryType']=='URL']
+        
         req_body = {
           "client": {
                   "clientId":      "yourcompanyname",
@@ -129,8 +128,7 @@ class SafeBrowsing:
                 },
           "listUpdateRequests": url_threatlist_combinations
         }
-        res = requests.post(self.threatListUpdatesEndpoint,json=req_body,
-        headers=self.headers)
+        res = requests.post(self.threatListUpdatesEndpoint,json=req_body)
         if res.status_code != 200:
           return {}
         res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
@@ -144,14 +142,14 @@ class SafeBrowsing:
         hashes = set()
         prefixSizes = []
         for x in tqdm(listUpdateResponses):
-
-            y = x['additions'][0]['rawHashes']
-            prefixSize = y['prefixSize']
-            rawHashes = base64.b64decode(y['rawHashes'].encode('ascii'))
-            
-            hashes_list = sorted([rawHashes[i:i+prefixSize] for i in range(0, len(rawHashes), prefixSize)])
-            hashes.update(hashes_list)
-            prefixSizes += [prefixSize]
+            for addition in x['additions']:
+                y = addition['rawHashes']
+                prefixSize = y['prefixSize']
+                rawHashes = base64.b64decode(y['rawHashes'].encode('ascii'))
+                
+                hashes_list = sorted([rawHashes[i:i+prefixSize] for i in range(0, len(rawHashes), prefixSize)])
+                hashes.update(hashes_list)
+                prefixSizes += [prefixSize]
         
         # The uncompressed threat entries in hash format of a particular prefix length. 
         # Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes, 
