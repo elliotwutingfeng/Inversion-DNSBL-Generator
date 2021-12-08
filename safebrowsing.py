@@ -122,9 +122,11 @@ class SafeBrowsing:
           "listUpdateRequests": url_threatlist_combinations
         }
         res = requests.post(self.threatListUpdatesEndpoint,json=req_body)
-        assert(res.status_code == 200)
+        if res.status_code != 200:
+          return {}
         res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
-        assert('listUpdateResponses' in res_json)
+        if 'listUpdateResponses' not in res_json:
+          return {}
         logging.info(f"Minimum wait duration: {res_json['minimumWaitDuration']}")
         return res_json
 
@@ -151,6 +153,8 @@ class SafeBrowsing:
     def get_malicious_hash_prefixes(self):
         """Download latest malicious hash prefixes from Safe Browsing API"""
         res_json = self.retrieve_threatListUpdates()
+        if res_json == {}:
+          return set()
         listUpdateResponses = res_json['listUpdateResponses']
         hashes = SafeBrowsing.get_malicious_hashes(listUpdateResponses)
         return hashes

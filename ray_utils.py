@@ -91,6 +91,8 @@ def execute_tasks(tasks: list, task_handler) -> list:
     Tasks are processed in parallel with pipelining.
     Progressbar is shown.
     '''
+    if len(tasks) == 0: return []
+    
     def process_incremental(acc, result):
         return acc + [result]
     
