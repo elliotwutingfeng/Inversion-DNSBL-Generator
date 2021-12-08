@@ -10,6 +10,8 @@ import ray
 from tqdm import tqdm
 import base64
 
+from url_utils import post_with_retries
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -84,7 +86,7 @@ class SafeBrowsing:
           data = SafeBrowsing.threatMatches_payload(url_batch)
           try:
               # Make POST request for each sublist of URLs
-              res = requests.post(self.threatMatchesEndpoint,json=data)
+              res = post_with_retries(self.threatMatchesEndpoint,data)
           except requests.exceptions.RequestException as e:
               raise SystemExit(e)
           if res.status_code != 200:
@@ -118,8 +120,15 @@ class SafeBrowsing:
         '''
         threatlist_combinations = requests.get(self.threatListsEndpoint).json()['threatLists']
 
-        url_threatlist_combinations = [x for x in threatlist_combinations
-        if x['threatEntryType']=='URL']
+        if self.vendor == "Google":
+            url_threatlist_combinations = [x for x in threatlist_combinations if x['threatEntryType']=='URL']
+        else:
+            url_threatlist_combinations = [
+        {"threatType": "ANY", "platformType": "ANY_PLATFORM", "threatEntryType": "URL", "state":""}
+        ,{"threatType": "UNWANTED_SOFTWARE", "threatEntryType": "URL", "platformType": "PLATFORM_TYPE_UNSPECIFIED", "state":""},
+        {"threatType": "MALWARE", "threatEntryType": "URL", "platformType": "PLATFORM_TYPE_UNSPECIFIED", "state":""},
+        {"threatType": "SOCIAL_ENGINEERING", "threatEntryType": "URL", "platformType": "PLATFORM_TYPE_UNSPECIFIED", "state":""}
+        ]
         
         req_body = {
           "client": {
@@ -128,7 +137,7 @@ class SafeBrowsing:
                 },
           "listUpdateRequests": url_threatlist_combinations
         }
-        res = requests.post(self.threatListUpdatesEndpoint,json=req_body)
+        res = post_with_retries(self.threatListUpdatesEndpoint,req_body)
         if res.status_code != 200:
           return {}
         res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])

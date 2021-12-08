@@ -29,12 +29,12 @@ def update_database():
     top1m_urls = get_top1m_whitelist()
     add_URLs(conn, top1m_urls, updateTime)
     del top1m_urls
-    top10m_urls = get_top10m_whitelist()
-    add_URLs(conn, top10m_urls, updateTime)
-    del top10m_urls
+    #top10m_urls = get_top10m_whitelist()
+    #add_URLs(conn, top10m_urls, updateTime)
+    #del top10m_urls
 
     malicious_urls = []
-    for vendor in ["Google"]:#,"Yandex"]:
+    for vendor in ["Google","Yandex"]:
         sb = SafeBrowsing(vendor)
         
         logging.info(f"Downloading {vendor} malicious URL hashes")

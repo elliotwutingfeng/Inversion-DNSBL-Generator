@@ -4,4 +4,5 @@ URLs_marked_malicious_by_Safe_Browsing.txt
 __pycache__/
 urls.db
 urls.db-journal
-Debug_Yandex.py
+debug.py
+debug.rest
