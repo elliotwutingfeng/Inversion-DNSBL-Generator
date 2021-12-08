@@ -124,6 +124,7 @@ class SafeBrowsing:
         res = requests.post(self.threatListUpdatesEndpoint,json=req_body)
         assert(res.status_code == 200)
         res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
+        assert('listUpdateResponses' in res_json)
         logging.info(f"Minimum wait duration: {res_json['minimumWaitDuration']}")
         return res_json
 

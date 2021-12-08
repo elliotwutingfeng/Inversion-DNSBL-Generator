@@ -4,10 +4,10 @@ import time
 import logging
 
 from db_utils import (
-add_hash_prefixes,
+add_maliciousHashPrefixes,
 identify_suspected_urls,
 initialise_database,
-add_URLs,get_all_URLs,
+add_URLs,
 update_malicious_URLs,
 update_activity_URLs
 )
@@ -33,30 +33,32 @@ def update_database():
     add_URLs(conn, top10m_urls, updateTime)
     del top10m_urls
 
-    sb = SafeBrowsing("Google")
-    
-    logging.info("Downloading malicious URL hashes")
-    hash_prefixes = sb.get_malicious_hash_prefixes()
-    logging.info("Updating DB with malicious URL hashes")
-    add_hash_prefixes(conn, hash_prefixes)
-    del hash_prefixes
+    malicious_urls = []
+    for vendor in ["Google","Yandex"]:
+        sb = SafeBrowsing(vendor)
+        
+        logging.info(f"Downloading {vendor} malicious URL hashes")
+        hash_prefixes = sb.get_malicious_hash_prefixes()
+        logging.info(f"Updating DB with {vendor} malicious URL hashes")
+        add_maliciousHashPrefixes(conn, hash_prefixes, vendor)
+        del hash_prefixes
 
-    logging.info("Identifying suspected malicious URLs")
-    suspected_urls = identify_suspected_urls(conn)
-    logging.info("Verifying suspected malicious URLs")
-    malicious_urls = sb.get_malicious_URLs(suspected_urls)
-    del suspected_urls
-    logging.info("Updating DB with verified malicious URLs")
-    update_malicious_URLs(conn, malicious_urls, updateTime)
+        logging.info(f"Identifying suspected {vendor} malicious URLs")
+        suspected_urls = identify_suspected_urls(conn, vendor)
+        logging.info(f"Verifying suspected {vendor} malicious URLs")
+        vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
+        malicious_urls += vendor_malicious_urls
+        del suspected_urls
+        logging.info(f"Updating DB with verified {vendor} malicious URLs")
+        update_malicious_URLs(conn, vendor_malicious_urls, updateTime, vendor)
 
     logging.info("Writing malicious URLs to blocklist URLs_marked_malicious_by_Safe_Browsing.txt")
     write_all_malicious_urls_to_file(malicious_urls)
 
-    logging.info("Checking host statuses of malicious URLs with fping")
-    # all_urls = get_all_URLs(conn)
-    alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
-    logging.info("Updating DB with malicious URL host statuses")
-    update_activity_URLs(conn, alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
+    #logging.info("Checking host statuses of malicious URLs with fping")
+    #alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
+    #logging.info("Updating DB with malicious URL host statuses")
+    #update_activity_URLs(conn, alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
 
     # push to GitHub
     # TODO

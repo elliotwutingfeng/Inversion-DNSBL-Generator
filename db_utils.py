@@ -16,7 +16,8 @@ database = "urls.db"
 sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
                                     url text PRIMARY KEY,
                                     lastListed integer,
-                                    lastMalicious integer,
+                                    lastGoogleMalicious integer,
+                                    lastYandexMalicious integer,
                                     lastReachable integer,
                                     hash blob
                                 );"""
@@ -26,40 +27,43 @@ sql_create_updatelog_table = """CREATE TABLE IF NOT EXISTS updatelog (
                                 updated integer NOT NULL
                             );"""
 
-sql_create_hashPrefixes_table = """CREATE TABLE IF NOT EXISTS hashPrefixes (
+sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
                                 id integer PRIMARY KEY,
                                 hashPrefix blob,
-                                prefixSize integer
+                                prefixSize integer,
+                                vendor text
                             );"""
 
-def add_hash_prefixes(conn, hash_prefixes):
+def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
     """
-    Replace hashPrefixes table contents with list of hash prefixes
+    Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
     sql = '''
-    INSERT INTO hashPrefixes (id,hashPrefix,prefixSize)
-    VALUES (?, ?, ?);
+    INSERT INTO maliciousHashPrefixes (id,hashPrefix,prefixSize,vendor)
+    VALUES (?, ?, ?, ?);
     '''
     
     cur = conn.cursor()
-    cur.execute("DELETE FROM hashPrefixes;")
-    cur.executemany(sql,((None,hashPrefix,len(hashPrefix)) for hashPrefix in list(hash_prefixes)))
+    cur.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+    cur.executemany(sql,((None,hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
     conn.commit()
     return cur.lastrowid
 
-def identify_suspected_urls(conn):
+def identify_suspected_urls(conn, vendor):
     # Find all prefixSizes
     cur = conn.cursor()
-    cur.execute("SELECT DISTINCT prefixSize from hashPrefixes;")
+    cur.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
     prefixSizes = [x[0] for x in cur.fetchall()]
 
     suspected_urls = []
     for prefixSize in prefixSizes:
     # Find all urls with matching hash_prefixes
         cur = conn.cursor()
-        cur.execute(f"SELECT url from urls INNER JOIN hashPrefixes WHERE substring(urls.hash,1,?) = hashPrefixes.hashPrefix;",(prefixSize,))
+        cur.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
+        WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
+        AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
         suspected_urls += [x[0] for x in cur.fetchall()]
-    logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by Google Safe Browsing API.")
+    logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
     return suspected_urls
 
 def create_connection(db_file=None):
@@ -93,15 +97,9 @@ def initialise_database():
     conn = create_connection(database)
     # initialise tables
     if conn is not None:
-        # create urls table
         create_table(conn, sql_create_urls_table)
-
-        # create updatelog table
         create_table(conn, sql_create_updatelog_table)
-
-        # create hashPrefixes table
-        create_table(conn, sql_create_hashPrefixes_table)
-
+        create_table(conn, sql_create_maliciousHashPrefixes_table)
     else:
         logging.error("Error! cannot create the database connection.")
 
@@ -138,17 +136,27 @@ def get_all_URLs(conn):
     urls = [row[0] for row in cur.fetchall()]
     return urls
 
-def update_malicious_URLs(conn, malicious_urls, updateTime):
+def update_malicious_URLs(conn, malicious_urls, updateTime, vendor):
     """
     Updates malicious status of all urls currently in DB
-    i.e. urls found in malicious_urls, set lastMalicious value to updateTime
+    i.e. urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
     number_of_malicious_urls = len(malicious_urls)
-    sql = f'''
-    UPDATE urls
-    SET lastMalicious = ?
-    WHERE url IN ({','.join('?'*number_of_malicious_urls)})
-    '''
+
+    if vendor == "Google":
+        sql = f'''
+        UPDATE urls
+        SET lastGoogleMalicious = ?
+        WHERE url IN ({','.join('?'*number_of_malicious_urls)})
+        '''
+    elif vendor == "Yandex":
+        sql = f'''
+        UPDATE urls
+        SET lastYandexMalicious = ?
+        WHERE url IN ({','.join('?'*number_of_malicious_urls)})
+        '''
+    else:
+        raise ValueError('vendor must be "Google" or "Yandex"')
 
     cur = conn.cursor()
     cur.execute(sql,(updateTime,*malicious_urls))
