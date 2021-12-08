@@ -23,6 +23,7 @@ def chunks(lst: list, n: int) -> list:
 
 class SafeBrowsing:
     def __init__(self,vendor):
+        self.vendor = vendor
         if vendor == "Google":
           self.threatMatchesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}"
           self.threatListsEndpoint = f"https://safebrowsing.googleapis.com/v4/threatLists?key={GOOGLE_API_KEY}"
@@ -35,6 +36,7 @@ class SafeBrowsing:
           self.maximum_url_batch_size = 300 # Tested to be 300 URLs even though API docs states it as 500 ¯\_(ツ)_/¯
         else:
           raise ValueError('vendor must be "Google" or "Yandex"')
+        self.headers = {'Accept':'*/*','Accept-Encoding':'gzip, deflate, br','Connection':'keep-alive','user-agent':'Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0'}
 
     ######## Safe Browsing Lookup API ########
     @staticmethod
@@ -83,7 +85,8 @@ class SafeBrowsing:
           data = SafeBrowsing.threatMatches_payload(url_batch)
           try:
               # Make POST request for each sublist of URLs
-              res = requests.post(self.threatMatchesEndpoint,json=data)
+              res = requests.post(self.threatMatchesEndpoint,json=data,
+              headers=self.headers)
           except requests.exceptions.RequestException as e:
               raise SystemExit(e)
           if res.status_code != 200:
@@ -101,6 +104,9 @@ class SafeBrowsing:
         results = execute_tasks(url_batches,self.threatMatches_lookup())
         malicious = list(itertools.chain(*[res.json()['matches'] for res in results if len(list(res.json().keys())) != 0 ]))
         malicious_urls = list(set([x['threat']['url'].replace("https://","").replace("http://","") for x in malicious]))
+
+        logging.info(f'{len(malicious_urls)} URLs confirmed to be marked malicious by {self.vendor} Safe Browsing API.')
+
         return malicious_urls
 
     ######## Safe Browsing Update API ########
@@ -113,7 +119,9 @@ class SafeBrowsing:
         Yandex API Reference: https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/update-threatlist.html
         '''
         threatlist_combinations = requests.get(self.threatListsEndpoint).json()['threatLists']
-        url_threatlist_combinations = [x for x in threatlist_combinations if x['threatEntryType']=='URL']
+        url_threatlist_combinations = [x for x in threatlist_combinations 
+        if x['threatEntryType']=='URL' 
+        and ((x['threatType']=="ANY" and x['platformType'] =="ANY_PLATFORM") or (x['platformType']=="PLATFORM_TYPE_UNSPECIFIED"))]
         req_body = {
           "client": {
                   "clientId":      "yourcompanyname",
@@ -121,7 +129,8 @@ class SafeBrowsing:
                 },
           "listUpdateRequests": url_threatlist_combinations
         }
-        res = requests.post(self.threatListUpdatesEndpoint,json=req_body)
+        res = requests.post(self.threatListUpdatesEndpoint,json=req_body,
+        headers=self.headers)
         if res.status_code != 200:
           return {}
         res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
