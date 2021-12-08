@@ -11,18 +11,23 @@ import json
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-headers = { "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15" }
+headers = { "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8",
+ "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15" }
 
 def get_with_retries(endpoint,stream=False):
-    return requests.get(endpoint,stream,headers=headers)
-    for attempt in range(1,21):
+    if stream:
+        return requests.get(endpoint,stream=True,headers=headers)
+    attempt = 1
+    while True:
         try:
-            resp = requests.get(endpoint,stream,headers=headers)
+            resp = requests.get(endpoint,headers=headers)
+            if resp.status_code != 200:
+                attempt += 1
+                continue
             return resp
         except requests.exceptions.RequestException as e:
             logging.warning(f"{attempt} {e}")
-            if attempt == 20:
-                raise requests.exceptions.RequestException(e)
+        attempt += 1
 
 
 def post_with_retries(endpoint,payload):
@@ -43,7 +48,7 @@ def get_top1m_whitelist() -> list[str]:
     logging.info("Downloading TOP1M list...")
     try:
         with BytesIO() as f:
-            resp = requests.get("https://tranco-list.eu/top-1m.csv.zip", stream=True)
+            resp = get_with_retries("https://tranco-list.eu/top-1m.csv.zip", stream=True)
             chunk_size = 4096
             for data in tqdm(resp.iter_content(chunk_size=chunk_size),
                              total=math.ceil(int(resp.headers['Content-Length'])/chunk_size)):
@@ -60,7 +65,7 @@ def get_top10m_whitelist() -> list[str]:
     logging.info("Downloading TOP10M list...")
     try:
         with BytesIO() as f:
-            resp = requests.get("https://www.domcop.com/files/top/top10milliondomains.csv.zip", stream=True)
+            resp = get_with_retries("https://www.domcop.com/files/top/top10milliondomains.csv.zip", stream=True)
             chunk_size = 4096
             for data in tqdm(resp.iter_content(chunk_size=chunk_size),
                              total=math.ceil(int(resp.headers['Content-Length'])/chunk_size)):

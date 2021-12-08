@@ -10,7 +10,7 @@ import ray
 from tqdm import tqdm
 import base64
 
-from url_utils import post_with_retries
+from url_utils import get_with_retries, post_with_retries
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -118,7 +118,7 @@ class SafeBrowsing:
         Google API Reference: https://developers.google.com/safe-browsing/v4/update-api
         Yandex API Reference: https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/update-threatlist.html
         '''
-        threatlist_combinations = requests.get(self.threatListsEndpoint).json()['threatLists']
+        threatlist_combinations = get_with_retries(self.threatListsEndpoint).json()['threatLists']
 
         if self.vendor == "Google":
             url_threatlist_combinations = [x for x in threatlist_combinations if x['threatEntryType']=='URL']
