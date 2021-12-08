@@ -29,9 +29,9 @@ def update_database():
     top1m_urls = get_top1m_whitelist()
     add_URLs(conn, top1m_urls, updateTime)
     del top1m_urls
-    #top10m_urls = get_top10m_whitelist()
-    #add_URLs(conn, top10m_urls, updateTime)
-    #del top10m_urls
+    top10m_urls = get_top10m_whitelist()
+    add_URLs(conn, top10m_urls, updateTime)
+    del top10m_urls
 
     malicious_urls = []
     for vendor in ["Google","Yandex"]:
@@ -54,6 +54,7 @@ def update_database():
         update_malicious_URLs(conn, vendor_malicious_urls, updateTime, vendor)
 
     logging.info("Writing malicious URLs to blocklist URLs_marked_malicious_by_Safe_Browsing.txt")
+    malicious_urls = list(set(malicious_urls))
     write_all_malicious_urls_to_file(malicious_urls)
 
     #logging.info("Checking host statuses of malicious URLs with fping")

@@ -26,16 +26,17 @@ def get_with_retries(endpoint,stream=False):
 
 
 def post_with_retries(endpoint,payload):
-    for attempt in range(1,21):
+    attempt = 1
+    while True:
         try:
             resp = requests.post(endpoint,data=json.dumps(payload),headers=headers)
             if resp.status_code != 200:
+                attempt += 1
                 continue
             return resp
         except requests.exceptions.RequestException as e:
             logging.warning(f"{attempt} {e}")
-            if attempt == 20:
-                raise requests.exceptions.RequestException(e)
+        attempt += 1
 
 def get_top1m_whitelist() -> list[str]:
     """Downloads the Tranco TOP1M Whitelist and returns all whitelisted URLs."""
