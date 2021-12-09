@@ -13,7 +13,7 @@ Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the G
 
 ## Requirements
 
-- Tested on Python 3.7.8
+- Tested on Python 3.8.12
 - x86-64 CPU; for Python Ray support
 - [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 - [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)

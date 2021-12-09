@@ -10,7 +10,7 @@ import ray
 from tqdm import tqdm
 import base64
 
-from url_utils import get_with_retries, post_with_retries
+from requests_utils import get_with_retries, post_with_retries
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -78,23 +78,24 @@ class SafeBrowsing:
 
 
     def threatMatches_lookup(self):
-      @ray.remote
-      def threatMatches_lookup_(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> Response:
-          """Returns Safe Browsing API threatMatches for a given list of URLs
-          """
+        @ray.remote
+        def threatMatches_lookup_(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> Response:
+            """Returns Safe Browsing API threatMatches for a given list of URLs
+            """
+            logger = logging.getLogger(__name__)
+            logger.setLevel(logging.INFO)
 
-          data = SafeBrowsing.threatMatches_payload(url_batch)
-          try:
-              # Make POST request for each sublist of URLs
-              res = post_with_retries(self.threatMatchesEndpoint,data)
-          except requests.exceptions.RequestException as e:
-              raise SystemExit(e)
-          if res.status_code != 200:
-              raise SystemExit(Exception("Error: threatMatches API Response Code is not 200, Actual: " + str(res.status_code) ))
-          time.sleep(2) # To prevent rate limiting
-          actor_id.update.remote(1) # Update progressbar
-          return res
-      return threatMatches_lookup_
+            data = SafeBrowsing.threatMatches_payload(url_batch)
+            try:
+                # Make POST request for each sublist of URLs
+                res = post_with_retries(self.threatMatchesEndpoint,data)
+            except requests.exceptions.RequestException as e:
+                res = requests.Response()
+
+            time.sleep(2) # To prevent rate limiting
+            actor_id.update.remote(1) # Update progressbar
+            return res
+        return threatMatches_lookup_
 
     def get_malicious_URLs(self,urls: list[str]) -> list[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
@@ -123,6 +124,7 @@ class SafeBrowsing:
         if self.vendor == "Google":
             url_threatlist_combinations = [x for x in threatlist_combinations if x['threatEntryType']=='URL']
         else:
+            # Yandex API returns status code 204 with no content if url_threatlist_combinations is too large
             url_threatlist_combinations = [
         {"threatType": "ANY", "platformType": "ANY_PLATFORM", "threatEntryType": "URL", "state":""}
         ,{"threatType": "UNWANTED_SOFTWARE", "threatEntryType": "URL", "platformType": "PLATFORM_TYPE_UNSPECIFIED", "state":""},
@@ -138,8 +140,7 @@ class SafeBrowsing:
           "listUpdateRequests": url_threatlist_combinations
         }
         res = post_with_retries(self.threatListUpdatesEndpoint,req_body)
-        if res.status_code != 200:
-          return {}
+
         res_json = res.json() # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
         if 'listUpdateResponses' not in res_json:
           return {}

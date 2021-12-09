@@ -14,25 +14,25 @@ def compute_url_hash(url):
 
 database = "urls.db"
 sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
-                                    url text PRIMARY KEY,
-                                    lastListed integer,
-                                    lastGoogleMalicious integer,
-                                    lastYandexMalicious integer,
-                                    lastReachable integer,
-                                    hash blob
-                                );"""
+                           url text PRIMARY KEY,
+                           lastListed integer,
+                           lastGoogleMalicious integer,
+                           lastYandexMalicious integer,
+                           lastReachable integer,
+                           hash blob
+                           );"""
 
 sql_create_updatelog_table = """CREATE TABLE IF NOT EXISTS updatelog (
                                 id integer PRIMARY KEY,
                                 updated integer NOT NULL
-                            );"""
+                                );"""
 
 sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
-                                id integer PRIMARY KEY,
-                                hashPrefix blob,
-                                prefixSize integer,
-                                vendor text
-                            );"""
+                                            id integer PRIMARY KEY,
+                                            hashPrefix blob,
+                                            prefixSize integer,
+                                            vendor text
+                                            );"""
 
 def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
     """
@@ -42,28 +42,35 @@ def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
     INSERT INTO maliciousHashPrefixes (id,hashPrefix,prefixSize,vendor)
     VALUES (?, ?, ?, ?);
     '''
-    
-    cur = conn.cursor()
-    cur.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
-    cur.executemany(sql,((None,hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
-    conn.commit()
+    try:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+        cur.executemany(sql,((None,hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
+        conn.commit()
+    except Error as e:
+        logging.error(e)
+
     return cur.lastrowid
 
 def identify_suspected_urls(conn, vendor):
-    # Find all prefixSizes
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
-    prefixSizes = [x[0] for x in cur.fetchall()]
-
-    suspected_urls = []
-    for prefixSize in prefixSizes:
-    # Find all urls with matching hash_prefixes
+    try:
+        # Find all prefixSizes
         cur = conn.cursor()
-        cur.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
-        WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
-        AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
-        suspected_urls += [x[0] for x in cur.fetchall()]
-    logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
+        cur.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+        prefixSizes = [x[0] for x in cur.fetchall()]
+
+        suspected_urls = []
+        for prefixSize in prefixSizes:
+        # Find all urls with matching hash_prefixes
+            cur = conn.cursor()
+            cur.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
+            WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
+            AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
+            suspected_urls += [x[0] for x in cur.fetchall()]
+            logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
+    except Error as e:
+        logging.error(e)
+
     return suspected_urls
 
 def create_connection(db_file=None):
@@ -117,10 +124,13 @@ def add_URLs(conn, urls, updateTime):
     DO UPDATE SET lastListed=excluded.lastListed
     '''
     lastListed = updateTime
-    
-    cur = conn.cursor()
-    cur.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
-    conn.commit()
+    try:
+        cur = conn.cursor()
+        cur.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
+        conn.commit()
+    except Error as e:
+        logging.error(e)
+
     return cur.lastrowid
 
 def get_all_URLs(conn):
@@ -130,10 +140,13 @@ def get_all_URLs(conn):
     sql = '''
     SELECT url FROM urls;
     '''
-    
-    cur = conn.cursor()
-    cur.execute(sql)
-    urls = [row[0] for row in cur.fetchall()]
+    try:
+        cur = conn.cursor()
+        cur.execute(sql)
+        urls = [row[0] for row in cur.fetchall()]
+    except Error as e:
+        logging.error(e)
+
     return urls
 
 def update_malicious_URLs(conn, malicious_urls, updateTime, vendor):
@@ -157,10 +170,13 @@ def update_malicious_URLs(conn, malicious_urls, updateTime, vendor):
         '''
     else:
         raise ValueError('vendor must be "Google" or "Yandex"')
+    try:
+        cur = conn.cursor()
+        cur.execute(sql,(updateTime,*malicious_urls))
+        conn.commit()
+    except Error as e:
+        logging.error(e)
 
-    cur = conn.cursor()
-    cur.execute(sql,(updateTime,*malicious_urls))
-    conn.commit()
     return cur.lastrowid
 
 def update_activity_URLs(conn, alive_urls, updateTime):
@@ -174,8 +190,11 @@ def update_activity_URLs(conn, alive_urls, updateTime):
     SET lastReachable = ?
     WHERE url IN ({','.join('?'*number_of_alive_urls)})
     '''
+    try:
+        cur = conn.cursor()
+        cur.execute(sql,(updateTime,*alive_urls))
+        conn.commit()
+    except Error as e:
+        logging.error(e)
 
-    cur = conn.cursor()
-    cur.execute(sql,(updateTime,*alive_urls))
-    conn.commit()
-    return cur.lastrowid    
+    return cur.lastrowid

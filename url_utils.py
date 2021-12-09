@@ -4,44 +4,10 @@ from zipfile import ZipFile
 import requests
 import logging
 import tldextract
+from requests_utils import get_with_retries
 from tqdm import tqdm
 import math
-import json
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-headers = { "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8",
- "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15" }
-
-def get_with_retries(endpoint,stream=False):
-    if stream:
-        return requests.get(endpoint,stream=True,headers=headers)
-    attempt = 1
-    while True:
-        try:
-            resp = requests.get(endpoint,headers=headers)
-            if resp.status_code != 200:
-                attempt += 1
-                continue
-            return resp
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"{attempt} {e}")
-        attempt += 1
-
-
-def post_with_retries(endpoint,payload):
-    attempt = 1
-    while True:
-        try:
-            resp = requests.post(endpoint,data=json.dumps(payload),headers=headers)
-            if resp.status_code != 200:
-                attempt += 1
-                continue
-            return resp
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"{attempt} {e}")
-        attempt += 1
 
 def get_top1m_whitelist() -> list[str]:
     """Downloads the Tranco TOP1M Whitelist and returns all whitelisted URLs."""
