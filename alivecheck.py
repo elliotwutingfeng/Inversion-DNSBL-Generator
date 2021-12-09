@@ -15,9 +15,10 @@ def fping(url,pba):
     pba.update.remote(1)
     return output
 
-def check_activity_URLs(dangerous_urls):
+def check_activity_URLs(urls_to_be_checked):
+    logging.info("Checking host statuses of URLs with fping")
     # Check URL host statuses with fping
-    results = execute_tasks(dangerous_urls,fping)
+    results = execute_tasks(urls_to_be_checked,fping)
     alive_and_not_dns_blocked_urls = []
     alive_and_dns_blocked_urls = []
     unreachable_urls = []

@@ -42,6 +42,7 @@ def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
     INSERT INTO maliciousHashPrefixes (id,hashPrefix,prefixSize,vendor)
     VALUES (?, ?, ?, ?);
     '''
+    logging.info(f"Updating DB with {vendor} malicious URL hashes")
     try:
         cur = conn.cursor()
         cur.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
@@ -53,6 +54,7 @@ def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
     return cur.lastrowid
 
 def identify_suspected_urls(conn, vendor):
+    logging.info(f"Identifying suspected {vendor} malicious URLs")
     try:
         # Find all prefixSizes
         cur = conn.cursor()
@@ -67,7 +69,7 @@ def identify_suspected_urls(conn, vendor):
             WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
             AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
             suspected_urls += [x[0] for x in cur.fetchall()]
-            logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
+        logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
     except Error as e:
         logging.error(e)
 
@@ -125,9 +127,11 @@ def add_URLs(conn, urls, updateTime):
     '''
     lastListed = updateTime
     try:
+        logging.info("Performing INSERT-UPDATE URLs to DB...")
         cur = conn.cursor()
         cur.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
         conn.commit()
+        logging.info("Performing INSERT-UPDATE to DB... [DONE]")
     except Error as e:
         logging.error(e)
 
@@ -154,6 +158,7 @@ def update_malicious_URLs(conn, malicious_urls, updateTime, vendor):
     Updates malicious status of all urls currently in DB
     i.e. urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
+    logging.info(f"Updating DB with verified {vendor} malicious URLs")
     number_of_malicious_urls = len(malicious_urls)
 
     if vendor == "Google":
@@ -184,6 +189,7 @@ def update_activity_URLs(conn, alive_urls, updateTime):
     Updates alive status of all urls currently in DB
     i.e. urls found alive, set lastReachable value to updateTime
     """
+    logging.info("Updating DB with URL host statuses")
     number_of_alive_urls = len(alive_urls)
     sql = f'''
     UPDATE urls

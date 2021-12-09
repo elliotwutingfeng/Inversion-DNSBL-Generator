@@ -1,7 +1,6 @@
 ## This script demonstrates the basic features of the database
 import ray
 import time
-import logging
 
 from db_utils import (
 add_maliciousHashPrefixes,
@@ -16,16 +15,13 @@ from filewriter import write_all_malicious_urls_to_file
 from safebrowsing import SafeBrowsing
 from url_utils import get_top10m_whitelist, get_top1m_whitelist
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
 def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     conn = initialise_database()
+    updateTime = time.time()
     
-    logging.info("Adding whitelisted URLs to DB")
-    updateTime = time.time() 
+    # Download and Add whitelisted URLs to DB
     top1m_urls = get_top1m_whitelist()
     add_URLs(conn, top1m_urls, updateTime)
     del top1m_urls
@@ -33,33 +29,33 @@ def update_database():
     add_URLs(conn, top10m_urls, updateTime)
     del top10m_urls
 
-    malicious_urls = []
+    malicious_urls = set()
     for vendor in ["Google","Yandex"]:
         sb = SafeBrowsing(vendor)
-        
-        logging.info(f"Downloading {vendor} malicious URL hashes")
-        hash_prefixes = sb.get_malicious_hash_prefixes()
-        logging.info(f"Updating DB with {vendor} malicious URL hashes")
-        add_maliciousHashPrefixes(conn, hash_prefixes, vendor)
-        del hash_prefixes
 
-        logging.info(f"Identifying suspected {vendor} malicious URLs")
-        suspected_urls = identify_suspected_urls(conn, vendor)
-        logging.info(f"Verifying suspected {vendor} malicious URLs")
-        vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
-        malicious_urls += vendor_malicious_urls
-        del suspected_urls
+        # Download and Update Safe Browsing API Malicious Hash Prefixes to DB
+        hash_prefixes = sb.get_malicious_hash_prefixes()
+        add_maliciousHashPrefixes(conn, hash_prefixes, vendor)
+        del hash_prefixes # "frees" memory
         
-        logging.info(f"Updating DB with verified {vendor} malicious URLs")
+        # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
+        suspected_urls = identify_suspected_urls(conn, vendor)
+
+        # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
+        vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
+        del suspected_urls # "frees" memory
+
+        malicious_urls.update(vendor_malicious_urls)
+        
+        # Update vendor_malicious_urls to DB
         update_malicious_URLs(conn, vendor_malicious_urls, updateTime, vendor)
 
-    logging.info("Writing malicious URLs to blocklist URLs_marked_malicious_by_Safe_Browsing.txt")
-    malicious_urls = list(set(malicious_urls))
+    # Write malicious_urls to TXT file (overwrites existing TXT file)
+    malicious_urls = list(malicious_urls)
     write_all_malicious_urls_to_file(malicious_urls)
 
-    #logging.info("Checking host statuses of malicious URLs with fping")
+    # Check host statuses of URLs with fping and update host statuses to DB
     #alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
-    #logging.info("Updating DB with malicious URL host statuses")
     #update_activity_URLs(conn, alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
 
     # push to GitHub

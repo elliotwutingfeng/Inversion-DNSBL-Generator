@@ -99,6 +99,7 @@ class SafeBrowsing:
 
     def get_malicious_URLs(self,urls: list[str]) -> list[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
+        logging.info(f"Verifying suspected {self.vendor} malicious URLs")
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = list(chunks(urls,self.maximum_url_batch_size))
         logging.info(f'{len(url_batches)} batches')
@@ -169,6 +170,7 @@ class SafeBrowsing:
 
     def get_malicious_hash_prefixes(self):
         """Download latest malicious hash prefixes from Safe Browsing API"""
+        logging.info(f"Downloading {self.vendor} malicious URL hashes")
         res_json = self.retrieve_threatListUpdates()
         if res_json == {}:
           return set()
