@@ -25,7 +25,7 @@ Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the G
 ```bash
 echo "GOOGLE_API_KEY=<your-google-api-key-here>" >> .env
 echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
-pip3 install requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## How to use
