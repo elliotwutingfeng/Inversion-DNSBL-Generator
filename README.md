@@ -65,6 +65,10 @@ python3 main.py --mode testing
 python3 main.py --mode full
 ```
 
+## Known Issues
+
+- Yandex Safe Browsing API calls often fail with either ConnectionResetError or HTTP Status Code 204. Yandex Technical support has been notified. _Temporary workaround: Keep retrying API call until it succeeds_
+
 ## User Protection Notice
 
 ### Google
