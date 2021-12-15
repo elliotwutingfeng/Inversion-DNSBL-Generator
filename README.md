@@ -13,6 +13,7 @@ Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the G
 
 ## Requirements
 
+- Linux or macOS
 - Tested on Python 3.8.12
 - x86-64 CPU; for Python Ray support
 - [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
@@ -26,6 +27,33 @@ Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the G
 echo "GOOGLE_API_KEY=<your-google-api-key-here>" >> .env
 echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
 pip3 install -r requirements.txt
+```
+
+### Install [fping](https://fping.org)
+
+```bash
+# Debian/Ubuntu
+sudo apt install fping
+```
+
+```bash
+# CentOS/RHEL
+sudo yum install fping
+```
+
+```bash
+# Fedora/Rocky Linux/AlmaLinux
+sudo dnf install fping
+```
+
+```bash
+# Arch Linux/Manjaro/EndeavourOS
+sudo pacman -S fping
+```
+
+```bash
+# macOS
+brew install fping
 ```
 
 ## How to use
