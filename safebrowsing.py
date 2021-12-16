@@ -35,7 +35,11 @@ class SafeBrowsing:
             self.threatMatchesEndpoint = f"https://sba.yandex.net/v4/threatMatches:find?key={YANDEX_API_KEY}"
             self.threatListsEndpoint = f"https://sba.yandex.net/v4/threatLists?key={YANDEX_API_KEY}"
             self.threatListUpdatesEndpoint = f"https://sba.yandex.net/v4/threatListUpdates:fetch?key={YANDEX_API_KEY}"
-            self.maximum_url_batch_size = 300 # Tested to be 300 URLs even though API docs states it as 500 ¯\_(ツ)_/¯
+            # Even though API docs states maximum batch size limit as 500
+            # Tested absolute maximum is batch size 300 (but fails often)
+            # Somewhat stable: batch size 200
+            # ¯\_(ツ)_/¯
+            self.maximum_url_batch_size = 200
         else:
           raise ValueError('vendor must be "Google" or "Yandex"')
 
@@ -82,8 +86,6 @@ class SafeBrowsing:
         def threatMatches_lookup_(url_batch: list[str], actor_id: ray._raylet.ObjectRef) -> Response:
             """Returns Safe Browsing API threatMatches for a given list of URLs
             """
-            logger = logging.getLogger(__name__)
-            logger.setLevel(logging.INFO)
 
             data = SafeBrowsing.threatMatches_payload(url_batch)
             try:
@@ -105,6 +107,7 @@ class SafeBrowsing:
         logging.info(f'{len(url_batches)} batches')
         results = execute_tasks(url_batches,self.threatMatches_lookup())
         malicious = list(itertools.chain(*[res.json()['matches'] for res in results if len(list(res.json().keys())) != 0 ]))
+        # Remove http, https prefixes
         malicious_urls = list(set([x['threat']['url'].replace("https://","").replace("http://","") for x in malicious]))
 
         logging.info(f'{len(malicious_urls)} URLs confirmed to be marked malicious by {self.vendor} Safe Browsing API.')

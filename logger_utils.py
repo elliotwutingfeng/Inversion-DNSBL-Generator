@@ -11,6 +11,5 @@ def init_logger():
     logging.getLogger("filelock").setLevel(logging.WARNING)
     
     logger = logging.getLogger()
-    #logger.setLevel(logging.INFO)
 
     return logger

@@ -15,9 +15,9 @@ def get_with_retries(endpoint,stream=False):
     while True:
             try:
                 if stream:
-                    return requests.get(endpoint,stream=True,headers=headers)
+                    return requests.get(endpoint,stream=True,headers=headers,timeout=15)
                 else:
-                    resp = requests.get(endpoint,headers=headers)
+                    resp = requests.get(endpoint,headers=headers,timeout=15)
                     if resp.status_code != 200:
                         raise requests.exceptions.RequestException(f"Status Code not 200. Actual Code is {resp.status_code}")
                     return resp
@@ -30,7 +30,7 @@ def post_with_retries(endpoint,payload):
     attempt = 1
     while True:
         try:
-            resp = requests.post(endpoint,data=json.dumps(payload),headers=headers)
+            resp = requests.post(endpoint,data=json.dumps(payload),headers=headers,timeout=15)
             if resp.status_code != 200:
                 raise requests.exceptions.RequestException(f"Status Code not 200. Actual Code is {resp.status_code}")
             return resp
