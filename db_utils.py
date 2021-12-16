@@ -3,11 +3,12 @@ from sqlite3 import Error
 import logging
 from hashlib import sha256
 
+from logger_utils import init_logger
+
 # sqlite> .header on
 # sqlite> .mode column
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = init_logger()
 
 def compute_url_hash(url):
     return sha256(f"{url}/".encode()).digest()

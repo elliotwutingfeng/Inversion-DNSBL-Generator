@@ -1,11 +1,11 @@
 import ray
 import subprocess
 import logging
+from logger_utils import init_logger
 
 from ray_utils import execute_tasks
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = init_logger()
 
 @ray.remote
 def fping(url,pba):

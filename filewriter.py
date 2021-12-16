@@ -2,8 +2,9 @@ from __future__ import annotations
 import logging
 import json
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+from logger_utils import init_logger
+
+logger = init_logger()
 
 blocklist_txt_filename = "URLs_marked_malicious_by_Safe_Browsing.txt"
 blocklist_json_filename = 'URLs_marked_malicious_by_Safe_Browsing.json'

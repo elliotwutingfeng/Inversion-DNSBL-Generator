@@ -1,14 +1,14 @@
 import logging
 import argparse
 import ray
+from logger_utils import init_logger
 from update_database import update_database
 
 from url_utils import get_top1m_url_list
 from safebrowsing import SafeBrowsing
 from filewriter import write_top1m_malicious_urls_to_file
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = init_logger()
 
 if __name__=='__main__':
 

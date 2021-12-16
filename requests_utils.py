@@ -3,8 +3,9 @@ import requests
 import time
 import json
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+from logger_utils import init_logger
+
+logger = init_logger()
 
 headers = { "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8",
  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15" }

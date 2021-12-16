@@ -4,13 +4,13 @@ from zipfile import ZipFile
 import requests
 import logging
 import tldextract
+from logger_utils import init_logger
 from requests_utils import get_with_retries
 from tqdm import tqdm
 import math
 import pathlib
 
-# Disables filelock logging clutter from tldextract library
-logging.getLogger("filelock").setLevel(logging.WARNING)
+logger = init_logger()
 
 def get_top1m_url_list() -> list[str]:
     """Downloads the Tranco TOP1M dataset and returns all listed URLs."""
