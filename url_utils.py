@@ -72,5 +72,3 @@ if __name__=='__main__':
     logging.info(len(top1m_urls))
     top10m_urls = get_top10m_url_list()
     logging.info(len(top10m_urls))
-    local_urls = get_local_file_url_list(pathlib.Path.cwd() / "local_domains" / "domain2multi-com00.txt")
-    logging.info(len(local_urls))

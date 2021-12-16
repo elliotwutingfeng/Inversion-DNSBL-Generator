@@ -23,11 +23,6 @@ sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
                            hash blob
                            );"""
 
-sql_create_updatelog_table = """CREATE TABLE IF NOT EXISTS updatelog (
-                                id integer PRIMARY KEY,
-                                updated integer NOT NULL
-                                );"""
-
 sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
                                             id integer PRIMARY KEY,
                                             hashPrefix blob,
@@ -35,7 +30,7 @@ sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS malicious
                                             vendor text
                                             );"""
 
-def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
+def add_maliciousHashPrefixes(hash_prefixes, vendor):
     """
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
@@ -44,39 +39,39 @@ def add_maliciousHashPrefixes(conn, hash_prefixes, vendor):
     VALUES (?, ?, ?, ?);
     '''
     logging.info(f"Updating DB with {vendor} malicious URL hashes")
+    conn = create_connection()
     try:
-        cur = conn.cursor()
-        cur.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
-        cur.executemany(sql,((None,hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
-        conn.commit()
+        with conn:
+            conn.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+            conn.executemany(sql,((None,hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
     except Error as e:
         logging.error(e)
+    conn.close()
 
-    return cur.lastrowid
-
-def identify_suspected_urls(conn, vendor):
+def identify_suspected_urls(vendor):
     logging.info(f"Identifying suspected {vendor} malicious URLs")
+    conn = create_connection()
     try:
-        # Find all prefixSizes
-        cur = conn.cursor()
-        cur.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
-        prefixSizes = [x[0] for x in cur.fetchall()]
+        with conn:
+            # Find all prefixSizes
+            cur = conn.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+            prefixSizes = [x[0] for x in cur.fetchall()]
 
-        suspected_urls = []
-        for prefixSize in prefixSizes:
-        # Find all urls with matching hash_prefixes
-            cur = conn.cursor()
-            cur.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
-            WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
-            AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
-            suspected_urls += [x[0] for x in cur.fetchall()]
-        logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
+            suspected_urls = []
+            for prefixSize in prefixSizes:
+            # Find all urls with matching hash_prefixes
+                cur = conn.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
+                WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
+                AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
+                suspected_urls += [x[0] for x in cur.fetchall()]
+            logging.info(f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API.")
     except Error as e:
         logging.error(e)
+    conn.close()
 
     return suspected_urls
 
-def create_connection(db_file=None):
+def create_connection(db_file=database):
     """ create a database connection to the SQLite database
         specified by db_file
     :param db_file: database file
@@ -91,32 +86,33 @@ def create_connection(db_file=None):
 
     return conn
 
-def create_table(conn, create_table_sql):
+def create_table(create_table_sql):
     """ create a table from the create_table_sql statement
     :param conn: Connection object
     :param create_table_sql: a CREATE TABLE statement
     :return:
     """
+    conn = create_connection()
     try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
+        with conn:
+            conn.execute(create_table_sql)
     except Error as e:
         logging.error(e)
+    conn.close()
 
 def initialise_database():
     # Create database with 2 tables
     conn = create_connection(database)
     # initialise tables
     if conn is not None:
-        create_table(conn, sql_create_urls_table)
-        create_table(conn, sql_create_updatelog_table)
-        create_table(conn, sql_create_maliciousHashPrefixes_table)
+        create_table(sql_create_urls_table)
+        create_table(sql_create_maliciousHashPrefixes_table)
     else:
         logging.error("Error! cannot create the database connection.")
 
     return conn
 
-def add_URLs(conn, urls, updateTime):
+def add_URLs(urls, updateTime):
     """
     Add a list of urls into the urls table
     If any given url already exists, update its lastListed field
@@ -128,34 +124,35 @@ def add_URLs(conn, urls, updateTime):
     DO UPDATE SET lastListed=excluded.lastListed
     '''
     lastListed = updateTime
+    conn = create_connection()
     try:
-        logging.info("Performing INSERT-UPDATE URLs to DB...")
-        cur = conn.cursor()
-        cur.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
-        conn.commit()
-        logging.info("Performing INSERT-UPDATE to DB... [DONE]")
+        with conn:
+            logging.info("Performing INSERT-UPDATE URLs to DB...")
+            conn.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
+            logging.info("Performing INSERT-UPDATE to DB... [DONE]")
     except Error as e:
         logging.error(e)
+    conn.close()
 
-    return cur.lastrowid
-
-def get_all_URLs(conn):
+def get_all_URLs():
     """
     Returns list of all urls currently in DB
     """
     sql = '''
     SELECT url FROM urls;
     '''
+    conn = create_connection()
     try:
-        cur = conn.cursor()
-        cur.execute(sql)
-        urls = [row[0] for row in cur.fetchall()]
+        with conn:
+            cur = conn.execute(sql)
+            urls = [row[0] for row in cur.fetchall()]
     except Error as e:
         logging.error(e)
+    conn.close()
 
     return urls
 
-def update_malicious_URLs(conn, malicious_urls, updateTime, vendor):
+def update_malicious_URLs(malicious_urls, updateTime, vendor):
     """
     Updates malicious status of all urls currently in DB
     i.e. urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
@@ -177,16 +174,16 @@ def update_malicious_URLs(conn, malicious_urls, updateTime, vendor):
         '''
     else:
         raise ValueError('vendor must be "Google" or "Yandex"')
+    
+    conn = create_connection()
     try:
-        cur = conn.cursor()
-        cur.execute(sql,(updateTime,*malicious_urls))
-        conn.commit()
+        with conn:
+            conn.execute(sql,(updateTime,*malicious_urls))
     except Error as e:
         logging.error(e)
+    conn.close()
 
-    return cur.lastrowid
-
-def update_activity_URLs(conn, alive_urls, updateTime):
+def update_activity_URLs(alive_urls, updateTime):
     """
     Updates alive status of all urls currently in DB
     i.e. urls found alive, set lastReachable value to updateTime
@@ -198,11 +195,10 @@ def update_activity_URLs(conn, alive_urls, updateTime):
     SET lastReachable = ?
     WHERE url IN ({','.join('?'*number_of_alive_urls)})
     '''
+    conn = create_connection()
     try:
-        cur = conn.cursor()
-        cur.execute(sql,(updateTime,*alive_urls))
-        conn.commit()
+        with conn:
+            conn.execute(sql,(updateTime,*alive_urls))
     except Error as e:
         logging.error(e)
-
-    return cur.lastrowid
+    conn.close()
