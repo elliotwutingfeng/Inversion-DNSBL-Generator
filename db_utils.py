@@ -84,6 +84,7 @@ def create_connection(db_file=None):
     conn = None
     try:
         conn = sqlite3.connect(':memory:' if db_file==None else db_file)
+        conn.execute('PRAGMA journal_mode = WAL') # Enable Write-Ahead Log option; https://www.sqlite.org/wal.html
     except Error as e:
         logging.error(e)
 

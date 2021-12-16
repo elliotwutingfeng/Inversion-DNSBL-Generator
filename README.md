@@ -84,3 +84,4 @@ Google works to provide the most accurate and up-to-date information about unsaf
 - https://yandex.com/dev/safebrowsing/
 - https://tranco-list.eu
 - https://www.domcop.com/top-10-million-domains
+- https://remusao.github.io/posts/few-tips-sqlite-perf.html

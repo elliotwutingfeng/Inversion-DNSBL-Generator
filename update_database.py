@@ -23,6 +23,7 @@ def update_database():
     ray.init(include_dashboard=False)
     conn = initialise_database()
     updateTime = time.time()
+
     
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls = get_top1m_url_list()
@@ -32,11 +33,22 @@ def update_database():
     add_URLs(conn, top10m_urls, updateTime)
     del top10m_urls
 
-    # Extract and Add local URLs to DB (limit to 10 files for testing)
-    for file in tqdm(os.listdir("local_domains")[:10]):
-        local_urls = get_local_file_url_list(pathlib.Path.cwd() / "local_domains" / file)
+    '''
+    # Extract and Add local URLs to DB
+    local_domains_dir = pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
+    local_domains_filepaths = []
+    for root, _, files in tqdm(os.walk(local_domains_dir)):
+        for file in files:
+            # Look for dotcom URLs only
+            if "generic_com" in root and file.lower().endswith('.txt'):
+                local_domains_filepaths.append(os.path.join(root, file))
+
+    # limit to 2 files for testing
+    for filepath in tqdm(local_domains_filepaths[:2]):
+        local_urls = get_local_file_url_list(filepath)
         add_URLs(conn, local_urls, updateTime)
         del local_urls # "frees" memory
+    '''
 
     malicious_urls = set()
     for vendor in ["Google","Yandex"]:
@@ -63,9 +75,11 @@ def update_database():
     malicious_urls = list(malicious_urls)
     write_all_malicious_urls_to_file(malicious_urls)
 
+    '''
     # Check host statuses of URLs with fping and update host statuses to DB
-    #alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
-    #update_activity_URLs(conn, alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
+    alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
+    update_activity_URLs(conn, alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
+    '''
 
     # push to GitHub
     # TODO
