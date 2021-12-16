@@ -13,7 +13,7 @@ update_activity_URLs
 from alivecheck import check_activity_URLs
 from filewriter import write_all_malicious_urls_to_file
 from safebrowsing import SafeBrowsing
-from url_utils import get_top10m_whitelist, get_top1m_whitelist
+from url_utils import get_top10m_url_list, get_top1m_url_list
 
 def update_database():
     ray.shutdown()
@@ -21,11 +21,11 @@ def update_database():
     conn = initialise_database()
     updateTime = time.time()
     
-    # Download and Add whitelisted URLs to DB
-    top1m_urls = get_top1m_whitelist()
+    # Download and Add TOP1M and TOP10M URLs to DB
+    top1m_urls = get_top1m_url_list()
     add_URLs(conn, top1m_urls, updateTime)
     del top1m_urls
-    top10m_urls = get_top10m_whitelist()
+    top10m_urls = get_top10m_url_list()
     add_URLs(conn, top10m_urls, updateTime)
     del top10m_urls
 

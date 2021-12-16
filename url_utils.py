@@ -9,8 +9,8 @@ from tqdm import tqdm
 import math
 
 
-def get_top1m_whitelist() -> list[str]:
-    """Downloads the Tranco TOP1M Whitelist and returns all whitelisted URLs."""
+def get_top1m_url_list() -> list[str]:
+    """Downloads the Tranco TOP1M dataset and returns all listed URLs."""
     logging.info("Downloading TOP1M list...")
     try:
         with BytesIO() as f:
@@ -26,8 +26,8 @@ def get_top1m_whitelist() -> list[str]:
     except requests.exceptions.RequestException as e:
         raise SystemExit(e)
 
-def get_top10m_whitelist() -> list[str]:
-    """Downloads the DomCop TOP10M Whitelist and returns all whitelisted URLs."""
+def get_top10m_url_list() -> list[str]:
+    """Downloads the DomCop TOP10M dataset and returns all listed URLs."""
     logging.info("Downloading TOP10M list...")
     try:
         with BytesIO() as f:
@@ -45,7 +45,7 @@ def get_top10m_whitelist() -> list[str]:
         raise SystemExit(e)
 
 if __name__=='__main__':
-    top1m_urls = get_top1m_whitelist()
+    top1m_urls = get_top1m_url_list()
     logging.info(len(top1m_urls))
-    top10m_urls = get_top10m_whitelist()
+    top10m_urls = get_top10m_url_list()
     logging.info(len(top10m_urls))

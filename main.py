@@ -3,7 +3,7 @@ import argparse
 import ray
 from update_database import update_database
 
-from url_utils import get_top1m_whitelist
+from url_utils import get_top1m_url_list
 from safebrowsing import SafeBrowsing
 from filewriter import write_top1m_malicious_urls_to_file
 
@@ -28,7 +28,7 @@ if __name__=='__main__':
     else:
         ray.shutdown()
         ray.init(include_dashboard=False)
-        top1m_urls = get_top1m_whitelist()[-testing_quantity:]
+        top1m_urls = get_top1m_url_list()[-testing_quantity:]
 
         gsb = SafeBrowsing("Google")
         google_malicious_urls = gsb.get_malicious_URLs(top1m_urls)
