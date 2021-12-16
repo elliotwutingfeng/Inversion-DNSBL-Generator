@@ -2,9 +2,9 @@
 
 ## Overview
 
-Python script to periodically update a local SQLite database with URLs sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net).
+Create and/or update a local [SQLite](https://www.sqlite.org) database with URLs sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net).
 
-Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the Google Safe Browsing API.
+Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the Safe Browsing APIs.
 
 ## URL sources
 
@@ -16,6 +16,8 @@ Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the G
 - Linux or macOS
 - Tested on Python 3.8.12
 - x86-64 CPU; for Python Ray support
+- Recommended: At least 8GB RAM
+- Recommended: At least 5GB storage space
 - [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 - [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 

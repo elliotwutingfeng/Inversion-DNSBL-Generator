@@ -1,6 +1,9 @@
 ## This script demonstrates the basic features of the database
 import ray
 import time
+import os
+from tqdm import tqdm
+import pathlib
 
 from db_utils import (
 add_maliciousHashPrefixes,
@@ -13,7 +16,7 @@ update_activity_URLs
 from alivecheck import check_activity_URLs
 from filewriter import write_all_malicious_urls_to_file
 from safebrowsing import SafeBrowsing
-from url_utils import get_top10m_url_list, get_top1m_url_list
+from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_url_list
 
 def update_database():
     ray.shutdown()
@@ -28,6 +31,12 @@ def update_database():
     top10m_urls = get_top10m_url_list()
     add_URLs(conn, top10m_urls, updateTime)
     del top10m_urls
+
+    # Extract and Add local URLs to DB (limit to 10 files for testing)
+    for file in tqdm(os.listdir("local_domains")[:10]):
+        local_urls = get_local_file_url_list(pathlib.Path.cwd() / "local_domains" / file)
+        add_URLs(conn, local_urls, updateTime)
+        del local_urls # "frees" memory
 
     malicious_urls = set()
     for vendor in ["Google","Yandex"]:

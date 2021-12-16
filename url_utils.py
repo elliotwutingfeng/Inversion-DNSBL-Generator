@@ -7,7 +7,10 @@ import tldextract
 from requests_utils import get_with_retries
 from tqdm import tqdm
 import math
+import pathlib
 
+# Disables filelock logging clutter from tldextract library
+logging.getLogger("filelock").setLevel(logging.WARNING)
 
 def get_top1m_url_list() -> list[str]:
     """Downloads the Tranco TOP1M dataset and returns all listed URLs."""
@@ -20,11 +23,14 @@ def get_top1m_url_list() -> list[str]:
                              total=math.ceil(int(resp.headers['Content-Length'])/chunk_size)):
                 f.write(data)
             zipfile = ZipFile(f)
-            top1m_urls = [x.strip().decode().split(',')[1] for x in zipfile.open(zipfile.namelist()[0]).readlines()]
+            top1m_raw_urls = [x.strip().decode().split(',')[1] for x in zipfile.open(zipfile.namelist()[0]).readlines()]
+            top1m_tlds = [tldextract.extract(x).registered_domain for x in top1m_raw_urls]
+            top1m_urls = list(set(top1m_raw_urls + top1m_tlds))
             logging.info("Downloading TOP1M list... [DONE]")
             return top1m_urls
     except requests.exceptions.RequestException as e:
-        raise SystemExit(e)
+        logging.warning(f"Failed to retrieve TOP1M list; returning empty list: {e}")
+        return []
 
 def get_top10m_url_list() -> list[str]:
     """Downloads the DomCop TOP10M dataset and returns all listed URLs."""
@@ -37,15 +43,34 @@ def get_top10m_url_list() -> list[str]:
                              total=math.ceil(int(resp.headers['Content-Length'])/chunk_size)):
                 f.write(data)
             zipfile = ZipFile(f)
-            top10m_urls = [tldextract.extract(x.strip().decode().split(',')[1].replace('"',"")).registered_domain 
+            top10m_raw_urls = [x.strip().decode().split(',')[1].replace('"',"")
                        for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]]
+            top10m_tlds = [tldextract.extract(x).registered_domain for x in top10m_raw_urls]
+            top10m_urls = list(set(top10m_raw_urls + top10m_tlds))
             logging.info("Downloading TOP10M list... [DONE]")
             return top10m_urls
     except requests.exceptions.RequestException as e:
-        raise SystemExit(e)
+        logging.warning(f"Failed to retrieve TOP10M list; returning empty list: {e}")
+        return []
+
+def get_local_file_url_list(file: str) -> list[str]:
+    """Returns all listed URLs from local text file"""
+    logging.info(f"Extracting local list ({file}) ...")
+    try:
+        with open(file,'r') as f:
+            raw_urls = [_.strip() for _ in f.readlines()]
+            tlds = [tldextract.extract(x).registered_domain for x in raw_urls]
+            urls = list(set(raw_urls + tlds))
+            logging.info(f"Extracting local list ({file}) ... [DONE]")
+        return urls
+    except OSError as e:
+        logging.warning(f"Failed to retrieve local list ({file}); returning empty list: {e}")
+        return []
 
 if __name__=='__main__':
     top1m_urls = get_top1m_url_list()
     logging.info(len(top1m_urls))
     top10m_urls = get_top10m_url_list()
     logging.info(len(top10m_urls))
+    local_urls = get_local_file_url_list(pathlib.Path.cwd() / "local_domains" / "domain2multi-com00.txt")
+    logging.info(len(local_urls))

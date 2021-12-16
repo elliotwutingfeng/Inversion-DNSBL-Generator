@@ -6,3 +6,4 @@ urls.db
 urls.db-journal
 debug.py
 debug.rest
+local_domains/
