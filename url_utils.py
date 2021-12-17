@@ -8,10 +8,12 @@ from logger_utils import init_logger
 from requests_utils import get_with_retries
 from tqdm import tqdm
 import math
+import ray
 import pathlib
 
 logger = init_logger()
 
+@ray.remote
 def get_top1m_url_list() -> list[str]:
     """Downloads the Tranco TOP1M dataset and returns all listed URLs."""
     logging.info("Downloading TOP1M list...")
@@ -32,6 +34,7 @@ def get_top1m_url_list() -> list[str]:
         logging.warning(f"Failed to retrieve TOP1M list; returning empty list: {e}")
         return []
 
+@ray.remote
 def get_top10m_url_list() -> list[str]:
     """Downloads the DomCop TOP10M dataset and returns all listed URLs."""
     logging.info("Downloading TOP10M list...")
@@ -68,7 +71,6 @@ def get_local_file_url_list(file: str) -> list[str]:
         return []
 
 if __name__=='__main__':
-    top1m_urls = get_top1m_url_list()
+    top1m_urls,top10m_urls = ray.get([get_top1m_url_list.remote(),get_top10m_url_list.remote()])
     logging.info(len(top1m_urls))
-    top10m_urls = get_top10m_url_list()
     logging.info(len(top10m_urls))

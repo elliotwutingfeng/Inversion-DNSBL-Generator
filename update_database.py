@@ -26,10 +26,9 @@ def update_database():
 
     
     # Download and Add TOP1M and TOP10M URLs to DB
-    top1m_urls = get_top1m_url_list()
+    top1m_urls,top10m_urls = ray.get([get_top1m_url_list.remote(),get_top10m_url_list.remote()])
     add_URLs(top1m_urls, updateTime)
     del top1m_urls
-    top10m_urls = get_top10m_url_list()
     add_URLs(top10m_urls, updateTime)
     del top10m_urls
 
