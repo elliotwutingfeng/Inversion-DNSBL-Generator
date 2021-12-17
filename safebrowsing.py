@@ -154,7 +154,7 @@ class SafeBrowsing:
     @staticmethod
     def get_malicious_hashes(listUpdateResponses):
         hashes = set()
-        prefixSizes = []
+        prefixSizes = set()
         for x in tqdm(listUpdateResponses):
             for addition in x['additions']:
                 y = addition['rawHashes']
@@ -163,12 +163,12 @@ class SafeBrowsing:
                 
                 hashes_list = sorted([rawHashes[i:i+prefixSize] for i in range(0, len(rawHashes), prefixSize)])
                 hashes.update(hashes_list)
-                prefixSizes += [prefixSize]
+                prefixSizes.add(prefixSize)
         
         # The uncompressed threat entries in hash format of a particular prefix length. 
         # Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes, 
         # but some hashes are lengthened if they collide with the hash of a popular URL.
-        assert(set([len(x) for x in hashes]) == set(prefixSizes))
+        assert(set([len(x) for x in hashes]) == prefixSizes)
         return hashes
 
     def get_malicious_hash_prefixes(self):
