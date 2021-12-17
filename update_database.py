@@ -21,7 +21,7 @@ from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_ur
 def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
-    updateTime = time.time()
+    updateTime = int(time.time()) # seconds since UNIX Epoch
     initialise_database()
 
     
