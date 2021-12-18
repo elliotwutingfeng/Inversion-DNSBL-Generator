@@ -39,7 +39,7 @@ def update_database():
     for root, _, files in tqdm(os.walk(local_domains_dir)):
         for file in files:
             # Look for dotcom URLs only
-            if "generic_com" in root and file in ["domain2multi-com0d.txt","domain2multi-com1d.txt"]: #file.lower().endswith('.txt'):
+            if "generic_com" in root and file in ["domain2multi-com0d.txt"]: #file.lower().endswith('.txt'):
                 local_domains_filepaths.append(os.path.join(root, file))
 
     for filepath in tqdm(local_domains_filepaths):

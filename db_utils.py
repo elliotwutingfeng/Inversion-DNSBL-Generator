@@ -1,5 +1,5 @@
-import sqlite3
-from sqlite3 import Error
+import apsw
+from apsw import Error
 import logging
 from hashlib import sha256
 
@@ -15,7 +15,7 @@ def compute_url_hash(url):
 
 database = "urls.db"
 sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
-                           url text PRIMARY KEY,
+                           url text UNIQUE,
                            lastListed integer,
                            lastGoogleMalicious integer,
                            lastYandexMalicious integer,
@@ -24,7 +24,6 @@ sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
                            );"""
 
 sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
-                                            id integer PRIMARY KEY,
                                             hashPrefix blob,
                                             prefixSize integer,
                                             vendor text
@@ -35,15 +34,16 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
     sql = '''
-    INSERT INTO maliciousHashPrefixes (id,hashPrefix,prefixSize,vendor)
-    VALUES (?, ?, ?, ?);
+    INSERT INTO maliciousHashPrefixes (hashPrefix,prefixSize,vendor)
+    VALUES (?, ?, ?);
     '''
     logging.info(f"Updating DB with {vendor} malicious URL hashes")
     conn = create_connection()
     try:
         with conn:
-            conn.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
-            conn.executemany(sql,((None,hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
+            cur = conn.cursor()
+            cur.execute("DELETE FROM maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+            cur.executemany(sql,((hashPrefix,len(hashPrefix),vendor) for hashPrefix in list(hash_prefixes)))
     except Error as e:
         logging.error(e)
     conn.close()
@@ -54,13 +54,14 @@ def identify_suspected_urls(vendor):
     try:
         with conn:
             # Find all prefixSizes
-            cur = conn.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
+            cur = conn.cursor()
+            cur = cur.execute("SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",(vendor,))
             prefixSizes = [x[0] for x in cur.fetchall()]
 
             suspected_urls = []
             for prefixSize in prefixSizes:
             # Find all urls with matching hash_prefixes
-                cur = conn.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
+                cur = cur.execute('''SELECT url from urls INNER JOIN maliciousHashPrefixes 
                 WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
                 AND maliciousHashPrefixes.vendor = ?;''',(prefixSize,vendor))
                 suspected_urls += [x[0] for x in cur.fetchall()]
@@ -79,8 +80,9 @@ def create_connection(db_file=database):
     """
     conn = None
     try:
-        conn = sqlite3.connect(':memory:' if db_file==None else db_file)
-        conn.execute('PRAGMA journal_mode = WAL') # Enable Write-Ahead Log option; https://www.sqlite.org/wal.html
+        conn = apsw.Connection(':memory:' if db_file==None else db_file)
+        cur = conn.cursor()
+        cur.execute('PRAGMA journal_mode = WAL') # Enable Write-Ahead Log option; https://www.sqlite.org/wal.html
     except Error as e:
         logging.error(e)
 
@@ -95,7 +97,8 @@ def create_table(create_table_sql):
     conn = create_connection()
     try:
         with conn:
-            conn.execute(create_table_sql)
+            cur = conn.cursor()
+            cur.execute(create_table_sql)
     except Error as e:
         logging.error(e)
     conn.close()
@@ -127,8 +130,9 @@ def add_URLs(urls, updateTime):
     conn = create_connection()
     try:
         with conn:
+            cur = conn.cursor()
             logging.info("Performing INSERT-UPDATE URLs to DB...")
-            conn.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
+            cur.executemany(sql,((url,lastListed, compute_url_hash(url)) for url in urls))
             logging.info("Performing INSERT-UPDATE to DB... [DONE]")
     except Error as e:
         logging.error(e)
@@ -144,7 +148,8 @@ def get_all_URLs():
     conn = create_connection()
     try:
         with conn:
-            cur = conn.execute(sql)
+            cur = conn.cursor()
+            cur = cur.execute(sql)
             urls = [row[0] for row in cur.fetchall()]
     except Error as e:
         logging.error(e)
@@ -178,7 +183,8 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor):
     conn = create_connection()
     try:
         with conn:
-            conn.execute(sql,(updateTime,*malicious_urls))
+            cur = conn.cursor()
+            cur.execute(sql,(updateTime,*malicious_urls))
     except Error as e:
         logging.error(e)
     conn.close()
@@ -198,7 +204,8 @@ def update_activity_URLs(alive_urls, updateTime):
     conn = create_connection()
     try:
         with conn:
-            conn.execute(sql,(updateTime,*alive_urls))
+            cur = conn.cursor()
+            cur.execute(sql,(updateTime,*alive_urls))
     except Error as e:
         logging.error(e)
     conn.close()
