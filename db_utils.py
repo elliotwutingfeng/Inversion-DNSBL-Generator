@@ -16,7 +16,7 @@ def compute_url_hash(url):
 
 
 database = "urls.db"
-sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
+sql_create_urls_table = """CREATE TABLE IF NOT EXISTS ? (
                            url text UNIQUE,
                            lastListed integer,
                            lastGoogleMalicious integer,
@@ -25,7 +25,7 @@ sql_create_urls_table = """CREATE TABLE IF NOT EXISTS urls (
                            hash blob
                            );"""
 
-sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
+sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS ? (
                                             hashPrefix blob,
                                             prefixSize integer,
                                             vendor text
@@ -112,7 +112,7 @@ def create_connection(db_file=database):
     return conn
 
 
-def create_table(create_table_sql):
+def create_table(create_table_sql, table_name):
     """create a table from the create_table_sql statement
     :param conn: Connection object
     :param create_table_sql: a CREATE TABLE statement
@@ -122,7 +122,7 @@ def create_table(create_table_sql):
     try:
         with conn:
             cur = conn.cursor()
-            cur.execute(create_table_sql)
+            cur.execute(create_table_sql, table_name)
     except Error as e:
         logging.error(e)
     conn.close()
@@ -133,8 +133,8 @@ def initialise_database():
     conn = create_connection(database)
     # initialise tables
     if conn is not None:
-        create_table(sql_create_urls_table)
-        create_table(sql_create_maliciousHashPrefixes_table)
+        # create_table(sql_create_urls_table, "urls")
+        create_table(sql_create_maliciousHashPrefixes_table, "maliciousHashPrefixes")
     else:
         logging.error("Error! cannot create the database connection.")
 

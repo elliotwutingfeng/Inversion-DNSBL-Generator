@@ -24,7 +24,7 @@ def update_database():
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
     initialise_database()
-
+    """
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls, top10m_urls = ray.get(
         [get_top1m_url_list.remote(), get_top10m_url_list.remote()]
@@ -33,23 +33,28 @@ def update_database():
     del top1m_urls
     add_URLs(top10m_urls, updateTime)
     del top10m_urls
-
     """
+
     # Extract and Add local URLs to DB
-    local_domains_dir = pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
+    local_domains_dir = (
+        pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
+    )
     local_domains_filepaths = []
     for root, _, files in tqdm(os.walk(local_domains_dir)):
         for file in files:
             # Look for dotcom URLs only
-            if "generic_com" in root and file in ["domain2multi-com0d.txt"]: #file.lower().endswith('.txt'):
+            if "generic_com" in root and file in [
+                "domain2multi-com0d.txt",
+                "domain2multi-com1d.txt",
+            ]:  # file.lower().endswith('.txt'):
                 local_domains_filepaths.append(os.path.join(root, file))
 
     for filepath in tqdm(local_domains_filepaths):
         local_urls = get_local_file_url_list(filepath)
         add_URLs(local_urls, updateTime)
-        del local_urls # "frees" memory
-    """
+        del local_urls  # "frees" memory
 
+    """
     malicious_urls = set()
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
@@ -74,7 +79,7 @@ def update_database():
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     malicious_urls = list(malicious_urls)
     write_all_malicious_urls_to_file(malicious_urls)
-
+    """
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
