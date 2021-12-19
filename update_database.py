@@ -23,36 +23,40 @@ def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
-    initialise_database()
+    # Get local URL filenames
+    local_domains_dir = (
+        pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
+    )
+    local_domains_filepaths = []
+    urls_filenames = []
+    for root, _, files in tqdm(os.walk(local_domains_dir)):
+        for file in files:
+            # Look for dotcom URLs only
+            if file in [
+                "domain2multi-com1d.txt",
+                "domain2multi-com0d.txt",
+            ]:  # file.lower().endswith('.txt'):
+                urls_filenames.append(f"{file[:-4]}")
+                local_domains_filepaths.append(os.path.join(root, file))
+
+    initialise_database(urls_filenames)
+
+    # Extract and Add local URLs to DB
+    for filepath, filename in tqdm(list(zip(local_domains_filepaths, urls_filenames))):
+        local_urls = get_local_file_url_list(filepath)
+        add_URLs(local_urls, updateTime, filename)
+        del local_urls  # "frees" memory
+
     """
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls, top10m_urls = ray.get(
         [get_top1m_url_list.remote(), get_top10m_url_list.remote()]
     )
-    add_URLs(top1m_urls, updateTime)
+    add_URLs(top1m_urls, updateTime, "top1m_urls")
     del top1m_urls
-    add_URLs(top10m_urls, updateTime)
+    add_URLs(top10m_urls, updateTime, "top10m_urls")
     del top10m_urls
     """
-
-    # Extract and Add local URLs to DB
-    local_domains_dir = (
-        pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
-    )
-    local_domains_filepaths = []
-    for root, _, files in tqdm(os.walk(local_domains_dir)):
-        for file in files:
-            # Look for dotcom URLs only
-            if "generic_com" in root and file in [
-                "domain2multi-com0d.txt",
-                "domain2multi-com1d.txt",
-            ]:  # file.lower().endswith('.txt'):
-                local_domains_filepaths.append(os.path.join(root, file))
-
-    for filepath in tqdm(local_domains_filepaths):
-        local_urls = get_local_file_url_list(filepath)
-        add_URLs(local_urls, updateTime)
-        del local_urls  # "frees" memory
 
     """
     malicious_urls = set()

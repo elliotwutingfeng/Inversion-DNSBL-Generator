@@ -16,20 +16,6 @@ def compute_url_hash(url):
 
 
 database = "urls.db"
-sql_create_urls_table = """CREATE TABLE IF NOT EXISTS ? (
-                           url text UNIQUE,
-                           lastListed integer,
-                           lastGoogleMalicious integer,
-                           lastYandexMalicious integer,
-                           lastReachable integer,
-                           hash blob
-                           );"""
-
-sql_create_maliciousHashPrefixes_table = """CREATE TABLE IF NOT EXISTS ? (
-                                            hashPrefix blob,
-                                            prefixSize integer,
-                                            vendor text
-                                            );"""
 
 
 def add_maliciousHashPrefixes(hash_prefixes, vendor):
@@ -112,42 +98,89 @@ def create_connection(db_file=database):
     return conn
 
 
-def create_table(create_table_sql, table_name):
+def create_maliciousHashPrefixes_table():
     """create a table from the create_table_sql statement
     :param conn: Connection object
     :param create_table_sql: a CREATE TABLE statement
     :return:
     """
+    create_table_sql = """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
+                                            hashPrefix blob,
+                                            prefixSize integer,
+                                            vendor text
+                                            );"""
     conn = create_connection()
     try:
         with conn:
             cur = conn.cursor()
-            cur.execute(create_table_sql, table_name)
+            cur.execute(create_table_sql)
     except Error as e:
         logging.error(e)
     conn.close()
 
 
-def initialise_database():
+def create_urls_table(table_name):
+    create_table_sql = """CREATE TABLE IF NOT EXISTS {} (
+                           url text UNIQUE,
+                           lastListed integer,
+                           lastGoogleMalicious integer,
+                           lastYandexMalicious integer,
+                           lastReachable integer,
+                           hash blob
+                           );"""
+    conn = create_connection()
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur.execute(create_table_sql.format(table_name))
+    except Error as e:
+        logging.error(e)
+    conn.close()
+
+
+def create_filenames_table(urls_filenames):
+    create_table_sql = """CREATE TABLE IF NOT EXISTS urls_filenames (
+    id integer PRIMARY KEY,
+    urls_filename text UNIQUE
+        )
+        """
+    insert_filename_sql = (
+        "INSERT OR IGNORE into urls_filenames (id,urls_filename) VALUES (?, ?)"
+    )
+    conn = create_connection()
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur.execute(create_table_sql)
+            cur.executemany(
+                insert_filename_sql, ((None, name) for name in urls_filenames)
+            )
+    except Error as e:
+        logging.error(e)
+    conn.close()
+
+
+def initialise_database(urls_filenames):
     # Create database with 2 tables
     conn = create_connection(database)
     # initialise tables
     if conn is not None:
-        # create_table(sql_create_urls_table, "urls")
-        create_table(sql_create_maliciousHashPrefixes_table, "maliciousHashPrefixes")
+        # create_urls_table("urls")
+        create_filenames_table(urls_filenames)
+        create_maliciousHashPrefixes_table()
     else:
         logging.error("Error! cannot create the database connection.")
 
     return conn
 
 
-def add_URLs(urls, updateTime):
+def add_URLs(urls, updateTime, filename):
     """
     Add a list of urls into the urls table
     If any given url already exists, update its lastListed field
     """
     sql = """
-    INSERT INTO urls (url, lastListed, hash)
+    INSERT INTO {} (url, lastListed, hash)
     VALUES (?, ?, ?)
     ON CONFLICT(url)
     DO UPDATE SET lastListed=excluded.lastListed
@@ -157,34 +190,31 @@ def add_URLs(urls, updateTime):
     try:
         with conn:
             cur = conn.cursor()
+            logging.info("Creating urls table if it does not exist...")
+            # Obtain id from lookup table to use as part of table_name
+            cur.execute(
+                "SELECT id from urls_filenames where urls_filename=? LIMIT 1",
+                (filename,),
+            )
+            id = [x[0] for x in cur.fetchall()][0]
+            table_name = f"urls_{id}"
+    except Error as e:
+        logging.error(e)
+    conn.close()
+    create_urls_table(table_name)
+    conn = create_connection()
+    try:
+        with conn:
+            cur = conn.cursor()
             logging.info("Performing INSERT-UPDATE URLs to DB...")
             cur.executemany(
-                sql, ((url, lastListed, compute_url_hash(url)) for url in urls)
+                sql.format(table_name),
+                ((url, lastListed, compute_url_hash(url)) for url in urls),
             )
             logging.info("Performing INSERT-UPDATE to DB... [DONE]")
     except Error as e:
         logging.error(e)
     conn.close()
-
-
-def get_all_URLs():
-    """
-    Returns list of all urls currently in DB
-    """
-    sql = """
-    SELECT url FROM urls;
-    """
-    conn = create_connection()
-    try:
-        with conn:
-            cur = conn.cursor()
-            cur = cur.execute(sql)
-            urls = [row[0] for row in cur.fetchall()]
-    except Error as e:
-        logging.error(e)
-    conn.close()
-
-    return urls
 
 
 def update_malicious_URLs(malicious_urls, updateTime, vendor):
@@ -240,3 +270,25 @@ def update_activity_URLs(alive_urls, updateTime):
     except Error as e:
         logging.error(e)
     conn.close()
+
+
+'''
+def get_all_URLs():
+    """
+    Returns list of all urls currently in DB
+    """
+    sql = """
+    SELECT url FROM urls;
+    """
+    conn = create_connection()
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur = cur.execute(sql)
+            urls = [row[0] for row in cur.fetchall()]
+    except Error as e:
+        logging.error(e)
+    conn.close()
+
+    return urls
+'''
