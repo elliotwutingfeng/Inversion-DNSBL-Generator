@@ -23,6 +23,7 @@ def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
+    """
     # Get local URL filenames
     local_domains_dir = (
         pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
@@ -46,7 +47,7 @@ def update_database():
         local_urls = get_local_file_url_list(filepath)
         add_URLs(local_urls, updateTime, filename)
         del local_urls  # "frees" memory
-
+    """
     """
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls, top10m_urls = ray.get(
@@ -58,8 +59,6 @@ def update_database():
     del top10m_urls
     """
 
-    """
-    malicious_urls = set()
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -67,6 +66,10 @@ def update_database():
         hash_prefixes = sb.get_malicious_hash_prefixes()
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
+    """
+    malicious_urls = set()
+    for vendor in ["Google", "Yandex"]:
+        sb = SafeBrowsing(vendor)
 
         # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
         suspected_urls = identify_suspected_urls(vendor)
