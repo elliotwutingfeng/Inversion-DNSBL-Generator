@@ -8,6 +8,7 @@ from ray.actor import ActorHandle
 from tqdm import tqdm
 import ray
 
+
 @ray.remote
 class ProgressBarActor:
     counter: int
@@ -85,24 +86,26 @@ class ProgressBar:
                 pbar.close()
                 return
 
+
 def execute_tasks(tasks: list, task_handler) -> list:
-    '''Apply task_handler to list of tasks.
-    
+    """Apply task_handler to list of tasks.
+
     Tasks are processed in parallel with pipelining.
     Progressbar is shown.
-    '''
-    if len(tasks) == 0: return []
-    
+    """
+    if len(tasks) == 0:
+        return []
+
     def process_incremental(acc, result):
         return acc + [result]
-    
+
     # Progressbar Ray Actor
     num_ticks = len(tasks)
     pb = ProgressBar(num_ticks)
     actor = pb.actor
     actor_id = ray.put(actor)
 
-    tasks_pre_launch = [task_handler.remote(task,actor_id) for task in tasks]
+    tasks_pre_launch = [task_handler.remote(task, actor_id) for task in tasks]
 
     # Opens progressbar until all tasks are completed
     pb.print_until_done()
@@ -112,5 +115,5 @@ def execute_tasks(tasks: list, task_handler) -> list:
     while len(tasks_pre_launch):
         done_id, tasks_pre_launch = ray.wait(tasks_pre_launch)
         results = process_incremental(results, ray.get(done_id[0]))
-    
+
     return results
