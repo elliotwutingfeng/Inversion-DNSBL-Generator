@@ -38,7 +38,7 @@ def create_connection(db_file=database):
 
 def create_urls_table(table_name):
     conn = create_connection()
-    logging.info("Creating urls table if it does not exist...")
+    logging.info(f"Creating table {table_name} if it does not exist...")
     try:
         with conn:
             cur = conn.cursor()
@@ -58,6 +58,7 @@ def create_urls_table(table_name):
 
 
 def compute_url_hash(url):
+    """Returns sha256 hash of url as specified by Safe Browsing API"""
     return sha256(f"{url}/".encode()).digest()
 
 
@@ -84,7 +85,9 @@ def add_URLs(urls, updateTime, filename):
         create_urls_table(table_name)
         with conn:
             cur = conn.cursor()
-            logging.info("Performing INSERT-UPDATE URLs to DB...")
+            logging.info(
+                f"Performing INSERT-UPDATE URLs to table {table_name} representing filename {filename}..."
+            )
             batch_size = 50
             url_batches = list(chunks(urls, batch_size))
 
@@ -101,7 +104,9 @@ def add_URLs(urls, updateTime, filename):
                     ),
                 )
 
-            logging.info("Performing INSERT-UPDATE to DB... [DONE]")
+            logging.info(
+                f"Performing INSERT-UPDATE URLs to table {table_name} representing filename {filename}... [DONE]"
+            )
     except Error as e:
         logging.error(e)
     conn.close()
@@ -195,15 +200,13 @@ def identify_suspected_urls(vendor):
             ]
 
             # Find all urls with matching hash_prefixes
-            suspected_urls = list(
-                flatten(
-                    execute_tasks(
-                        [
-                            (urls_table, prefixSize, vendor)
-                            for urls_table, prefixSize in combinations
-                        ],
-                        get_matching_hashPrefix_urls,
-                    )
+            suspected_urls = flatten(
+                execute_tasks(
+                    [
+                        (urls_table, prefixSize, vendor)
+                        for urls_table, prefixSize in combinations
+                    ],
+                    get_matching_hashPrefix_urls,
                 )
             )
 
@@ -262,16 +265,14 @@ def create_maliciousHashPrefixes_table():
 
 def initialise_database(urls_filenames):
     # Create database with 2 tables
-    conn = create_connection(database)
-    # initialise tables
-    if conn is not None:
-        # create_urls_table("urls")
-        create_filenames_table(urls_filenames)
-        create_maliciousHashPrefixes_table()
-    else:
-        logging.error("Error! cannot create the database connection.")
 
-    return conn
+    conn = create_connection()
+    if conn is None:
+        raise Exception("Failed to initialise database")
+    conn.close()
+    # initialise tables
+    create_filenames_table(urls_filenames)
+    create_maliciousHashPrefixes_table()
 
 
 def update_malicious_URLs(malicious_urls, updateTime, vendor):

@@ -34,15 +34,15 @@ if __name__ == "__main__":
     else:
         ray.shutdown()
         ray.init(include_dashboard=False)
-        top1m_urls = ray.get([get_top1m_url_list.remote()])[0][-testing_quantity:]
+        test_urls = ray.get([get_top1m_url_list.remote()])[0][-testing_quantity:]
 
         gsb = SafeBrowsing("Google")
-        google_malicious_urls = gsb.get_malicious_URLs(top1m_urls)
+        google_malicious_urls = gsb.get_malicious_URLs(test_urls)
 
         ysb = SafeBrowsing("Yandex")
-        yandex_malicious_urls = ysb.get_malicious_URLs(top1m_urls)
+        yandex_malicious_urls = ysb.get_malicious_URLs(test_urls)
 
         malicious_urls = list(set(google_malicious_urls + yandex_malicious_urls))
 
-        write_top1m_malicious_urls_to_file(malicious_urls, top1m_urls)
+        write_top1m_malicious_urls_to_file(malicious_urls, test_urls)
         ray.shutdown()
