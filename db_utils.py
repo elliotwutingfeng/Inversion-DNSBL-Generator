@@ -168,16 +168,20 @@ def identify_suspected_urls(vendor):
 
             urls_tables = get_urls_tables()
 
-            for urls_table in tqdm(urls_tables):
-                for prefixSize in prefixSizes:
-                    # Find all urls with matching hash_prefixes
-                    cur = cur.execute(
-                        f"""SELECT url from {urls_table} INNER JOIN maliciousHashPrefixes 
-                    WHERE substring({urls_table}.hash,1,?) = maliciousHashPrefixes.hashPrefix 
-                    AND maliciousHashPrefixes.vendor = ?;""",
-                        (prefixSize, vendor),
-                    )
-                    suspected_urls += [x[0] for x in cur.fetchall()]
+            combinations = [
+                (urls_table, prefixSize)
+                for prefixSize in prefixSizes
+                for urls_table in urls_tables
+            ]
+            for urls_table, prefixSize in tqdm(combinations):
+                # Find all urls with matching hash_prefixes
+                cur = cur.execute(
+                    f"""SELECT url from {urls_table} INNER JOIN maliciousHashPrefixes 
+                WHERE substring({urls_table}.hash,1,?) = maliciousHashPrefixes.hashPrefix 
+                AND maliciousHashPrefixes.vendor = ?;""",
+                    (prefixSize, vendor),
+                )
+                suspected_urls += [x[0] for x in cur.fetchall()]
             logging.info(
                 f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API."
             )
@@ -272,6 +276,37 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor):
         except Error as e:
             logging.error(e)
         conn.close()
+
+
+def retrieve_malicious_URLs():
+    """
+    Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
+    """
+    malicious_urls = set()
+    urls_tables = get_urls_tables()
+    conn = create_connection()
+    for urls_table in tqdm(urls_tables):
+        try:
+            with conn:
+                cur = conn.cursor()
+                # Most recent lastGoogleMalicious timestamp
+                cur.execute(f"SELECT MAX(lastGoogleMalicious) from {urls_table}")
+                lastGoogleMalicious = [x[0] for x in cur.fetchall()][0]
+                # Most recent lastYandexMalicious timestamp
+                cur.execute(f"SELECT MAX(lastYandexMalicious) from {urls_table}")
+                lastYandexMalicious = [x[0] for x in cur.fetchall()][0]
+                cur.execute(
+                    f"""
+        SELECT url from {urls_table}
+        WHERE lastGoogleMalicious = ? OR lastYandexMalicious = ?
+        """,
+                    (lastGoogleMalicious, lastYandexMalicious),
+                )
+                malicious_urls.update([x[0] for x in cur.fetchall()])
+        except Error as e:
+            logging.error(e)
+    conn.close()
+    return list(malicious_urls)
 
 
 def update_activity_URLs(alive_urls, updateTime):

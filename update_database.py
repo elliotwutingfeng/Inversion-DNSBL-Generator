@@ -10,6 +10,7 @@ from db_utils import (
     identify_suspected_urls,
     initialise_database,
     add_URLs,
+    retrieve_malicious_URLs,
     update_malicious_URLs,
     update_activity_URLs,
 )
@@ -23,7 +24,7 @@ def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
-
+    """
     # Get local URL filenames
     local_domains_dir = (
         pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
@@ -47,7 +48,7 @@ def update_database():
         local_urls = get_local_file_url_list(filepath)
         add_URLs(local_urls, updateTime, filename)
         del local_urls  # "frees" memory
-
+    """
     """
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls, top10m_urls = ray.get(
@@ -68,7 +69,6 @@ def update_database():
         del hash_prefixes  # "frees" memory
     """
     """
-    malicious_urls = set()
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -79,15 +79,13 @@ def update_database():
         vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
         del suspected_urls  # "frees" memory
 
-        malicious_urls.update(vendor_malicious_urls)
-
         # Update vendor_malicious_urls to DB
         update_malicious_URLs(vendor_malicious_urls, updateTime, vendor)
-
-    # Write malicious_urls to TXT file (overwrites existing TXT file)
-    malicious_urls = list(malicious_urls)
-    write_all_malicious_urls_to_file(malicious_urls)
     """
+    # Write malicious_urls to TXT file (overwrites existing TXT file)
+    malicious_urls = retrieve_malicious_URLs()
+    write_all_malicious_urls_to_file(malicious_urls)
+
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
