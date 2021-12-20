@@ -4,21 +4,17 @@ import logging
 from hashlib import sha256
 from tqdm import tqdm
 import ray
+from list_utils import chunks, flatten
 
 from logger_utils import init_logger
 from ray_utils import execute_tasks
-from safebrowsing import chunks
+
 
 # sqlite> .header on
 # sqlite> .mode column
 
 logger = init_logger()
 database = "urls.db"
-
-
-def flatten(list_of_lists):
-    """Flattens a list_of_lists. Returns a generator"""
-    return (item for sublist in list_of_lists for item in sublist)
 
 
 def create_connection(db_file=database):
