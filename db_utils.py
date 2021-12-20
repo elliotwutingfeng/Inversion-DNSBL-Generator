@@ -2,6 +2,7 @@ import apsw
 from apsw import Error
 import logging
 from hashlib import sha256
+from tqdm import tqdm
 
 from logger_utils import init_logger
 
@@ -46,6 +47,21 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     conn.close()
 
 
+def get_urls_tables():
+    conn = create_connection()
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur = cur.execute("SELECT id FROM urls_filenames")
+            ids = [int(x[0]) for x in cur.fetchall()]
+            urls_tables = [f"urls_{id}" for id in ids]
+    except Error as e:
+        logging.error(e)
+    conn.close()
+
+    return urls_tables
+
+
 def identify_suspected_urls(vendor):
     logging.info(f"Identifying suspected {vendor} malicious URLs")
     conn = create_connection()
@@ -60,15 +76,19 @@ def identify_suspected_urls(vendor):
             prefixSizes = [x[0] for x in cur.fetchall()]
 
             suspected_urls = []
-            for prefixSize in prefixSizes:
-                # Find all urls with matching hash_prefixes
-                cur = cur.execute(
-                    """SELECT url from urls INNER JOIN maliciousHashPrefixes 
-                WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.hashPrefix 
-                AND maliciousHashPrefixes.vendor = ?;""",
-                    (prefixSize, vendor),
-                )
-                suspected_urls += [x[0] for x in cur.fetchall()]
+
+            urls_tables = get_urls_tables()
+
+            for urls_table in tqdm(urls_tables):
+                for prefixSize in prefixSizes:
+                    # Find all urls with matching hash_prefixes
+                    cur = cur.execute(
+                        f"""SELECT url from {urls_table} INNER JOIN maliciousHashPrefixes 
+                    WHERE substring({urls_table}.hash,1,?) = maliciousHashPrefixes.hashPrefix 
+                    AND maliciousHashPrefixes.vendor = ?;""",
+                        (prefixSize, vendor),
+                    )
+                    suspected_urls += [x[0] for x in cur.fetchall()]
             logging.info(
                 f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API."
             )
@@ -196,7 +216,7 @@ def add_URLs(urls, updateTime, filename):
                 "SELECT id from urls_filenames where urls_filename=? LIMIT 1",
                 (filename,),
             )
-            id = [x[0] for x in cur.fetchall()][0]
+            id = [int(x[0]) for x in cur.fetchall()][0]
             table_name = f"urls_{id}"
     except Error as e:
         logging.error(e)
@@ -224,30 +244,31 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor):
     """
     logging.info(f"Updating DB with verified {vendor} malicious URLs")
     number_of_malicious_urls = len(malicious_urls)
+    urls_tables = get_urls_tables()
+    for urls_table in tqdm(urls_tables):
+        if vendor == "Google":
+            sql = f"""
+            UPDATE {urls_table}
+            SET lastGoogleMalicious = ?
+            WHERE url IN ({','.join('?'*number_of_malicious_urls)})
+            """
+        elif vendor == "Yandex":
+            sql = f"""
+            UPDATE {urls_table}
+            SET lastYandexMalicious = ?
+            WHERE url IN ({','.join('?'*number_of_malicious_urls)})
+            """
+        else:
+            raise ValueError('vendor must be "Google" or "Yandex"')
 
-    if vendor == "Google":
-        sql = f"""
-        UPDATE urls
-        SET lastGoogleMalicious = ?
-        WHERE url IN ({','.join('?'*number_of_malicious_urls)})
-        """
-    elif vendor == "Yandex":
-        sql = f"""
-        UPDATE urls
-        SET lastYandexMalicious = ?
-        WHERE url IN ({','.join('?'*number_of_malicious_urls)})
-        """
-    else:
-        raise ValueError('vendor must be "Google" or "Yandex"')
-
-    conn = create_connection()
-    try:
-        with conn:
-            cur = conn.cursor()
-            cur.execute(sql, (updateTime, *malicious_urls))
-    except Error as e:
-        logging.error(e)
-    conn.close()
+        conn = create_connection()
+        try:
+            with conn:
+                cur = conn.cursor()
+                cur.execute(sql, (updateTime, *malicious_urls))
+        except Error as e:
+            logging.error(e)
+        conn.close()
 
 
 def update_activity_URLs(alive_urls, updateTime):
@@ -270,25 +291,3 @@ def update_activity_URLs(alive_urls, updateTime):
     except Error as e:
         logging.error(e)
     conn.close()
-
-
-'''
-def get_all_URLs():
-    """
-    Returns list of all urls currently in DB
-    """
-    sql = """
-    SELECT url FROM urls;
-    """
-    conn = create_connection()
-    try:
-        with conn:
-            cur = conn.cursor()
-            cur = cur.execute(sql)
-            urls = [row[0] for row in cur.fetchall()]
-    except Error as e:
-        logging.error(e)
-    conn.close()
-
-    return urls
-'''

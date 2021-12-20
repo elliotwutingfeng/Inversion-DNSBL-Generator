@@ -58,7 +58,7 @@ def update_database():
     add_URLs(top10m_urls, updateTime, "top10m_urls")
     del top10m_urls
     """
-
+    """
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -86,7 +86,7 @@ def update_database():
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     malicious_urls = list(malicious_urls)
     write_all_malicious_urls_to_file(malicious_urls)
-    """
+
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
