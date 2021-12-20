@@ -23,7 +23,7 @@ def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
-    """
+
     # Get local URL filenames
     local_domains_dir = (
         pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
@@ -34,8 +34,8 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             if file in [
-                "domain2multi-com1d.txt",
-                "domain2multi-com0d.txt",
+                "domain2multi-af00.txt",
+                "domain2multi-ax00.txt",
             ]:  # file.lower().endswith('.txt'):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
@@ -47,7 +47,7 @@ def update_database():
         local_urls = get_local_file_url_list(filepath)
         add_URLs(local_urls, updateTime, filename)
         del local_urls  # "frees" memory
-    """
+
     """
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls, top10m_urls = ray.get(
@@ -66,6 +66,7 @@ def update_database():
         hash_prefixes = sb.get_malicious_hash_prefixes()
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
+    """
     """
     malicious_urls = set()
     for vendor in ["Google", "Yandex"]:
@@ -86,7 +87,7 @@ def update_database():
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     malicious_urls = list(malicious_urls)
     write_all_malicious_urls_to_file(malicious_urls)
-
+    """
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
