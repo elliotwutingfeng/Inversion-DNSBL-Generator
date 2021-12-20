@@ -3,8 +3,10 @@ from apsw import Error
 import logging
 from hashlib import sha256
 from tqdm import tqdm
+import ray
 
 from logger_utils import init_logger
+from ray_utils import execute_tasks
 from safebrowsing import chunks
 
 # sqlite> .header on
@@ -151,6 +153,28 @@ def get_urls_tables():
     return urls_tables
 
 
+@ray.remote
+def get_matching_hashPrefix_urls(task, pba):
+    urls_table, prefixSize, vendor = task
+    conn = create_connection()
+    urls = []
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur = cur.execute(
+                f"""SELECT url from {urls_table} INNER JOIN maliciousHashPrefixes 
+                WHERE substring({urls_table}.hash,1,?) = maliciousHashPrefixes.hashPrefix 
+                AND maliciousHashPrefixes.vendor = ?;""",
+                (prefixSize, vendor),
+            )
+            urls = [x[0] for x in cur.fetchall()]
+    except Error as e:
+        logging.error(e)
+    conn.close()
+    pba.update.remote(1)
+    return urls
+
+
 def identify_suspected_urls(vendor):
     logging.info(f"Identifying suspected {vendor} malicious URLs")
     conn = create_connection()
@@ -173,15 +197,20 @@ def identify_suspected_urls(vendor):
                 for prefixSize in prefixSizes
                 for urls_table in urls_tables
             ]
-            for urls_table, prefixSize in tqdm(combinations):
-                # Find all urls with matching hash_prefixes
-                cur = cur.execute(
-                    f"""SELECT url from {urls_table} INNER JOIN maliciousHashPrefixes 
-                WHERE substring({urls_table}.hash,1,?) = maliciousHashPrefixes.hashPrefix 
-                AND maliciousHashPrefixes.vendor = ?;""",
-                    (prefixSize, vendor),
+
+            # Find all urls with matching hash_prefixes
+            suspected_urls = list(
+                flatten(
+                    execute_tasks(
+                        [
+                            (urls_table, prefixSize, vendor)
+                            for urls_table, prefixSize in combinations
+                        ],
+                        get_matching_hashPrefix_urls,
+                    )
                 )
-                suspected_urls += [x[0] for x in cur.fetchall()]
+            )
+
             logging.info(
                 f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API."
             )
