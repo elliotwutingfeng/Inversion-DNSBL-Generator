@@ -30,12 +30,12 @@ def update_database():
     )
     local_domains_filepaths = []
     urls_filenames = []
-    for root, _, files in tqdm(os.walk(local_domains_dir)):
+    for root, _, files in tqdm(list(os.walk(local_domains_dir))):
         for file in files:
             # Look for dotcom URLs only
             if file in [
-                "domain2multi-af00.txt",
-                "domain2multi-ax00.txt",
+                "domain2multi-com1d.txt",  # domain2multi-com1d domain2multi-af00
+                "domain2multi-com0d.txt",  # domain2multi-com0d domain2multi-ax00
             ]:  # file.lower().endswith('.txt'):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))

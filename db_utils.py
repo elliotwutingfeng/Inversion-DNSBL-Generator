@@ -5,12 +5,18 @@ from hashlib import sha256
 from tqdm import tqdm
 
 from logger_utils import init_logger
+from safebrowsing import chunks
 
 # sqlite> .header on
 # sqlite> .mode column
 
 logger = init_logger()
 database = "urls.db"
+
+
+def flatten(list_of_lists):
+    """Flattens a list_of_lists. Returns a generator"""
+    return (item for sublist in list_of_lists for item in sublist)
 
 
 def create_connection(db_file=database):
@@ -39,16 +45,14 @@ def create_urls_table(table_name):
         with conn:
             cur = conn.cursor()
             cur.execute(
-                """CREATE TABLE IF NOT EXISTS {} (
+                f"""CREATE TABLE IF NOT EXISTS {table_name} (
                            url text UNIQUE,
                            lastListed integer,
                            lastGoogleMalicious integer,
                            lastYandexMalicious integer,
                            lastReachable integer,
                            hash blob
-                           );""".format(
-                    table_name
-                )
+                           );"""
             )
     except Error as e:
         logging.error(e)
@@ -83,17 +87,22 @@ def add_URLs(urls, updateTime, filename):
         with conn:
             cur = conn.cursor()
             logging.info("Performing INSERT-UPDATE URLs to DB...")
-            cur.executemany(
-                """
-            INSERT INTO {} (url, lastListed, hash)
-            VALUES (?, ?, ?)
-            ON CONFLICT(url)
-            DO UPDATE SET lastListed=excluded.lastListed
-            """.format(
-                    table_name
-                ),
-                ((url, lastListed, compute_url_hash(url)) for url in urls),
-            )
+            batch_size = 50
+            url_batches = list(chunks(urls, batch_size))
+
+            for url_batch in tqdm(url_batches):
+                cur.execute(
+                    f"""
+                INSERT INTO {table_name} (url, lastListed, hash)
+                VALUES {",".join(("(?,?,?)" for _ in range(len(url_batch))))}
+                ON CONFLICT(url)
+                DO UPDATE SET lastListed=excluded.lastListed
+                """,
+                    flatten(
+                        ((url, lastListed, compute_url_hash(url)) for url in url_batch)
+                    ),
+                )
+
             logging.info("Performing INSERT-UPDATE to DB... [DONE]")
     except Error as e:
         logging.error(e)
