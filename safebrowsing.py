@@ -1,6 +1,7 @@
 from __future__ import annotations
 import time
 from dotenv import dotenv_values
+from list_utils import chunks
 from logger_utils import init_logger
 from ray_utils import execute_tasks
 import requests
@@ -17,12 +18,6 @@ logger = init_logger()
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
-
-
-def chunks(lst: list, n: int) -> list:
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i : i + n]
 
 
 class SafeBrowsing:
