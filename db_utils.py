@@ -276,7 +276,7 @@ def initialise_database(urls_filenames):
 def update_malicious_URLs(malicious_urls, updateTime, vendor):
     """
     Updates malicious status of all urls currently in DB
-    i.e. urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
+    i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
     logging.info(f"Updating DB with verified {vendor} malicious URLs")
     urls_tables = get_urls_tables()
@@ -309,10 +309,11 @@ def retrieve_malicious_URLs():
     """
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
-    malicious_urls = set()
-    urls_tables = get_urls_tables()
-    conn = create_connection()
-    for urls_table in tqdm(urls_tables):
+
+    @ray.remote
+    def retrieve_malicious_URLs_(urls_table, pba):
+        malicious_urls = set()
+        conn = create_connection()
         try:
             with conn:
                 cur = conn.cursor()
@@ -332,7 +333,13 @@ def retrieve_malicious_URLs():
                 malicious_urls.update([x[0] for x in cur.fetchall()])
         except Error as e:
             logging.error(e)
-    conn.close()
+        conn.close()
+        pba.update.remote(1)
+        return malicious_urls
+
+    urls_tables = get_urls_tables()
+    malicious_urls = set().union(*execute_tasks(urls_tables, retrieve_malicious_URLs_))
+
     return list(malicious_urls)
 
 
