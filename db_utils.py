@@ -264,8 +264,6 @@ def create_maliciousHashPrefixes_table():
 
 
 def initialise_database(urls_filenames):
-    # Create database with 2 tables
-
     conn = create_connection()
     if conn is None:
         raise Exception("Failed to initialise database")
@@ -278,10 +276,9 @@ def initialise_database(urls_filenames):
 def update_malicious_URLs(malicious_urls, updateTime, vendor):
     """
     Updates malicious status of all urls currently in DB
-    i.e. urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
+    i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
     logging.info(f"Updating DB with verified {vendor} malicious URLs")
-    number_of_malicious_urls = len(malicious_urls)
     urls_tables = get_urls_tables()
     vendorToColumn = {"Google": "lastGoogleMalicious", "Yandex": "lastYandexMalicious"}
     if vendor not in vendorToColumn:
@@ -289,16 +286,20 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor):
     for urls_table in tqdm(urls_tables):
         conn = create_connection()
         try:
-            with conn:
-                cur = conn.cursor()
-                cur.execute(
-                    f"""
-        UPDATE {urls_table}
-        SET {vendorToColumn[vendor]} = ?
-        WHERE url IN ({','.join('?'*number_of_malicious_urls)})
-        """,
-                    (updateTime, *malicious_urls),
-                )
+            batch_size = 30_000
+            malicious_url_batches = list(chunks(malicious_urls, batch_size))
+            for malicious_url_batch in malicious_url_batches:
+                malicious_url_batch_length = len(malicious_url_batch)
+                with conn:
+                    cur = conn.cursor()
+                    cur.execute(
+                        f"""
+                        UPDATE {urls_table}
+                        SET {vendorToColumn[vendor]} = ?
+                        WHERE url IN ({','.join('?'*malicious_url_batch_length)})
+                        """,
+                        (updateTime, *malicious_url_batch),
+                    )
         except Error as e:
             logging.error(e)
         conn.close()
@@ -308,10 +309,11 @@ def retrieve_malicious_URLs():
     """
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
-    malicious_urls = set()
-    urls_tables = get_urls_tables()
-    conn = create_connection()
-    for urls_table in tqdm(urls_tables):
+
+    @ray.remote
+    def retrieve_malicious_URLs_(urls_table, pba):
+        malicious_urls = set()
+        conn = create_connection()
         try:
             with conn:
                 cur = conn.cursor()
@@ -331,7 +333,13 @@ def retrieve_malicious_URLs():
                 malicious_urls.update([x[0] for x in cur.fetchall()])
         except Error as e:
             logging.error(e)
-    conn.close()
+        conn.close()
+        pba.update.remote(1)
+        return malicious_urls
+
+    urls_tables = get_urls_tables()
+    malicious_urls = set().union(*execute_tasks(urls_tables, retrieve_malicious_URLs_))
+
     return list(malicious_urls)
 
 
@@ -341,21 +349,24 @@ def update_activity_URLs(alive_urls, updateTime):
     i.e. urls found alive, set lastReachable value to updateTime
     """
     logging.info("Updating DB with URL host statuses")
-    number_of_alive_urls = len(alive_urls)
     urls_tables = get_urls_tables()
     for urls_table in tqdm(urls_tables):
         conn = create_connection()
         try:
-            with conn:
-                cur = conn.cursor()
-                cur.execute(
-                    f"""
-        UPDATE {urls_table}
-        SET lastReachable = ?
-        WHERE url IN ({','.join('?'*number_of_alive_urls)})
-        """,
-                    (updateTime, *alive_urls),
-                )
+            batch_size = 30_000
+            alive_url_batches = list(chunks(alive_urls, batch_size))
+            for alive_url_batch in alive_url_batches:
+                alive_url_batch_length = len(alive_url_batch)
+                with conn:
+                    cur = conn.cursor()
+                    cur.execute(
+                        f"""
+                    UPDATE {urls_table}
+                    SET lastReachable = ?
+                    WHERE url IN ({','.join('?'*alive_url_batch_length)})
+                    """,
+                        (updateTime, *alive_url_batch),
+                    )
         except Error as e:
             logging.error(e)
         conn.close()

@@ -5,3 +5,6 @@ __pycache__/
 urls.db*
 debug.py
 debug.rest
+sandbox.ipynb
+.ipynb_checkpoints/
+leveldb*

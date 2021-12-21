@@ -24,9 +24,9 @@ def update_database():
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
-
-    urls_filenames = []
     """
+    urls_filenames = []
+
     # Get local urls_filenames
     local_domains_dir = (
         pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
@@ -42,18 +42,18 @@ def update_database():
             ]:  # file.lower().endswith('.txt'):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
-    """
-    urls_filenames.append("top1m_urls")
-    urls_filenames.append("top10m_urls")
+
+    # urls_filenames.append("top1m_urls")
+    # urls_filenames.append("top10m_urls")
     # Create DB tables
     initialise_database(urls_filenames)
-    """
+
     # Extract and Add local URLs to DB tables
     for filepath, filename in tqdm(list(zip(local_domains_filepaths, urls_filenames))):
         local_urls = get_local_file_url_list(filepath)
         add_URLs(local_urls, updateTime, filename)
         del local_urls  # "frees" memory
-    """
+    
     # Download and Add TOP1M and TOP10M URLs to DB
     top1m_urls, top10m_urls = ray.get(
         [get_top1m_url_list.remote(), get_top10m_url_list.remote()]
@@ -62,7 +62,8 @@ def update_database():
     del top1m_urls
     add_URLs(top10m_urls, updateTime, "top10m_urls")
     del top10m_urls
-
+    """
+    """
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -83,7 +84,7 @@ def update_database():
 
         # Update vendor_malicious_urls to DB
         update_malicious_URLs(vendor_malicious_urls, updateTime, vendor)
-
+    """
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     malicious_urls = retrieve_malicious_URLs()
     write_all_malicious_urls_to_file(malicious_urls)

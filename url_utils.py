@@ -9,7 +9,6 @@ from requests_utils import get_with_retries
 from tqdm import tqdm
 import math
 import ray
-import pathlib
 
 logger = init_logger()
 
