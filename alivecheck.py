@@ -8,12 +8,10 @@ from ray_utils import execute_tasks
 logger = init_logger()
 
 
-@ray.remote
-def fping(url, pba):
+def fping(url):
     # "fast pings" a given url, visit https://fping.org/ to learn more about the 'fping' command
     CMD = f"fping {url}"
     output = subprocess.run(CMD, shell=True, capture_output=True)
-    pba.update.remote(1)
     return output
 
 

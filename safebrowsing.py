@@ -84,10 +84,7 @@ class SafeBrowsing:
         return data
 
     def threatMatches_lookup(self):
-        @ray.remote
-        def threatMatches_lookup_(
-            url_batch: list[str], actor_id: ray._raylet.ObjectRef
-        ) -> Response:
+        def threatMatches_lookup_(url_batch: list[str]) -> Response:
             """Returns Safe Browsing API threatMatches for a given list of URLs"""
 
             data = SafeBrowsing.threatMatches_payload(url_batch)
@@ -98,7 +95,6 @@ class SafeBrowsing:
                 res = requests.Response()
 
             time.sleep(2)  # To prevent rate limiting
-            actor_id.update.remote(1)  # Update progressbar
             return res
 
         return threatMatches_lookup_

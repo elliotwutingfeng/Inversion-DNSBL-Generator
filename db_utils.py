@@ -154,8 +154,7 @@ def get_urls_tables():
     return urls_tables
 
 
-@ray.remote
-def get_matching_hashPrefix_urls(task, pba):
+def get_matching_hashPrefix_urls(task):
     urls_table, prefixSize, vendor = task
     conn = create_connection()
     urls = []
@@ -172,7 +171,7 @@ def get_matching_hashPrefix_urls(task, pba):
     except Error as e:
         logging.error(e)
     conn.close()
-    pba.update.remote(1)
+
     return urls
 
 
@@ -310,8 +309,7 @@ def retrieve_malicious_URLs():
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
 
-    @ray.remote
-    def retrieve_malicious_URLs_(urls_table, pba):
+    def retrieve_malicious_URLs_(urls_table):
         malicious_urls = set()
         conn = create_connection()
         try:
@@ -334,7 +332,7 @@ def retrieve_malicious_URLs():
         except Error as e:
             logging.error(e)
         conn.close()
-        pba.update.remote(1)
+
         return malicious_urls
 
     urls_tables = get_urls_tables()

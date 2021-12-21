@@ -105,7 +105,14 @@ def execute_tasks(tasks: list, task_handler) -> list:
     actor = pb.actor
     actor_id = ray.put(actor)
 
-    tasks_pre_launch = [task_handler.remote(task, actor_id) for task in tasks]
+    @ray.remote
+    def aux(task_handler, task, actor_id):
+        """Runs task handler on task, updates progressbar and finally returns the result"""
+        result = task_handler(task)
+        actor_id.update.remote(1)
+        return result
+
+    tasks_pre_launch = [aux.remote(task_handler, task, actor_id) for task in tasks]
 
     # Opens progressbar until all tasks are completed
     pb.print_until_done()
