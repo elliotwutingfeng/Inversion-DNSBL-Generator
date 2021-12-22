@@ -16,7 +16,7 @@ from db_utils import (
 )
 from alivecheck import check_activity_URLs
 from filewriter import write_all_malicious_urls_to_file
-from ray_utils import execute_tasks
+from ray_utils import execute_with_ray
 from safebrowsing import SafeBrowsing
 from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_url_list
 
@@ -37,7 +37,7 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if "germany" in root:  # file.lower().endswith('.txt'):
+            if file.lower().endswith(".txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
@@ -45,24 +45,20 @@ def update_database():
     # urls_filenames.append("top10m_urls")
     # Create DB files
     initialise_database(urls_filenames)
-
+    """
     # Extract and Add local URLs to DB tables
-    execute_tasks(
+    execute_with_ray(
         [
             (get_local_file_url_list, updateTime, filename, filepath)
             for filepath, filename in zip(local_domains_filepaths, urls_filenames)
         ],
         add_URLs,
     )
-    """
-    
+
     # Download and Add TOP1M and TOP10M URLs to DB
     add_URLs(get_top1m_url_list, updateTime, "top1m_urls")
-    del top1m_urls
     add_URLs(get_top10m_url_list, updateTime, "top10m_urls")
-    del top10m_urls
-    
-
+    """
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -75,14 +71,15 @@ def update_database():
         sb = SafeBrowsing(vendor)
 
         # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
-        suspected_urls = []
-        for filename in urls_filenames:
-            suspected_urls += identify_suspected_urls(vendor, filename)
+        suspected_urls = execute_with_ray(
+            [(vendor, filename) for filename in urls_filenames], identify_suspected_urls
+        )
 
         # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
         vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
         del suspected_urls  # "frees" memory
 
+        # To parallelise
         # Update vendor_malicious_urls to DB
         for filename in urls_filenames:
             update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
@@ -90,7 +87,7 @@ def update_database():
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     malicious_urls = retrieve_malicious_URLs(urls_filenames)
     write_all_malicious_urls_to_file(malicious_urls)
-    """
+
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)

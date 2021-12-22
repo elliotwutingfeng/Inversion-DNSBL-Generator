@@ -7,7 +7,7 @@ import ray
 from list_utils import chunks, flatten
 import os
 from logger_utils import init_logger
-from ray_utils import execute_tasks
+from ray_utils import execute_with_ray
 
 
 # sqlite> .header on
@@ -175,7 +175,7 @@ def identify_suspected_urls(vendor, filename):
 
         # Find all urls with matching hash_prefixes
         suspected_urls = flatten(
-            execute_tasks(
+            execute_with_ray(
                 [(filename, prefixSize, vendor) for prefixSize in prefixSizes],
                 get_matching_hashPrefix_urls,
             )
@@ -216,7 +216,7 @@ def create_maliciousHashPrefixes_table():
 def initialise_database(urls_filenames):
     # initialise tables
     logging.info(f"Creating .db files for {len(urls_filenames)} .txt files")
-    execute_tasks([(filename,) for filename in urls_filenames], create_urls_table)
+    execute_with_ray([(filename,) for filename in urls_filenames], create_urls_table)
     create_maliciousHashPrefixes_table()
 
 
@@ -282,7 +282,7 @@ def retrieve_malicious_URLs(urls_filenames):
         return malicious_urls
 
     malicious_urls = set().union(
-        *execute_tasks(
+        *execute_with_ray(
             [(filename,) for filename in urls_filenames], retrieve_malicious_URLs_
         )
     )

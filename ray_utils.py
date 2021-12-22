@@ -87,7 +87,7 @@ class ProgressBar:
                 return
 
 
-def execute_tasks(tasks: list, task_handler) -> list:
+def execute_with_ray(tasks: list, task_handler) -> list:
     """Apply task_handler to list of tasks.
 
     Tasks are processed in parallel with pipelining.
