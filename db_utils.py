@@ -45,7 +45,6 @@ def create_connection(filename):
 
 def create_urls_table(filename):
     conn = create_connection(filename)
-    logging.info(f"Creating urls table for {filename} if it does not exist...")
     try:
         with conn:
             cur = conn.cursor()
@@ -214,9 +213,9 @@ def create_maliciousHashPrefixes_table():
 
 
 def initialise_database(urls_filenames):
-    for filename in urls_filenames:
-        # initialise tables
-        create_urls_table(filename)
+    # initialise tables
+    logging.info(f"Creating .db files for {len(urls_filenames)} .txt files")
+    execute_tasks([(filename,) for filename in urls_filenames], create_urls_table)
     create_maliciousHashPrefixes_table()
 
 
