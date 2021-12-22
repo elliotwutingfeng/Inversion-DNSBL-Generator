@@ -111,7 +111,7 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
     logging.info(f"Updating DB with {vendor} malicious URL hashes")
-    conn = create_connection("maliciousHashPrefixes")
+    conn = create_connection("malicious")
     try:
         with conn:
             cur = conn.cursor()
@@ -139,13 +139,11 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
     try:
         with conn:
             cur = conn.cursor()
-            cur = cur.execute(
-                "ATTACH database 'databases/maliciousHashPrefixes.db' as maliciousHashPrefixes"
-            )
+            cur = cur.execute("ATTACH database 'databases/malicious.db' as malicious")
 
             cur = cur.execute(
                 f"""SELECT url from urls 
-                WHERE substring(urls.hash,1,?) in (select hashPrefix from maliciousHashPrefixes.maliciousHashPrefixes
+                WHERE substring(urls.hash,1,?) in (select hashPrefix from malicious.maliciousHashPrefixes
                 WHERE vendor = ?)""",
                 (prefixSize, vendor),
             )
@@ -158,7 +156,7 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
 
 
 def retrieve_vendor_prefixSizes(vendor):
-    conn = create_connection("maliciousHashPrefixes")
+    conn = create_connection("malicious")
     try:
         with conn:
             # Find all prefixSizes
@@ -203,7 +201,7 @@ def create_maliciousHashPrefixes_table():
     :param create_table_sql: a CREATE TABLE statement
     :return:
     """
-    conn = create_connection("maliciousHashPrefixes")
+    conn = create_connection("malicious")
     try:
         with conn:
             cur = conn.cursor()

@@ -13,6 +13,23 @@ import ray
 logger = init_logger()
 
 
+def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
+    """Generate Safe Browsing API-compliant hostname expressions
+    See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
+    """
+    hostname_expressions = set()
+    for raw_url in raw_urls:
+        ext = tldextract.extract(raw_url)
+        if ext.subdomain == "":
+            parts = [ext.registered_domain]
+        else:
+            parts = ext.subdomain.split(".") + [ext.registered_domain]
+        hostname_expressions.update(
+            [f"{'.'.join(parts[-i:])}" for i in range(min(5, len(parts)))]
+        )
+    return list(hostname_expressions)
+
+
 def get_top1m_url_list() -> list[str]:
     """Downloads the Tranco TOP1M dataset and returns all listed URLs."""
     logging.info("Downloading TOP1M list...")
@@ -32,10 +49,7 @@ def get_top1m_url_list() -> list[str]:
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
             ]
-            top1m_tlds = [
-                tldextract.extract(x).registered_domain for x in top1m_raw_urls
-            ]
-            top1m_urls = list(set(top1m_raw_urls + top1m_tlds))
+            top1m_urls = generate_hostname_expressions(top1m_raw_urls)
             logging.info("Downloading TOP1M list... [DONE]")
             return top1m_urls
     except requests.exceptions.RequestException as e:
@@ -63,10 +77,7 @@ def get_top10m_url_list() -> list[str]:
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             ]
-            top10m_tlds = [
-                tldextract.extract(x).registered_domain for x in top10m_raw_urls
-            ]
-            top10m_urls = list(set(top10m_raw_urls + top10m_tlds))
+            top10m_urls = generate_hostname_expressions(top10m_raw_urls)
             logging.info("Downloading TOP10M list... [DONE]")
             return top10m_urls
     except requests.exceptions.RequestException as e:
@@ -80,8 +91,7 @@ def get_local_file_url_list(file: str) -> list[str]:
     try:
         with open(file, "r") as f:
             raw_urls = [_.strip() for _ in f.readlines()]
-            tlds = [tldextract.extract(x).registered_domain for x in raw_urls]
-            urls = list(set(raw_urls + tlds))
+            urls = generate_hostname_expressions(raw_urls)
             logging.info(f"Extracting local list ({file}) ... [DONE]")
         return urls
     except OSError as e:
