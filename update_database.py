@@ -37,10 +37,7 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file in [
-                "domain2multi-af00.txt",
-                "domain2multi-ax00.txt",
-            ]:  # file.lower().endswith('.txt'):
+            if "germany" in root:  # file.lower().endswith('.txt'):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
@@ -50,28 +47,19 @@ def update_database():
     initialise_database(urls_filenames)
 
     # Extract and Add local URLs to DB tables
-    """
-    for filepath, filename in tqdm(list(zip(local_domains_filepaths, urls_filenames))):
-        local_urls = get_local_file_url_list(filepath)
-        add_URLs(local_urls, updateTime, filename)
-        del local_urls  # "frees" memory
-    """
     execute_tasks(
-        (
-            (get_local_file_url_list(filepath), updateTime, filename)
+        [
+            (get_local_file_url_list, updateTime, filename, filepath)
             for filepath, filename in zip(local_domains_filepaths, urls_filenames)
-        ),
+        ],
         add_URLs,
     )
     """
     
     # Download and Add TOP1M and TOP10M URLs to DB
-    top1m_urls, top10m_urls = ray.get(
-        [get_top1m_url_list.remote(), get_top10m_url_list.remote()]
-    )
-    add_URLs(top1m_urls, updateTime, "top1m_urls")
+    add_URLs(get_top1m_url_list, updateTime, "top1m_urls")
     del top1m_urls
-    add_URLs(top10m_urls, updateTime, "top10m_urls")
+    add_URLs(get_top10m_url_list, updateTime, "top10m_urls")
     del top10m_urls
     
 

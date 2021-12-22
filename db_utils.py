@@ -68,11 +68,12 @@ def compute_url_hash(url):
     return sha256(f"{url}/".encode()).digest()
 
 
-def add_URLs(urls, updateTime, filename):
+def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
     """
     Add a list of urls into filename's urls_{id} table
     If any given url already exists, update its lastListed field
     """
+    urls = url_list_fetcher() if filepath == None else url_list_fetcher(filepath)
     lastListed = updateTime
     conn = create_connection(filename)
     try:
@@ -84,7 +85,7 @@ def add_URLs(urls, updateTime, filename):
             batch_size = 50
             url_batches = list(chunks(urls, batch_size))
 
-            for url_batch in tqdm(url_batches):
+            for url_batch in url_batches:
                 cur.execute(
                     f"""
                 INSERT INTO urls (url, lastListed, hash)
