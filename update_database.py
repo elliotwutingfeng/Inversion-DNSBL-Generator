@@ -23,7 +23,7 @@ from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_ur
 
 def update_database():
     ray.shutdown()
-    ray.init(include_dashboard=False, num_cpus=4)
+    ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames = []
@@ -37,7 +37,7 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith(".txt"):
+            if file.lower().endswith("domain2multi-canon00.txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
@@ -88,7 +88,7 @@ def update_database():
 
         # To parallelise
         # Update vendor_malicious_urls to DB
-        for filename in urls_filenames:
+        for filename in tqdm(urls_filenames):
             update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
 
     # Write malicious_urls to TXT file (overwrites existing TXT file)

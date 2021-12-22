@@ -136,18 +136,18 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
 def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
     conn = create_connection(filename)
     urls = []
-
     try:
         with conn:
             cur = conn.cursor()
             cur = cur.execute(
                 "ATTACH database 'databases/maliciousHashPrefixes.db' as maliciousHashPrefixes"
             )
+
             cur = cur.execute(
                 f"""SELECT url from urls INNER JOIN maliciousHashPrefixes.maliciousHashPrefixes 
-                WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.maliciousHashPrefixes.hashPrefix 
-                AND maliciousHashPrefixes.maliciousHashPrefixes.vendor = ?;""",
-                (prefixSize, vendor),
+                WHERE maliciousHashPrefixes.maliciousHashPrefixes.vendor = ? 
+                AND substring(urls.hash,1,?) = maliciousHashPrefixes.maliciousHashPrefixes.hashPrefix""",
+                (vendor, prefixSize),
             )
             urls = [x[0] for x in cur.fetchall()]
     except Error as e:
@@ -178,6 +178,7 @@ def identify_suspected_urls(vendor, filename):
             execute_with_ray(
                 [(filename, prefixSize, vendor) for prefixSize in prefixSizes],
                 get_matching_hashPrefix_urls,
+                progress_bar=False,
             )
         )
 
