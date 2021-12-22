@@ -19,6 +19,7 @@ from filewriter import write_all_malicious_urls_to_file
 from ray_utils import execute_with_ray
 from safebrowsing import SafeBrowsing
 from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_url_list
+from list_utils import flatten
 
 
 def update_database():
@@ -37,7 +38,7 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith("domain2multi-canon00.txt"):
+            if file.lower().endswith(".txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
@@ -76,8 +77,11 @@ def update_database():
         sb = SafeBrowsing(vendor)
 
         # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
-        suspected_urls = execute_with_ray(
-            [(vendor, filename) for filename in urls_filenames], identify_suspected_urls
+        suspected_urls = flatten(
+            execute_with_ray(
+                [(vendor, filename) for filename in urls_filenames],
+                identify_suspected_urls,
+            )
         )
 
         # To Improve: If suspected_urls ever gets too large to fit in RAM we may need to store it in a temporary SQLITE file (or levelDB?)

@@ -158,7 +158,7 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
 
 
 def identify_suspected_urls(vendor, filename):
-    logging.info(f"Identifying suspected {vendor} malicious URLs for {filename}")
+    # logging.info(f"Identifying suspected {vendor} malicious URLs for {filename}")
     conn = create_connection(filename)
     try:
         with conn:

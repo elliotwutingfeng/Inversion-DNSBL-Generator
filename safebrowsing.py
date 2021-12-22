@@ -103,7 +103,9 @@ class SafeBrowsing:
         url_batches = list(chunks(urls, self.maximum_url_batch_size))
         logging.info(f"{len(url_batches)} batches")
         results = execute_with_ray(
-            [(url_batch,) for url_batch in url_batches], self.threatMatches_lookup
+            [(url_batch,) for url_batch in url_batches],
+            self.threatMatches_lookup,
+            progress_bar=False,
         )
 
         malicious = list(
