@@ -34,7 +34,7 @@ if __name__ == "__main__":
     else:
         ray.shutdown()
         ray.init(include_dashboard=False)
-        test_urls = ray.get([get_top1m_url_list.remote()])[0][-testing_quantity:]
+        test_urls = get_top1m_url_list()[-testing_quantity:]
 
         gsb = SafeBrowsing("Google")
         google_malicious_urls = gsb.get_malicious_URLs(test_urls)

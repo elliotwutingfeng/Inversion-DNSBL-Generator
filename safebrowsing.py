@@ -3,12 +3,11 @@ import time
 from dotenv import dotenv_values
 from list_utils import chunks
 from logger_utils import init_logger
-from ray_utils import execute_tasks
+from ray_utils import execute_with_ray
 import requests
 from requests.models import Response
 import itertools
 import logging
-import ray
 from tqdm import tqdm
 import base64
 
@@ -83,21 +82,18 @@ class SafeBrowsing:
         }
         return data
 
-    def threatMatches_lookup(self):
-        def threatMatches_lookup_(url_batch: list[str]) -> Response:
-            """Returns Safe Browsing API threatMatches for a given list of URLs"""
+    def threatMatches_lookup(self, url_batch: list[str]) -> Response:
+        """Returns Safe Browsing API threatMatches for a given list of URLs"""
 
-            data = SafeBrowsing.threatMatches_payload(url_batch)
-            try:
-                # Make POST request for each sublist of URLs
-                res = post_with_retries(self.threatMatchesEndpoint, data)
-            except requests.exceptions.RequestException as e:
-                res = requests.Response()
+        data = SafeBrowsing.threatMatches_payload(url_batch)
+        try:
+            # Make POST request for each sublist of URLs
+            res = post_with_retries(self.threatMatchesEndpoint, data)
+        except requests.exceptions.RequestException as e:
+            res = requests.Response()
 
-            time.sleep(2)  # To prevent rate limiting
-            return res
-
-        return threatMatches_lookup_
+        time.sleep(2)  # To prevent rate limiting
+        return res
 
     def get_malicious_URLs(self, urls: list[str]) -> list[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
@@ -105,7 +101,12 @@ class SafeBrowsing:
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = list(chunks(urls, self.maximum_url_batch_size))
         logging.info(f"{len(url_batches)} batches")
-        results = execute_tasks(url_batches, self.threatMatches_lookup())
+        results = execute_with_ray(
+            [(url_batch,) for url_batch in url_batches],
+            self.threatMatches_lookup,
+            progress_bar=False,
+        )
+
         malicious = list(
             itertools.chain(
                 *[

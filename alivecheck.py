@@ -3,7 +3,7 @@ import subprocess
 import logging
 from logger_utils import init_logger
 
-from ray_utils import execute_tasks
+from ray_utils import execute_with_ray
 
 logger = init_logger()
 
@@ -18,7 +18,7 @@ def fping(url):
 def check_activity_URLs(urls_to_be_checked):
     logging.info("Checking host statuses of URLs with fping")
     # Check URL host statuses with fping
-    results = execute_tasks(urls_to_be_checked, fping)
+    results = execute_with_ray(urls_to_be_checked, fping)
     alive_and_not_dns_blocked_urls = []
     alive_and_dns_blocked_urls = []
     unreachable_urls = []
