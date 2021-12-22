@@ -73,7 +73,7 @@ def update_database():
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
     """
-
+    """
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -81,7 +81,7 @@ def update_database():
         suspected_urls = []
         for filename in urls_filenames:
             suspected_urls += identify_suspected_urls(vendor, filename)
-    """
+
         # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
         vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
         del suspected_urls  # "frees" memory
@@ -89,17 +89,16 @@ def update_database():
         # Update vendor_malicious_urls to DB
         for filename in urls_filenames:
             update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
+    """
 
     # Write malicious_urls to TXT file (overwrites existing TXT file)
-    malicious_urls = []
-    for filename in urls_filenames:
-        malicious_urls += retrieve_malicious_URLs(filename)
+    malicious_urls = retrieve_malicious_URLs(urls_filenames)
     write_all_malicious_urls_to_file(malicious_urls)
-    """
+
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
-    update_activity_URLs(alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime)
+    update_activity_URLs(alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime, filenames)
     """
 
     # push to GitHub

@@ -133,25 +133,6 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     conn.close()
 
 
-# Deprecated
-def get_urls_tables(filename):
-    conn = create_connection(filename)
-    try:
-        with conn:
-            cur = conn.cursor()
-            cur = cur.execute("SELECT id FROM urls_filenames")
-            ids = [int(x[0]) for x in cur.fetchall()]
-            urls_tables = [f"urls_{id}" for id in ids]
-    except Error as e:
-        logging.error(e)
-    conn.close()
-
-    return urls_tables
-
-
-# End Deprecated
-
-
 def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
     conn = create_connection(filename)
     urls = []
@@ -265,53 +246,51 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
     Updates malicious status of all urls currently in DB
     i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
-    logging.info(f"Updating DB with verified {vendor} malicious URLs")
-    urls_tables = get_urls_tables(filename)
+    logging.info(f"Updating {filename} DB with verified {vendor} malicious URLs")
     vendorToColumn = {"Google": "lastGoogleMalicious", "Yandex": "lastYandexMalicious"}
     if vendor not in vendorToColumn:
         raise ValueError('vendor must be "Google" or "Yandex"')
-    for urls_table in tqdm(urls_tables):
-        conn = create_connection()
-        try:
-            batch_size = 30_000
-            malicious_url_batches = list(chunks(malicious_urls, batch_size))
-            for malicious_url_batch in malicious_url_batches:
-                malicious_url_batch_length = len(malicious_url_batch)
-                with conn:
-                    cur = conn.cursor()
-                    cur.execute(
-                        f"""
-                        UPDATE {urls_table}
-                        SET {vendorToColumn[vendor]} = ?
-                        WHERE url IN ({','.join('?'*malicious_url_batch_length)})
-                        """,
-                        (updateTime, *malicious_url_batch),
-                    )
-        except Error as e:
-            logging.error(e)
-        conn.close()
+    conn = create_connection(filename)
+    try:
+        batch_size = 30_000
+        malicious_url_batches = list(chunks(malicious_urls, batch_size))
+        for malicious_url_batch in malicious_url_batches:
+            malicious_url_batch_length = len(malicious_url_batch)
+            with conn:
+                cur = conn.cursor()
+                cur.execute(
+                    f"""
+                    UPDATE urls
+                    SET {vendorToColumn[vendor]} = ?
+                    WHERE url IN ({','.join('?'*malicious_url_batch_length)})
+                    """,
+                    (updateTime, *malicious_url_batch),
+                )
+    except Error as e:
+        logging.error(e)
+    conn.close()
 
 
-def retrieve_malicious_URLs(filename):
+def retrieve_malicious_URLs(urls_filenames):
     """
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
 
-    def retrieve_malicious_URLs_(urls_table):
+    def retrieve_malicious_URLs_(filename):
         malicious_urls = set()
         conn = create_connection(filename)
         try:
             with conn:
                 cur = conn.cursor()
                 # Most recent lastGoogleMalicious timestamp
-                cur.execute(f"SELECT MAX(lastGoogleMalicious) from {urls_table}")
+                cur.execute(f"SELECT MAX(lastGoogleMalicious) from urls")
                 lastGoogleMalicious = [x[0] for x in cur.fetchall()][0]
                 # Most recent lastYandexMalicious timestamp
-                cur.execute(f"SELECT MAX(lastYandexMalicious) from {urls_table}")
+                cur.execute(f"SELECT MAX(lastYandexMalicious) from urls")
                 lastYandexMalicious = [x[0] for x in cur.fetchall()][0]
                 cur.execute(
                     f"""
-        SELECT url from {urls_table}
+        SELECT url from urls
         WHERE lastGoogleMalicious = ? OR lastYandexMalicious = ?
         """,
                     (lastGoogleMalicious, lastYandexMalicious),
@@ -323,21 +302,22 @@ def retrieve_malicious_URLs(filename):
 
         return malicious_urls
 
-    urls_tables = get_urls_tables(filename)
-    malicious_urls = set().union(*execute_tasks(urls_tables, retrieve_malicious_URLs_))
+    # To parallelise
+    malicious_urls = set().union(
+        *[retrieve_malicious_URLs_(filename) for filename in urls_filenames]
+    )
 
     return list(malicious_urls)
 
 
-def update_activity_URLs(alive_urls, updateTime):
+def update_activity_URLs(alive_urls, updateTime, filenames):
     """
     Updates alive status of all urls currently in DB
     i.e. urls found alive, set lastReachable value to updateTime
     """
     logging.info("Updating DB with URL host statuses")
-    urls_tables = get_urls_tables(filename)
-    for urls_table in tqdm(urls_tables):
-        conn = create_connection()
+    for filename in tqdm(filenames):
+        conn = create_connection(filename)
         try:
             batch_size = 30_000
             alive_url_batches = list(chunks(alive_urls, batch_size))
@@ -347,7 +327,7 @@ def update_activity_URLs(alive_urls, updateTime):
                     cur = conn.cursor()
                     cur.execute(
                         f"""
-                    UPDATE {urls_table}
+                    UPDATE urls
                     SET lastReachable = ?
                     WHERE url IN ({','.join('?'*alive_url_batch_length)})
                     """,
