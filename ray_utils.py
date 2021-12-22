@@ -87,6 +87,15 @@ class ProgressBar:
                 return
 
 
+@ray.remote
+def aux(task_handler, task, actor_id=None):
+    """Runs task handler on task, updates progressbar and finally returns the result"""
+    result = task_handler(*task)
+    if actor_id != None:
+        actor_id.update.remote(1)
+    return result
+
+
 def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
     """Apply task_handler to list of tasks.
 
@@ -105,14 +114,6 @@ def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
         pb = ProgressBar(num_ticks)
         actor = pb.actor
         actor_id = ray.put(actor)
-
-    @ray.remote
-    def aux(task_handler, task, actor_id=None):
-        """Runs task handler on task, updates progressbar and finally returns the result"""
-        result = task_handler(*task)
-        if actor_id != None:
-            actor_id.update.remote(1)
-        return result
 
     tasks_pre_launch = [
         aux.remote(task_handler, task, actor_id=actor_id if progress_bar else None)
