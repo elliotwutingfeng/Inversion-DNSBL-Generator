@@ -29,7 +29,7 @@ def update_database():
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames = []
-
+    """
     # Get local urls_filenames
     local_domains_dir = (
         pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
@@ -37,14 +37,13 @@ def update_database():
     local_domains_filepaths = []
     for root, _, files in tqdm(list(os.walk(local_domains_dir))):
         for file in files:
-            # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
             if file.lower().endswith(".txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
-
-    # urls_filenames.append("top1m_urls")
-    # urls_filenames.append("top10m_urls")
+    """
+    urls_filenames.append("top1m_urls")
+    urls_filenames.append("top10m_urls")
     # Create DB files
     initialise_database(urls_filenames)
     """
@@ -56,7 +55,7 @@ def update_database():
         ],
         add_URLs,
     )
-
+    """
     # Download and Add TOP1M and TOP10M URLs to DB
     execute_with_ray(
         [
@@ -65,7 +64,7 @@ def update_database():
         ],
         add_URLs,
     )
-    
+
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -73,7 +72,7 @@ def update_database():
         hash_prefixes = sb.get_malicious_hash_prefixes()
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
-    """
+
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
