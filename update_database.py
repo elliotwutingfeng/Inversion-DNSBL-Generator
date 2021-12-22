@@ -46,7 +46,7 @@ def update_database():
     # urls_filenames.append("top10m_urls")
     # Create DB files
     initialise_database(urls_filenames)
-    """
+
     # Extract and Add local URLs to DB
     execute_with_ray(
         [
@@ -55,7 +55,7 @@ def update_database():
         ],
         add_URLs,
     )
-    
+    """
     # Download and Add TOP1M and TOP10M URLs to DB
     execute_with_ray(
         [
@@ -74,7 +74,7 @@ def update_database():
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
     """
-
+    """
     malicious_urls = []
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
@@ -103,7 +103,7 @@ def update_database():
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     # malicious_urls = retrieve_malicious_URLs(urls_filenames)
     write_all_malicious_urls_to_file(malicious_urls)
-
+    """
     """
     # Check host statuses of URLs with fping and update host statuses to DB
     alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)

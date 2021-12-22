@@ -45,11 +45,11 @@ def get_top1m_url_list() -> list[str]:
             ):
                 f.write(data)
             zipfile = ZipFile(f)
-            top1m_raw_urls = [
+            raw_urls = [
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
             ]
-            top1m_urls = generate_hostname_expressions(top1m_raw_urls)
+            top1m_urls = generate_hostname_expressions(raw_urls)
             logging.info("Downloading TOP1M list... [DONE]")
             return top1m_urls
     except requests.exceptions.RequestException as e:
@@ -73,11 +73,11 @@ def get_top10m_url_list() -> list[str]:
             ):
                 f.write(data)
             zipfile = ZipFile(f)
-            top10m_raw_urls = [
+            raw_urls = [
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             ]
-            top10m_urls = generate_hostname_expressions(top10m_raw_urls)
+            top10m_urls = generate_hostname_expressions(raw_urls)
             logging.info("Downloading TOP10M list... [DONE]")
             return top10m_urls
     except requests.exceptions.RequestException as e:
