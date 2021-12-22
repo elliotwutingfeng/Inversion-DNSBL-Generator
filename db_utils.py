@@ -5,7 +5,7 @@ from hashlib import sha256
 from tqdm import tqdm
 import ray
 from list_utils import chunks, flatten
-
+import os
 from logger_utils import init_logger
 from ray_utils import execute_tasks
 
@@ -14,18 +14,25 @@ from ray_utils import execute_tasks
 # sqlite> .mode column
 
 logger = init_logger()
-database = "urls.db"
 
 
-def create_connection(db_file=database):
+def create_connection(filename):
     """create a database connection to the SQLite database
         specified by db_file, if db_file is None, connect to a new in-memory database
     :param db_file: database file
     :return: Connection object or None
     """
+    databases_folder = "databases"
     conn = None
+
     try:
-        conn = apsw.Connection(":memory:" if db_file == None else db_file)
+        if not os.path.exists(databases_folder):
+            os.mkdir(databases_folder)
+        conn = apsw.Connection(
+            ":memory:"
+            if filename == None
+            else f"{databases_folder}{os.sep}{filename}.db"
+        )
         cur = conn.cursor()
         cur.execute(
             "PRAGMA journal_mode = WAL"
@@ -36,14 +43,14 @@ def create_connection(db_file=database):
     return conn
 
 
-def create_urls_table(table_name):
-    conn = create_connection()
-    logging.info(f"Creating table {table_name} if it does not exist...")
+def create_urls_table(filename):
+    conn = create_connection(filename)
+    logging.info(f"Creating urls table for {filename} if it does not exist...")
     try:
         with conn:
             cur = conn.cursor()
             cur.execute(
-                f"""CREATE TABLE IF NOT EXISTS {table_name} (
+                f"""CREATE TABLE IF NOT EXISTS urls (
                            url text UNIQUE,
                            lastListed integer,
                            lastGoogleMalicious integer,
@@ -68,25 +75,12 @@ def add_URLs(urls, updateTime, filename):
     If any given url already exists, update its lastListed field
     """
     lastListed = updateTime
-    conn = create_connection()
+    conn = create_connection(filename)
     try:
         with conn:
             cur = conn.cursor()
-            # Obtain id from lookup table to use as part of generated table_name
-            cur.execute(
-                "SELECT id from urls_filenames where urls_filename=? LIMIT 1",
-                (filename,),
-            )
-            id = [int(x[0]) for x in cur.fetchall()][0]
-            table_name = f"urls_{id}"
             logging.info(
-                f"Generated table_name: {table_name} from lookup table for filename: {filename}"
-            )
-        create_urls_table(table_name)
-        with conn:
-            cur = conn.cursor()
-            logging.info(
-                f"Performing INSERT-UPDATE URLs to table {table_name} representing filename {filename}..."
+                f"Performing INSERT-UPDATE URLs to urls table of {filename}..."
             )
             batch_size = 50
             url_batches = list(chunks(urls, batch_size))
@@ -94,7 +88,7 @@ def add_URLs(urls, updateTime, filename):
             for url_batch in tqdm(url_batches):
                 cur.execute(
                     f"""
-                INSERT INTO {table_name} (url, lastListed, hash)
+                INSERT INTO urls (url, lastListed, hash)
                 VALUES {",".join(("(?,?,?)" for _ in range(len(url_batch))))}
                 ON CONFLICT(url)
                 DO UPDATE SET lastListed=excluded.lastListed
@@ -105,7 +99,7 @@ def add_URLs(urls, updateTime, filename):
                 )
 
             logging.info(
-                f"Performing INSERT-UPDATE URLs to table {table_name} representing filename {filename}... [DONE]"
+                f"Performing INSERT-UPDATE URLs to urls table of {filename}...[DONE]"
             )
     except Error as e:
         logging.error(e)
@@ -117,7 +111,7 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
     logging.info(f"Updating DB with {vendor} malicious URL hashes")
-    conn = create_connection()
+    conn = create_connection("maliciousHashPrefixes")
     try:
         with conn:
             cur = conn.cursor()
@@ -139,8 +133,9 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     conn.close()
 
 
-def get_urls_tables():
-    conn = create_connection()
+# Deprecated
+def get_urls_tables(filename):
+    conn = create_connection(filename)
     try:
         with conn:
             cur = conn.cursor()
@@ -154,17 +149,23 @@ def get_urls_tables():
     return urls_tables
 
 
-def get_matching_hashPrefix_urls(task):
-    urls_table, prefixSize, vendor = task
-    conn = create_connection()
+# End Deprecated
+
+
+def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
+    conn = create_connection(filename)
     urls = []
+
     try:
         with conn:
             cur = conn.cursor()
             cur = cur.execute(
-                f"""SELECT url from {urls_table} INNER JOIN maliciousHashPrefixes 
-                WHERE substring({urls_table}.hash,1,?) = maliciousHashPrefixes.hashPrefix 
-                AND maliciousHashPrefixes.vendor = ?;""",
+                "ATTACH database 'databases/maliciousHashPrefixes.db' as maliciousHashPrefixes"
+            )
+            cur = cur.execute(
+                f"""SELECT url from urls INNER JOIN maliciousHashPrefixes.maliciousHashPrefixes 
+                WHERE substring(urls.hash,1,?) = maliciousHashPrefixes.maliciousHashPrefixes.hashPrefix 
+                AND maliciousHashPrefixes.maliciousHashPrefixes.vendor = ?;""",
                 (prefixSize, vendor),
             )
             urls = [x[0] for x in cur.fetchall()]
@@ -175,43 +176,33 @@ def get_matching_hashPrefix_urls(task):
     return urls
 
 
-def identify_suspected_urls(vendor):
-    logging.info(f"Identifying suspected {vendor} malicious URLs")
-    conn = create_connection()
+def identify_suspected_urls(vendor, filename):
+    logging.info(f"Identifying suspected {vendor} malicious URLs for {filename}")
+    conn = create_connection(filename)
     try:
         with conn:
             # Find all prefixSizes
             cur = conn.cursor()
             cur = cur.execute(
-                "SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",
+                "ATTACH database 'databases/maliciousHashPrefixes.db' as maliciousHashPrefixes"
+            )
+            cur = cur.execute(
+                "SELECT DISTINCT prefixSize from maliciousHashPrefixes.maliciousHashPrefixes WHERE vendor = ?;",
                 (vendor,),
             )
             prefixSizes = [x[0] for x in cur.fetchall()]
 
-            suspected_urls = []
-
-            urls_tables = get_urls_tables()
-
-            combinations = [
-                (urls_table, prefixSize)
-                for prefixSize in prefixSizes
-                for urls_table in urls_tables
-            ]
-
-            # Find all urls with matching hash_prefixes
-            suspected_urls = flatten(
-                execute_tasks(
-                    [
-                        (urls_table, prefixSize, vendor)
-                        for urls_table, prefixSize in combinations
-                    ],
-                    get_matching_hashPrefix_urls,
-                )
+        # Find all urls with matching hash_prefixes
+        suspected_urls = flatten(
+            execute_tasks(
+                [(filename, prefixSize, vendor) for prefixSize in prefixSizes],
+                get_matching_hashPrefix_urls,
             )
+        )
 
-            logging.info(
-                f"{len(suspected_urls)} URLs potentially marked malicious by {vendor} Safe Browsing API."
-            )
+        logging.info(
+            f"{len(suspected_urls)} URLs from {filename} potentially marked malicious by {vendor} Safe Browsing API."
+        )
     except Error as e:
         logging.error(e)
     conn.close()
@@ -219,8 +210,8 @@ def identify_suspected_urls(vendor):
     return suspected_urls
 
 
-def create_filenames_table(urls_filenames):
-    conn = create_connection()
+def create_filenames_table(urls_filenames, filename):
+    conn = create_connection(filename)
     try:
         with conn:
             cur = conn.cursor()
@@ -246,7 +237,7 @@ def create_maliciousHashPrefixes_table():
     :param create_table_sql: a CREATE TABLE statement
     :return:
     """
-    conn = create_connection()
+    conn = create_connection("maliciousHashPrefixes")
     try:
         with conn:
             cur = conn.cursor()
@@ -263,22 +254,19 @@ def create_maliciousHashPrefixes_table():
 
 
 def initialise_database(urls_filenames):
-    conn = create_connection()
-    if conn is None:
-        raise Exception("Failed to initialise database")
-    conn.close()
-    # initialise tables
-    create_filenames_table(urls_filenames)
+    for filename in urls_filenames:
+        # initialise tables
+        create_urls_table(filename)
     create_maliciousHashPrefixes_table()
 
 
-def update_malicious_URLs(malicious_urls, updateTime, vendor):
+def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
     """
     Updates malicious status of all urls currently in DB
     i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
     logging.info(f"Updating DB with verified {vendor} malicious URLs")
-    urls_tables = get_urls_tables()
+    urls_tables = get_urls_tables(filename)
     vendorToColumn = {"Google": "lastGoogleMalicious", "Yandex": "lastYandexMalicious"}
     if vendor not in vendorToColumn:
         raise ValueError('vendor must be "Google" or "Yandex"')
@@ -304,14 +292,14 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor):
         conn.close()
 
 
-def retrieve_malicious_URLs():
+def retrieve_malicious_URLs(filename):
     """
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
 
     def retrieve_malicious_URLs_(urls_table):
         malicious_urls = set()
-        conn = create_connection()
+        conn = create_connection(filename)
         try:
             with conn:
                 cur = conn.cursor()
@@ -335,7 +323,7 @@ def retrieve_malicious_URLs():
 
         return malicious_urls
 
-    urls_tables = get_urls_tables()
+    urls_tables = get_urls_tables(filename)
     malicious_urls = set().union(*execute_tasks(urls_tables, retrieve_malicious_URLs_))
 
     return list(malicious_urls)
@@ -347,7 +335,7 @@ def update_activity_URLs(alive_urls, updateTime):
     i.e. urls found alive, set lastReachable value to updateTime
     """
     logging.info("Updating DB with URL host statuses")
-    urls_tables = get_urls_tables()
+    urls_tables = get_urls_tables(filename)
     for urls_table in tqdm(urls_tables):
         conn = create_connection()
         try:

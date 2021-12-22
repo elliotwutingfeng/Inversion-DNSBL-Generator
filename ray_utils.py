@@ -108,7 +108,7 @@ def execute_tasks(tasks: list, task_handler) -> list:
     @ray.remote
     def aux(task_handler, task, actor_id):
         """Runs task handler on task, updates progressbar and finally returns the result"""
-        result = task_handler(task)
+        result = task_handler(*task)
         actor_id.update.remote(1)
         return result
 
