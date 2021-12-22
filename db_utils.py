@@ -144,10 +144,10 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
             )
 
             cur = cur.execute(
-                f"""SELECT url from urls INNER JOIN maliciousHashPrefixes.maliciousHashPrefixes 
-                WHERE maliciousHashPrefixes.maliciousHashPrefixes.vendor = ? 
-                AND substring(urls.hash,1,?) = maliciousHashPrefixes.maliciousHashPrefixes.hashPrefix""",
-                (vendor, prefixSize),
+                f"""SELECT url from urls 
+                WHERE substring(urls.hash,1,?) in (select hashPrefix from maliciousHashPrefixes.maliciousHashPrefixes
+                WHERE vendor = ?)""",
+                (prefixSize, vendor),
             )
             urls = [x[0] for x in cur.fetchall()]
     except Error as e:

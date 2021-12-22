@@ -39,7 +39,7 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith("domain2multi-ax00.txt"):
+            if file.lower().endswith(".txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
