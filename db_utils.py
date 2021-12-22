@@ -191,27 +191,6 @@ def identify_suspected_urls(vendor, filename):
     return suspected_urls
 
 
-def create_filenames_table(urls_filenames, filename):
-    conn = create_connection(filename)
-    try:
-        with conn:
-            cur = conn.cursor()
-            cur.execute(
-                """CREATE TABLE IF NOT EXISTS urls_filenames (
-            id integer PRIMARY KEY,
-            urls_filename text UNIQUE
-                )
-                """
-            )
-            cur.executemany(
-                "INSERT OR IGNORE into urls_filenames (id,urls_filename) VALUES (?, ?)",
-                ((None, name) for name in urls_filenames),
-            )
-    except Error as e:
-        logging.error(e)
-    conn.close()
-
-
 def create_maliciousHashPrefixes_table():
     """create a table from the create_table_sql statement
     :param conn: Connection object
