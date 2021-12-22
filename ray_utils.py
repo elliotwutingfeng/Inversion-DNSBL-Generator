@@ -87,11 +87,11 @@ class ProgressBar:
                 return
 
 
-def execute_with_ray(tasks: list, task_handler) -> list:
+def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
     """Apply task_handler to list of tasks.
 
     Tasks are processed in parallel with pipelining.
-    Progressbar is shown.
+    progress_bar : If set to True, shows progressbar.
     """
     if len(tasks) == 0:
         return []
@@ -99,23 +99,29 @@ def execute_with_ray(tasks: list, task_handler) -> list:
     def process_incremental(acc, result):
         return acc + [result]
 
-    # Progressbar Ray Actor
-    num_ticks = len(tasks)
-    pb = ProgressBar(num_ticks)
-    actor = pb.actor
-    actor_id = ray.put(actor)
+    if progress_bar:
+        # Progressbar Ray Actor
+        num_ticks = len(tasks)
+        pb = ProgressBar(num_ticks)
+        actor = pb.actor
+        actor_id = ray.put(actor)
 
     @ray.remote
-    def aux(task_handler, task, actor_id):
+    def aux(task_handler, task, actor_id=None):
         """Runs task handler on task, updates progressbar and finally returns the result"""
         result = task_handler(*task)
-        actor_id.update.remote(1)
+        if actor_id != None:
+            actor_id.update.remote(1)
         return result
 
-    tasks_pre_launch = [aux.remote(task_handler, task, actor_id) for task in tasks]
+    tasks_pre_launch = [
+        aux.remote(task_handler, task, actor_id=actor_id if progress_bar else None)
+        for task in tasks
+    ]
 
     # Opens progressbar until all tasks are completed
-    pb.print_until_done()
+    if progress_bar:
+        pb.print_until_done()
 
     # Processes tasks with pipelining
     results = []

@@ -46,7 +46,7 @@ def update_database():
     # Create DB files
     initialise_database(urls_filenames)
     """
-    # Extract and Add local URLs to DB tables
+    # Extract and Add local URLs to DB
     execute_with_ray(
         [
             (get_local_file_url_list, updateTime, filename, filepath)
@@ -56,9 +56,14 @@ def update_database():
     )
 
     # Download and Add TOP1M and TOP10M URLs to DB
-    add_URLs(get_top1m_url_list, updateTime, "top1m_urls")
-    add_URLs(get_top10m_url_list, updateTime, "top10m_urls")
-    """
+    execute_with_ray(
+        [
+            (get_top1m_url_list, updateTime, "top1m_urls"),
+            (get_top10m_url_list, updateTime, "top10m_urls"),
+        ],
+        add_URLs,
+    )
+    
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -66,7 +71,7 @@ def update_database():
         hash_prefixes = sb.get_malicious_hash_prefixes()
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
-
+    """
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -74,6 +79,8 @@ def update_database():
         suspected_urls = execute_with_ray(
             [(vendor, filename) for filename in urls_filenames], identify_suspected_urls
         )
+
+        # To Improve: If suspected_urls ever gets too large to fit in RAM we may need to store it in a temporary SQLITE file (or levelDB?)
 
         # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
         vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
