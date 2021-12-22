@@ -11,6 +11,7 @@ from db_utils import (
     initialise_database,
     add_URLs,
     retrieve_malicious_URLs,
+    retrieve_vendor_prefixSizes,
     update_malicious_URLs,
     update_activity_URLs,
 )
@@ -38,7 +39,7 @@ def update_database():
         for file in files:
             # Look for dotcom URLs only
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith(".txt"):
+            if file.lower().endswith("domain2multi-ax00.txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
@@ -76,10 +77,11 @@ def update_database():
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
+        prefixSizes = retrieve_vendor_prefixSizes(vendor)
         # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
         suspected_urls = flatten(
             execute_with_ray(
-                [(vendor, filename) for filename in urls_filenames],
+                [(vendor, filename, prefixSizes) for filename in urls_filenames],
                 identify_suspected_urls,
             )
         )

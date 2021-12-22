@@ -8,7 +8,6 @@ import requests
 from requests.models import Response
 import itertools
 import logging
-import ray
 from tqdm import tqdm
 import base64
 

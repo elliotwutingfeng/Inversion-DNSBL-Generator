@@ -157,22 +157,27 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
     return urls
 
 
-def identify_suspected_urls(vendor, filename):
-    # logging.info(f"Identifying suspected {vendor} malicious URLs for {filename}")
-    conn = create_connection(filename)
+def retrieve_vendor_prefixSizes(vendor):
+    conn = create_connection("maliciousHashPrefixes")
     try:
         with conn:
             # Find all prefixSizes
             cur = conn.cursor()
             cur = cur.execute(
-                "ATTACH database 'databases/maliciousHashPrefixes.db' as maliciousHashPrefixes"
-            )
-            cur = cur.execute(
-                "SELECT DISTINCT prefixSize from maliciousHashPrefixes.maliciousHashPrefixes WHERE vendor = ?;",
+                "SELECT DISTINCT prefixSize from maliciousHashPrefixes WHERE vendor = ?;",
                 (vendor,),
             )
             prefixSizes = [x[0] for x in cur.fetchall()]
+    except Error as e:
+        logging.error(e)
+    conn.close()
+    return prefixSizes
 
+
+def identify_suspected_urls(vendor, filename, prefixSizes):
+    # logging.info(f"Identifying suspected {vendor} malicious URLs for {filename}")
+    conn = create_connection(filename)
+    try:
         # Find all urls with matching hash_prefixes
         suspected_urls = flatten(
             execute_with_ray(
