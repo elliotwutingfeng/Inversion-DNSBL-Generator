@@ -302,9 +302,10 @@ def retrieve_malicious_URLs(urls_filenames):
 
         return malicious_urls
 
-    # To parallelise
     malicious_urls = set().union(
-        *[retrieve_malicious_URLs_(filename) for filename in urls_filenames]
+        *execute_tasks(
+            [(filename,) for filename in urls_filenames], retrieve_malicious_URLs_
+        )
     )
 
     return list(malicious_urls)

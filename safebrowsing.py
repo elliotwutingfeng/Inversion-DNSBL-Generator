@@ -102,8 +102,10 @@ class SafeBrowsing:
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = list(chunks(urls, self.maximum_url_batch_size))
         logging.info(f"{len(url_batches)} batches")
-        # To parallelise
-        results = [self.threatMatches_lookup(url_batch) for url_batch in url_batches]
+        results = execute_tasks(
+            [(url_batch,) for url_batch in url_batches], self.threatMatches_lookup
+        )
+
         malicious = list(
             itertools.chain(
                 *[

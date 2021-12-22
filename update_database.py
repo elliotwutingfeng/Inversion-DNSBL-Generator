@@ -64,7 +64,7 @@ def update_database():
     add_URLs(top10m_urls, updateTime, "top10m_urls")
     del top10m_urls
     """
-    """
+
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -72,8 +72,7 @@ def update_database():
         hash_prefixes = sb.get_malicious_hash_prefixes()
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
-    """
-    """
+
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -89,7 +88,6 @@ def update_database():
         # Update vendor_malicious_urls to DB
         for filename in urls_filenames:
             update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
-    """
 
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     malicious_urls = retrieve_malicious_URLs(urls_filenames)
