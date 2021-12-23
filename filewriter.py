@@ -34,12 +34,12 @@ def write_top1m_malicious_urls_to_file(
         os.mkdir(blocklists_folder)
 
     json_filename = f"{blocklist_filename}_{current_timestamp_str()}.json"
-    with open(f"{blocklists_folder}{os.sep}{json_filename}", "w") as outfile:
+    with open(f"{blocklists_folder}{os.sep}{json_filename}", "a") as outfile:
         json.dump({"malicious": malicious_urls, "original": top1m_urls}, outfile)
         logging.info(f"File written: {json_filename}")
 
     txt_filename = f"{blocklist_filename}_{current_timestamp_str()}.txt"
-    with open(f"{blocklists_folder}{os.sep}{txt_filename}", "w") as outfile:
+    with open(f"{blocklists_folder}{os.sep}{txt_filename}", "a") as outfile:
         outfile.writelines("\n".join(malicious_urls))
         logging.info(f"File written: {txt_filename}")
 
@@ -56,6 +56,6 @@ def write_all_malicious_urls_to_file(malicious_urls: list[str]) -> None:
         os.mkdir(blocklists_folder)
 
     txt_filename = f"{blocklist_filename}_{current_timestamp_str()}.txt"
-    with open(f"{blocklists_folder}{os.sep}{txt_filename}", "w") as outfile:
+    with open(f"{blocklists_folder}{os.sep}{txt_filename}", "a") as outfile:
         outfile.writelines("\n".join(malicious_urls))
         logging.info(f"File written: {txt_filename}")

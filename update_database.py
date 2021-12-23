@@ -1,4 +1,3 @@
-## This script demonstrates the basic features of the database
 import ray
 import time
 import os
@@ -13,9 +12,8 @@ from db_utils import (
     retrieve_malicious_URLs,
     retrieve_vendor_prefixSizes,
     update_malicious_URLs,
-    update_activity_URLs,
 )
-from alivecheck import check_activity_URLs
+
 from filewriter import write_all_malicious_urls_to_file
 from ray_utils import execute_with_ray
 from safebrowsing import SafeBrowsing
@@ -30,20 +28,19 @@ def update_database():
 
     urls_filenames = []
 
-    # Get local urls_filenames
+    # Scan "Domains Project" directory for local urls_filenames
     local_domains_dir = (
         pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
     )
     local_domains_filepaths = []
     for root, _, files in tqdm(list(os.walk(local_domains_dir))):
         for file in files:
-            # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
             if file.lower().endswith("domain2multi-ax00.txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
-    # urls_filenames.append("top1m_urls")
-    # urls_filenames.append("top10m_urls")
+    urls_filenames.append("top1m_urls")
+    urls_filenames.append("top10m_urls")
     # Create DB files
     initialise_database(urls_filenames)
 
@@ -55,7 +52,7 @@ def update_database():
         ],
         add_URLs,
     )
-    """
+
     # Download and Add TOP1M and TOP10M URLs to DB
     execute_with_ray(
         [
@@ -64,8 +61,7 @@ def update_database():
         ],
         add_URLs,
     )
-    """
-    """
+
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)
 
@@ -73,7 +69,6 @@ def update_database():
         hash_prefixes = sb.get_malicious_hash_prefixes()
         add_maliciousHashPrefixes(hash_prefixes, vendor)
         del hash_prefixes  # "frees" memory
-    """
 
     malicious_urls = []
     for vendor in ["Google", "Yandex"]:
@@ -95,7 +90,7 @@ def update_database():
         del suspected_urls  # "frees" memory
         malicious_urls += vendor_malicious_urls
 
-        # Write malicious_urls to TXT file (overwrites existing TXT file)
+        # Write malicious_urls to TXT file
         write_all_malicious_urls_to_file(malicious_urls)
 
         # To parallelise
@@ -103,15 +98,9 @@ def update_database():
         # for filename in tqdm(urls_filenames):
         #    update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
 
-    # Write malicious_urls to TXT file (overwrites existing TXT file)
+    # Write malicious_urls to TXT file
     # malicious_urls = retrieve_malicious_URLs(urls_filenames)
     # write_all_malicious_urls_to_file(malicious_urls)
-
-    """
-    # Check host statuses of URLs with fping and update host statuses to DB
-    alive_and_not_dns_blocked_urls,alive_and_dns_blocked_urls,_,_,_ = check_activity_URLs(malicious_urls)
-    update_activity_URLs(alive_and_not_dns_blocked_urls+alive_and_dns_blocked_urls, updateTime, filenames)
-    """
 
     # push to GitHub
     # TODO

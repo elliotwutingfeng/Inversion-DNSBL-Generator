@@ -13,7 +13,7 @@ logger = init_logger()
 if __name__ == "__main__":
     testing_quantity = 1500
     parser = argparse.ArgumentParser(
-        description="""Python script to periodically update a local SQLite database with popular URLs 
+        description="""Python script to periodically update local SQLite databases with popular URLs 
     sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API to generate a 
     malicious URL blocklist for applications like pfBlockerNG/Pi-hole etc. Uses [Ray](http://www.ray.io/) to make 
     parallel requests with pipelining to the Google Safe Browsing API and Yandex Safe Browsing API."""
@@ -23,8 +23,8 @@ if __name__ == "__main__":
         required=True,
         choices=["testing", "full"],
         help=f"""
-    testing: Generate blocklist based on last {testing_quantity} URLs from Tranco TOP1M list 
-    | full: Update local database with latest TOP1M+TOP10M URLs and generate blocklist from local database""",
+    testing: Generate blocklist (stored in blocklists/ folder) based on last {testing_quantity} URLs from Tranco TOP1M list
+    | full: Update local databases with latest TOP1M+TOP10M URLs and generate blocklist (stored in blocklists/ folder) from local databases""",
     )
     args = parser.parse_args()
 
