@@ -142,7 +142,6 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
             cur = cur.execute(
                 f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
             )
-
             cur = cur.execute(
                 f"""SELECT url from urls 
                 WHERE substring(urls.hash,1,?) in (select hashPrefix from malicious.maliciousHashPrefixes
@@ -150,6 +149,8 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
                 (prefixSize, vendor),
             )
             urls = [x[0] for x in cur.fetchall()]
+        with conn:
+            cur = conn.cursor()
             cur = cur.execute("DETACH database malicious")
     except Error as e:
         logging.error(

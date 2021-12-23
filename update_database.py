@@ -38,7 +38,7 @@ def update_database():
     for root, _, files in tqdm(list(os.walk(local_domains_dir))):
         for file in files:
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith("domain2multi-com0d.txt"):
+            if file.lower().endswith("domain2multi-ax00.txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 

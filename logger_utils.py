@@ -13,7 +13,7 @@ def init_logger():
             logging.FileHandler(f"{logs_folder}{os.sep}progress.log", mode="a"),
             logging.StreamHandler(),
         ],
-        format="%(asctime)s %(levelname)-4s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s",
+        format="%(asctime)s %(levelname)-4s [%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s",
         level=logging.INFO,
         datefmt="%d-%m-%Y %H:%M:%S",
     )
