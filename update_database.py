@@ -38,15 +38,15 @@ def update_database():
     for root, _, files in tqdm(list(os.walk(local_domains_dir))):
         for file in files:
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith(".txt"):
+            if file.lower().endswith("domain2multi-com0d.txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
-    urls_filenames.append("top1m_urls")
-    urls_filenames.append("top10m_urls")
+    # urls_filenames.append("top1m_urls")
+    # urls_filenames.append("top10m_urls")
     # Create DB files
     initialise_database(urls_filenames)
-    """
+
     # Extract and Add local URLs to DB
     execute_with_ray(
         [
@@ -64,7 +64,7 @@ def update_database():
         ],
         add_URLs,
     )
-
+    """
     """
     for vendor in ["Google", "Yandex"]:
         sb = SafeBrowsing(vendor)

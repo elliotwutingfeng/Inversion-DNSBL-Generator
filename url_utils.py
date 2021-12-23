@@ -11,8 +11,6 @@ from tqdm import tqdm
 import math
 from list_utils import chunks
 
-logger = init_logger()
-
 
 def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     """Generate Safe Browsing API-compliant hostname expressions
@@ -115,6 +113,7 @@ def get_local_file_url_list(file: str) -> list[str]:
 
 
 if __name__ == "__main__":
+    logger = init_logger()
     top1m_urls, top10m_urls = get_top1m_url_list(), get_top10m_url_list()
 
     logging.info(len(top1m_urls))

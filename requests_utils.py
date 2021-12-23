@@ -3,9 +3,6 @@ import requests
 import time
 import json
 
-from logger_utils import init_logger
-
-logger = init_logger()
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8",

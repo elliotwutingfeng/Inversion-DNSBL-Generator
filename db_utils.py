@@ -6,14 +6,11 @@ from hashlib import sha256
 from tqdm import tqdm
 from list_utils import chunks, flatten
 import os
-from logger_utils import init_logger
 from ray_utils import execute_with_ray
 
 
 # sqlite> .header on
 # sqlite> .mode column
-
-logger = init_logger()
 
 
 def create_connection(filename):
@@ -39,7 +36,7 @@ def create_connection(filename):
             "PRAGMA journal_mode = WAL"
         )  # Enable Write-Ahead Log option; https://www.sqlite.org/wal.html
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"filename:{filename} {e}")
 
     return conn
 
@@ -60,7 +57,7 @@ def create_urls_table(filename):
                            );"""
             )
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"filename:{filename} {e}")
     conn.close()
 
 
@@ -103,7 +100,7 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}...[DONE]"
             )
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"filename:{filename} {e}")
     conn.close()
 
 
@@ -130,7 +127,7 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
                 ),
             )
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"vendor:{vendor} {e}")
     conn.close()
 
 
@@ -153,7 +150,9 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
             urls = [x[0] for x in cur.fetchall()]
             cur = cur.execute("DETACH database malicious")
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(
+            f"filename:{filename} prefixSize:{prefixSize} vendor:{vendor} {e}"
+        )
     conn.close()
 
     return urls
@@ -172,7 +171,7 @@ def retrieve_vendor_prefixSizes(vendor) -> list[int]:
             )
             prefixSizes = [x[0] for x in cur.fetchall()]
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"vendor: {vendor} {e}")
     conn.close()
     return prefixSizes
 
@@ -195,7 +194,9 @@ def identify_suspected_urls(vendor, filename, prefixSizes):
             f"{len(suspected_urls)} URLs from {filename} potentially marked malicious by {vendor} Safe Browsing API."
         )
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(
+            f"vendor:{vendor} filename:{filename} prefixSizes:{prefixSizes} {e}"
+        )
     conn.close()
 
     return suspected_urls
@@ -219,7 +220,7 @@ def create_maliciousHashPrefixes_table():
                                             );"""
             )
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"{e}")
     conn.close()
 
 
@@ -256,7 +257,7 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
                     (updateTime, *malicious_url_batch),
                 )
     except Error as e:
-        logging.error(f"Locals: {locals()} {e}")
+        logging.error(f"vendor:{vendor} filename:{filename} {e}")
     conn.close()
 
 
@@ -286,7 +287,7 @@ def retrieve_malicious_URLs(urls_filenames) -> list[str]:
                 )
                 malicious_urls.update([x[0] for x in cur.fetchall()])
         except Error as e:
-            logging.error(f"Locals: {locals()} {e}")
+            logging.error(f"filename:{filename} {e}")
         conn.close()
 
         return malicious_urls
@@ -324,5 +325,5 @@ def update_activity_URLs(alive_urls, updateTime, filenames):
                         (updateTime, *alive_url_batch),
                     )
         except Error as e:
-            logging.error(f"Locals: {locals()} {e}")
+            logging.error(f"{e}")
         conn.close()

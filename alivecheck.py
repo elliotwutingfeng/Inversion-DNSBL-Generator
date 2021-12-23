@@ -5,8 +5,6 @@ from logger_utils import init_logger
 
 from ray_utils import execute_with_ray
 
-logger = init_logger()
-
 
 def fping(url):
     # "fast pings" a given url, visit https://fping.org/ to learn more about the 'fping' command
@@ -60,6 +58,7 @@ def check_activity_URLs(urls_to_be_checked):
 
 
 if __name__ == "__main__":
+    logger = init_logger()
     ray.shutdown()
     ray.init(include_dashboard=False)
 

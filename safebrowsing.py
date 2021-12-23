@@ -2,7 +2,6 @@ from __future__ import annotations
 import time
 from dotenv import dotenv_values
 from list_utils import chunks
-from logger_utils import init_logger
 from ray_utils import execute_with_ray
 import requests
 from requests.models import Response
@@ -12,8 +11,6 @@ from tqdm import tqdm
 import base64
 
 from requests_utils import get_with_retries, post_with_retries
-
-logger = init_logger()
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
