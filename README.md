@@ -35,10 +35,12 @@ pip3 install -r requirements.txt
 ## How to use
 
 ```bash
-# TESTING mode: Generate blocklist (stored in blocklists/ folder) based on last 1500 URLs from Tranco TOP1M list
-python3 main.py --mode testing
-# FULL mode: Update local databases with latest TOP1M+TOP10M URLs and generate blocklist (stored in blocklists/ folder) from local databases
-python3 main.py --mode full
+# fetch mode: Update local databases with latest TOP1M+TOP10M URLs and generate blocklist (stored in blocklists/ folder) from local databases
+python3 main.py --mode fetch --lists top1m top10m domainsproject everything
+# generate mode: Generate blocklist (stored in blocklists/ folder) based on last 1500 URLs from Tranco TOP1M list
+python3 main.py --mode generate --lists top1m top10m domainsproject everything
+# fetch_and_generate mode: Generate blocklist (stored in blocklists/ folder) based on last 1500 URLs from Tranco TOP1M list
+python3 main.py --mode fetch_and_generate --lists top1m top10m domainsproject everything
 ```
 
 ## Known Issues
