@@ -1,12 +1,7 @@
 import logging
-from datetime import datetime
 import os
 
 logs_folder = "logs"
-
-
-def current_timestamp_str():
-    return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
 def init_logger():
@@ -15,9 +10,7 @@ def init_logger():
     # Add date and timestamp to logging messages
     logging.basicConfig(
         handlers=[
-            logging.FileHandler(
-                f"{logs_folder}{os.sep}progress_{current_timestamp_str()}.log", mode="a"
-            ),
+            logging.FileHandler(f"{logs_folder}{os.sep}progress.log", mode="a"),
             logging.StreamHandler(),
         ],
         format="%(asctime)s %(levelname)-4s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s",

@@ -8,8 +8,9 @@ from url_utils import get_top1m_url_list
 from safebrowsing import SafeBrowsing
 from filewriter import write_top1m_malicious_urls_to_file
 
+logger = init_logger()
+
 if __name__ == "__main__":
-    logger = init_logger()
     testing_quantity = 1500
     parser = argparse.ArgumentParser(
         description="""Python script to periodically update a local SQLite database with popular URLs 

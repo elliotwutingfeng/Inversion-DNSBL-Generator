@@ -2,11 +2,18 @@ from __future__ import annotations
 import logging
 import json
 import os
+from datetime import datetime
 
-from logger_utils import current_timestamp_str
+from logger_utils import init_logger
 
 blocklists_folder = "blocklists"
 blocklist_filename = "URLs_marked_malicious_by_Safe_Browsing"
+
+logger = init_logger()
+
+
+def current_timestamp_str():
+    return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
 def write_top1m_malicious_urls_to_file(

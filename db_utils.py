@@ -6,11 +6,14 @@ from hashlib import sha256
 from tqdm import tqdm
 from list_utils import chunks, flatten
 import os
+from logger_utils import init_logger
 from ray_utils import execute_with_ray
 
 
 # sqlite> .header on
 # sqlite> .mode column
+
+logger = init_logger()
 
 
 def create_connection(filename):
@@ -30,7 +33,6 @@ def create_connection(filename):
             if filename == None
             else f"{databases_folder}{os.sep}{filename}.db"
         )
-        conn.setbusytimeout(5000)
         cur = conn.cursor()
         cur.execute(
             "PRAGMA journal_mode = WAL"
