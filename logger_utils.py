@@ -1,5 +1,7 @@
 import logging
 
+# TODO Create logfile with timestamp, add to .gitignore
+
 
 def init_logger():
     # Add date and timestamp to logging messages

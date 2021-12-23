@@ -38,12 +38,12 @@ def update_database():
     for root, _, files in tqdm(list(os.walk(local_domains_dir))):
         for file in files:
             # domain2multi-com1d domain2multi-af00 domain2multi-com0d domain2multi-ax00
-            if file.lower().endswith("domain2multi-ax00.txt"):
+            if file.lower().endswith(".txt"):
                 urls_filenames.append(f"{file[:-4]}")
                 local_domains_filepaths.append(os.path.join(root, file))
 
-    # urls_filenames.append("top1m_urls")
-    # urls_filenames.append("top10m_urls")
+    urls_filenames.append("top1m_urls")
+    urls_filenames.append("top10m_urls")
     # Create DB files
     initialise_database(urls_filenames)
     """
@@ -95,14 +95,17 @@ def update_database():
         del suspected_urls  # "frees" memory
         malicious_urls += vendor_malicious_urls
 
+        # Write malicious_urls to TXT file (overwrites existing TXT file)
+        write_all_malicious_urls_to_file(malicious_urls)
+
         # To parallelise
         # Update vendor_malicious_urls to DB
-        for filename in tqdm(urls_filenames):
-            update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
+        # for filename in tqdm(urls_filenames):
+        #    update_malicious_URLs(vendor_malicious_urls, updateTime, vendor, filename)
 
     # Write malicious_urls to TXT file (overwrites existing TXT file)
     # malicious_urls = retrieve_malicious_URLs(urls_filenames)
-    write_all_malicious_urls_to_file(malicious_urls)
+    # write_all_malicious_urls_to_file(malicious_urls)
 
     """
     # Check host statuses of URLs with fping and update host statuses to DB

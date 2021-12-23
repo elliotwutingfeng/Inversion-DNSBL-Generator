@@ -24,8 +24,8 @@ if __name__ == "__main__":
         required=True,
         choices=["testing", "full"],
         help=f"""
-    testing: Generate URLs_marked_malicious_by_Safe_Browsing.txt based on last {testing_quantity} URLs from Tranco TOP1M list 
-    | full: Update local database with latest TOP1M+TOP10M URLs and generate URLs_marked_malicious_by_Safe_Browsing.txt from local database""",
+    testing: Generate blocklist based on last {testing_quantity} URLs from Tranco TOP1M list 
+    | full: Update local database with latest TOP1M+TOP10M URLs and generate blocklist from local database""",
     )
     args = parser.parse_args()
 
