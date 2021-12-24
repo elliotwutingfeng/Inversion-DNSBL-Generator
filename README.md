@@ -1,6 +1,6 @@
-# Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
-
-## Overview
+<div align="center">
+    <h1>Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator</h1>
+</div>
 
 Create and/or update local [SQLite](https://www.sqlite.org) databases with URLs sourced from 
 various public lists (i.e. Tranco TOP1M, DomCop TOP10M, and Domains Project), and use the Safe Browsing API from Google and/or Yandex 
