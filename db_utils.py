@@ -229,7 +229,9 @@ def create_maliciousHashPrefixes_table():
 
 def initialise_database(urls_filenames):
     # initialise tables
-    logging.info(f"Creating .db files for {len(urls_filenames)} .txt files")
+    logging.info(
+        f"Creating .db files if they do not exist yet for {len(urls_filenames)} .txt files"
+    )
     execute_with_ray([(filename,) for filename in urls_filenames], create_urls_table)
     create_maliciousHashPrefixes_table()
 
