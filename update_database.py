@@ -10,7 +10,7 @@ from db_utils import (
     initialise_database,
     add_URLs,
     retrieve_malicious_URLs,
-    retrieve_provider_prefixSizes,
+    retrieve_vendor_prefixSizes,
     update_malicious_URLs,
 )
 
@@ -21,7 +21,7 @@ from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_ur
 from list_utils import flatten
 
 
-def update_database(fetch, identify, retrieve, sources, providers):
+def update_database(fetch, identify, retrieve, sources, vendors):
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
@@ -65,23 +65,23 @@ def update_database(fetch, identify, retrieve, sources, providers):
         execute_with_ray(add_URLs_jobs, add_URLs)
 
     if identify:
-        for provider in providers:
-            sb = SafeBrowsing(provider)
+        for vendor in vendors:
+            sb = SafeBrowsing(vendor)
 
             # Download and Update Safe Browsing API Malicious Hash Prefixes to DB
             hash_prefixes = sb.get_malicious_hash_prefixes()
-            add_maliciousHashPrefixes(hash_prefixes, provider)
+            add_maliciousHashPrefixes(hash_prefixes, vendor)
             del hash_prefixes  # "frees" memory
 
         malicious_urls = dict()
-        for provider in providers:
-            sb = SafeBrowsing(provider)
+        for vendor in vendors:
+            sb = SafeBrowsing(vendor)
 
-            prefixSizes = retrieve_provider_prefixSizes(provider)
+            prefixSizes = retrieve_vendor_prefixSizes(vendor)
             # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
             suspected_urls = flatten(
                 execute_with_ray(
-                    [(provider, filename, prefixSizes) for filename in urls_filenames],
+                    [(vendor, filename, prefixSizes) for filename in urls_filenames],
                     identify_suspected_urls,
                 )
             )
@@ -89,9 +89,9 @@ def update_database(fetch, identify, retrieve, sources, providers):
             # To Improve: Store suspected_urls into malicious.db under suspected_urls table columns: [url,Google,Yandex]
 
             # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
-            provider_malicious_urls = sb.get_malicious_URLs(suspected_urls)
+            vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
             del suspected_urls  # "frees" memory
-            malicious_urls[provider] = provider_malicious_urls
+            malicious_urls[vendor] = vendor_malicious_urls
 
         # Write malicious_urls to TXT file
         write_db_malicious_urls_to_file(flatten(list(malicious_urls.values())))
@@ -101,9 +101,9 @@ def update_database(fetch, identify, retrieve, sources, providers):
         # TODO parallelise this section
         # Update malicious URL statuses in DB
         for filename in tqdm(urls_filenames):
-            for provider in providers:
+            for vendor in vendors:
                 update_malicious_URLs(
-                    malicious_urls[provider], updateTime, provider, filename
+                    malicious_urls[vendor], updateTime, vendor, filename
                 )
 
     if retrieve:

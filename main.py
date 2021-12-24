@@ -23,7 +23,7 @@ if __name__ == "__main__":
     or [Pi-hole](https://pi-hole.net).
 
     For example, to generate a blocklist of malicious URLs from Tranco TOP1M using Google Safe Browsing API, 
-    run `python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --providers google`
+    run `python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google`
     """,
         formatter_class=CustomFormatter,
     )
@@ -80,12 +80,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-p",
-        "--providers",
+        "--vendors",
         nargs="+",
         required=False,
         choices=["google", "yandex"],
         help="""
-        (OPTIONAL: Omit this flag to use all Safe Browsing API providers)
+        (OPTIONAL: Omit this flag to use all Safe Browsing API vendors)
         Choose 1 or more URL sources
         ----------------------------
         google -> Google Safe Browsing API
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    args.providers = sorted([x.capitalize() for x in args.providers])
+    args.vendors = sorted([x.capitalize() for x in args.vendors])
     if not (args.fetch or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
@@ -105,5 +105,5 @@ if __name__ == "__main__":
         identify=args.identify,
         retrieve=args.retrieve,
         sources=args.sources,
-        providers=args.providers,
+        vendors=args.vendors,
     )

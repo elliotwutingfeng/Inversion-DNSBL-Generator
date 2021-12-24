@@ -20,14 +20,14 @@ logger = init_logger()
 
 
 class SafeBrowsing:
-    def __init__(self, provider):
-        self.provider = provider
-        if provider == "Google":
+    def __init__(self, vendor):
+        self.vendor = vendor
+        if vendor == "Google":
             self.threatMatchesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}"
             self.threatListsEndpoint = f"https://safebrowsing.googleapis.com/v4/threatLists?key={GOOGLE_API_KEY}"
             self.threatListUpdatesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?key={GOOGLE_API_KEY}"
             self.maximum_url_batch_size = 500
-        elif provider == "Yandex":
+        elif vendor == "Yandex":
             self.threatMatchesEndpoint = (
                 f"https://sba.yandex.net/v4/threatMatches:find?key={YANDEX_API_KEY}"
             )
@@ -41,7 +41,7 @@ class SafeBrowsing:
             # ¯\_(ツ)_/¯
             self.maximum_url_batch_size = 200
         else:
-            raise ValueError('provider must be "Google" or "Yandex"')
+            raise ValueError('vendor must be "Google" or "Yandex"')
 
     ######## Safe Browsing Lookup API ########
     @staticmethod
@@ -97,7 +97,7 @@ class SafeBrowsing:
 
     def get_malicious_URLs(self, urls: list[str]) -> list[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
-        logging.info(f"Verifying suspected {self.provider} malicious URLs")
+        logging.info(f"Verifying suspected {self.vendor} malicious URLs")
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = list(chunks(urls, self.maximum_url_batch_size))
         logging.info(f"{len(url_batches)} batches")
@@ -127,7 +127,7 @@ class SafeBrowsing:
         )
 
         logging.info(
-            f"{len(malicious_urls)} URLs confirmed to be marked malicious by {self.provider} Safe Browsing API."
+            f"{len(malicious_urls)} URLs confirmed to be marked malicious by {self.vendor} Safe Browsing API."
         )
 
         return malicious_urls
@@ -145,7 +145,7 @@ class SafeBrowsing:
             "threatLists"
         ]
 
-        if self.provider == "Google":
+        if self.vendor == "Google":
             url_threatlist_combinations = [
                 x for x in threatlist_combinations if x["threatEntryType"] == "URL"
             ]
@@ -219,7 +219,7 @@ class SafeBrowsing:
 
     def get_malicious_hash_prefixes(self):
         """Download latest malicious hash prefixes from Safe Browsing API"""
-        logging.info(f"Downloading {self.provider} malicious URL hashes")
+        logging.info(f"Downloading {self.vendor} malicious URL hashes")
         res_json = self.retrieve_threatListUpdates()
         if res_json == {}:
             return set()

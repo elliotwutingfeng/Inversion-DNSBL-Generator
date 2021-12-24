@@ -18,7 +18,7 @@ or [Pi-hole](https://pi-hole.net).
 
 - Linux or macOS
 - Tested on Python 3.8.12
-- x86-64 CPU; for Python Ray support
+- Multi-core x86-64 CPU; for Python Ray support
 - Recommended: At least 8GB RAM
 - Recommended: At least 5GB SSD free storage space; **at least 500GB SSD free storage space needed for downloading Domains Project URLs**
 - [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
@@ -34,30 +34,30 @@ echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
 pip3 install -r requirements.txt
 ```
 
-## How to use
+## Usage
 
 ### Quick start (try this first)
 ```bash
 # Download URLs from Tranco TOP1M and DomCop TOP10M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m --providers google
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m --vendors google
 ```
 
-### Some examples
+### Some other examples
 
 ```bash
-# Download URLs from Tranco TOP1M and update local database
+# Download URLs from Tranco TOP1M and update local database (no blocklist generated)
 python3 main.py --fetch-urls --sources top1m
 ```
 
 ```bash
 # Download URLs from Tranco TOP1M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --providers google
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google
 ```
 
 ```bash
 # Download URLs from DomCop TOP10M, then generate malicious URL blocklist using both Google Safe Browsing API and Yandex Safe Browsing API, 
 # and update local database
-python3 main.py --fetch-urls --identify-malicious-urls --sources top10m --providers google
+python3 main.py --fetch-urls --identify-malicious-urls --sources top10m --vendors google
 # or alternatively
 python3 main.py --fetch-urls --identify-malicious-urls --sources top10m
 ```
@@ -66,21 +66,21 @@ python3 main.py --fetch-urls --identify-malicious-urls --sources top10m
 # (Warning: need at least 500GB free space) Download URLs from Domains Project (domainsproject.org), 
 # generate malicious URL blocklist using Google Safe Browsing API,
 # and update local database
-python3 main.py --fetch-urls --identify-malicious-urls --sources domainsproject --providers google
+python3 main.py --fetch-urls --identify-malicious-urls --sources domainsproject --vendors google
 ```
 
 ```bash
 # (Warning: need at least 500GB free space) Download URLs from all sources, 
 # generate malicious URL blocklist using Google Safe Browsing API and Yandex Safe Browsing API,
 # and update local database
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject --providers google yandex
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject --vendors google yandex
 # or alternatively
 python3 main.py --fetch-urls --identify-malicious-urls
 ```
 
 ```bash
 # From all existing URLs in local database, generate malicious URL blocklist using Yandex Safe Browsing API
-python3 main.py --identify-malicious-urls --providers Yandex
+python3 main.py --identify-malicious-urls --vendors Yandex
 ```
 
 ## Known Issues
@@ -93,12 +93,17 @@ python3 main.py --identify-malicious-urls --providers Yandex
 
 Google works to provide the most accurate and up-to-date information about unsafe web resources. However, Google cannot guarantee that its information is comprehensive and error-free: some risky sites may not be identified, and some safe sites may be identified in error.
 
+## Libraries/Frameworks used
+- [SQLite](https://www.sqlite.org)
+- [APSW](https://rogerbinns.github.io/apsw)
+- [Ray](https://www.ray.io)
+- [TLDExtract](https://github.com/john-kurkowski/tldextract)
+
 ## References
 
 - https://developers.google.com/safe-browsing
-- https://developers.google.com/safe-browsing/v4/usage-limits
 - https://yandex.com/dev/safebrowsing/
 - https://tranco-list.eu
 - https://www.domcop.com/top-10-million-domains
-- https://remusao.github.io/posts/few-tips-sqlite-perf.html
 - https://domainsproject.org
+- https://remusao.github.io/posts/few-tips-sqlite-perf.html
