@@ -2,9 +2,11 @@
 
 ## Overview
 
-Create and/or update local [SQLite](https://www.sqlite.org) databases with URLs sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net).
-
-Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the Safe Browsing APIs.
+Create and/or update local [SQLite](https://www.sqlite.org) databases with URLs sourced from 
+various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API 
+to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) 
+applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) 
+or [Pi-hole](https://pi-hole.net).
 
 ## URL sources
 
@@ -18,7 +20,7 @@ Uses [Ray](http://www.ray.io) to make parallel requests with pipelining to the S
 - Tested on Python 3.8.12
 - x86-64 CPU; for Python Ray support
 - Recommended: At least 8GB RAM
-- Recommended: At least 5GB storage space
+- Recommended: At least 5GB SSD free storage space; **at least 500GB SSD free storage space needed for downloading Domains Project URLs**
 - [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 - [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -34,13 +36,51 @@ pip3 install -r requirements.txt
 
 ## How to use
 
+### Quick start (try this first)
 ```bash
-# fetch mode: Update local databases with latest TOP1M+TOP10M URLs and generate blocklist (stored in blocklists/ folder) from local databases
-python3 main.py --mode fetch --lists top1m top10m domainsproject everything
-# generate mode: Generate blocklist (stored in blocklists/ folder) based on last 1500 URLs from Tranco TOP1M list
-python3 main.py --mode generate --lists top1m top10m domainsproject everything
-# fetch_and_generate mode: Generate blocklist (stored in blocklists/ folder) based on last 1500 URLs from Tranco TOP1M list
-python3 main.py --mode fetch_and_generate --lists top1m top10m domainsproject everything
+# Download URLs from Tranco TOP1M and DomCop TOP10M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m --providers google
+```
+
+### Some examples
+
+```bash
+# Download URLs from Tranco TOP1M and update local database
+python3 main.py --fetch-urls --sources top1m
+```
+
+```bash
+# Download URLs from Tranco TOP1M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --providers google
+```
+
+```bash
+# Download URLs from DomCop TOP10M, then generate malicious URL blocklist using both Google Safe Browsing API and Yandex Safe Browsing API, 
+# and update local database
+python3 main.py --fetch-urls --identify-malicious-urls --sources top10m --providers google
+# or alternatively
+python3 main.py --fetch-urls --identify-malicious-urls --sources top10m
+```
+
+```bash
+# (Warning: need at least 500GB free space) Download URLs from Domains Project (domainsproject.org), 
+# generate malicious URL blocklist using Google Safe Browsing API,
+# and update local database
+python3 main.py --fetch-urls --identify-malicious-urls --sources domainsproject --providers google
+```
+
+```bash
+# (Warning: need at least 500GB free space) Download URLs from all sources, 
+# generate malicious URL blocklist using Google Safe Browsing API and Yandex Safe Browsing API,
+# and update local database
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject --providers google yandex
+# or alternatively
+python3 main.py --fetch-urls --identify-malicious-urls
+```
+
+```bash
+# From all existing URLs in local database, generate malicious URL blocklist using Yandex Safe Browsing API
+python3 main.py --identify-malicious-urls --providers Yandex
 ```
 
 ## Known Issues

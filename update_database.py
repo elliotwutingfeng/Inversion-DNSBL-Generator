@@ -21,14 +21,14 @@ from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_ur
 from list_utils import flatten
 
 
-def update_database(tasks, lists, providers):
+def update_database(fetch, identify, retrieve, sources, providers):
     ray.shutdown()
     ray.init(include_dashboard=False)
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames = []
 
-    if "domainsproject" in lists:
+    if "domainsproject" in sources:
         # Scan "Domains Project" directory for local urls_filenames
         local_domains_dir = (
             pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
@@ -40,31 +40,31 @@ def update_database(tasks, lists, providers):
                     urls_filenames.append(f"{file[:-4]}")
                     local_domains_filepaths.append(os.path.join(root, file))
 
-    if "top1m" in lists:
+    if "top1m" in sources:
         urls_filenames.append("top1m_urls")
-    if "top10m" in lists:
+    if "top10m" in sources:
         urls_filenames.append("top10m_urls")
 
     # Create DB files
     initialise_database(urls_filenames)
 
-    if "fetch" in tasks:
+    if fetch:
         add_URLs_jobs = []
-        if "domainsproject" in lists:
+        if "domainsproject" in sources:
             # Extract and Add local URLs to DB
             add_URLs_jobs += [
                 (get_local_file_url_list, updateTime, filename, filepath)
                 for filepath, filename in zip(local_domains_filepaths, urls_filenames)
             ]
-        if "top1m" in lists:
+        if "top1m" in sources:
             # Download and Add TOP1M URLs to DB
             add_URLs_jobs.append((get_top1m_url_list, updateTime, "top1m_urls"))
-        if "top10m" in lists:
+        if "top10m" in sources:
             # Download and Add TOP10M URLs to DB
             add_URLs_jobs.append((get_top10m_url_list, updateTime, "top10m_urls"))
         execute_with_ray(add_URLs_jobs, add_URLs)
 
-    if "generate" in tasks:
+    if identify:
         for provider in providers:
             sb = SafeBrowsing(provider)
 
@@ -106,4 +106,8 @@ def update_database(tasks, lists, providers):
                     malicious_urls[provider], updateTime, provider, filename
                 )
 
+    if retrieve:
+        malicious_urls = retrieve_malicious_URLs(urls_filenames)
+        # Write malicious_urls to TXT file
+        write_db_malicious_urls_to_file(malicious_urls)
     ray.shutdown()
