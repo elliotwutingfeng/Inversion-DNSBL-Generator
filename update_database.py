@@ -29,10 +29,8 @@ def update_database(fetch, identify, retrieve, sources, vendors):
     urls_filenames = []
 
     if "domainsproject" in sources:
-        # Scan "Domains Project" directory for local urls_filenames
-        local_domains_dir = (
-            pathlib.Path.cwd().parents[0] / "Domains Project" / "domains" / "data"
-        )
+        # Scan Domains Project's "domains" directory for local urls_filenames
+        local_domains_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
         local_domains_filepaths = []
         for root, _, files in tqdm(list(os.walk(local_domains_dir))):
             for file in files:

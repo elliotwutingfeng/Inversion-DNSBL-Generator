@@ -48,6 +48,7 @@ if __name__ == "__main__":
         Use Safe Browsing API to identify malicious URLs in database, 
         write the URLs to a .txt file blocklist, 
         and update database with these malicious URLs
+        (this flag cannot be enabled together with '--retrieve-known-malicious-urls')
         """,
     )
     group.add_argument(
@@ -57,7 +58,8 @@ if __name__ == "__main__":
         action="store_true",
         help="""
         Retrieve URLs in database that have been flagged 
-        as malicious, then create a .txt blocklist
+        as malicious, then create a .txt file blocklist
+        (this flag cannot be enabled together with '--identify-malicious-urls')
         """,
     )
 

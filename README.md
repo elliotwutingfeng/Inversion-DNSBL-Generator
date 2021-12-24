@@ -3,16 +3,16 @@
 ## Overview
 
 Create and/or update local [SQLite](https://www.sqlite.org) databases with URLs sourced from 
-various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API 
+various public lists (i.e. Tranco TOP1M, DomCop TOP10M, and Domains Project), and use the Safe Browsing API from Google and/or Yandex 
 to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) 
 applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) 
 or [Pi-hole](https://pi-hole.net).
 
 ## URL sources
 
-- Domains Project: https://domainsproject.org
-- DomCop TOP10M : https://www.domcop.com/top-10-million-domains
-- Tranco TOP1M : https://tranco-list.eu
+- Tranco TOP1M (~1 million URLs): https://tranco-list.eu
+- DomCop TOP10M (~10 million URLs): https://www.domcop.com/top-10-million-domains
+- Domains Project (~1.7 billion URLs): https://domainsproject.org
 
 ## Requirements
 
@@ -20,7 +20,7 @@ or [Pi-hole](https://pi-hole.net).
 - Tested on Python 3.8.12
 - Multi-core x86-64 CPU; for Python Ray support
 - Recommended: At least 8GB RAM
-- Recommended: At least 5GB SSD free storage space; **at least 500GB SSD free storage space needed for downloading Domains Project URLs**
+- Recommended: At least 5GB SSD free storage space; **at least 500GB SSD free storage space needed for processing Domains Project URLs**
 - [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 - [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -32,6 +32,13 @@ or [Pi-hole](https://pi-hole.net).
 echo "GOOGLE_API_KEY=<your-google-api-key-here>" >> .env
 echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
 pip3 install -r requirements.txt
+
+# Optional (dataset size ~49Gb): Download Domains Project URLs (https://domainsproject.org)
+cd ../
+git clone https://github.com/tb0hdan/domains.git
+cd domains
+git lfs install # you will need to install Git LFS first (https://git-lfs.github.com)
+./unpack.sh
 ```
 
 ## Usage
@@ -70,7 +77,7 @@ python3 main.py --fetch-urls --identify-malicious-urls --sources domainsproject 
 ```
 
 ```bash
-# (Warning: need at least 500GB free space) Download URLs from all sources, 
+# (Warning: need at least 500GB free space) Download URLs from all sources (Tranco TOP1M, DomCop TOP10M, and Domains Project), 
 # generate malicious URL blocklist using Google Safe Browsing API and Yandex Safe Browsing API,
 # and update local database
 python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject --vendors google yandex
@@ -81,6 +88,11 @@ python3 main.py --fetch-urls --identify-malicious-urls
 ```bash
 # From all existing URLs in local database, generate malicious URL blocklist using Yandex Safe Browsing API
 python3 main.py --identify-malicious-urls --vendors Yandex
+```
+
+```bash
+# Show help message
+python3 main.py --help
 ```
 
 ## Known Issues
