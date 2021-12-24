@@ -13,10 +13,10 @@ import base64
 
 from requests_utils import get_with_retries, post_with_retries
 
-logger = init_logger()
-
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
+
+logger = init_logger()
 
 
 class SafeBrowsing:

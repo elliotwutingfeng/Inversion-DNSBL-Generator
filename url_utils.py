@@ -5,12 +5,42 @@ import requests
 import logging
 import tldextract
 from logger_utils import init_logger
+from ray_utils import execute_with_ray
 from requests_utils import get_with_retries
 from tqdm import tqdm
 import math
-import ray
+from list_utils import chunks
 
 logger = init_logger()
+
+
+def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
+    """Generate Safe Browsing API-compliant hostname expressions
+    See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
+    """
+
+    raw_url_chunks = chunks(raw_urls, 50_000)
+
+    def aux(raw_url_chunk):
+        hostname_expressions = set()
+        for raw_url in raw_url_chunk:
+            ext = tldextract.extract(raw_url)
+            if ext.subdomain == "":
+                parts = [ext.registered_domain]
+            else:
+                parts = ext.subdomain.split(".") + [ext.registered_domain]
+            hostname_expressions.update(
+                [f"{'.'.join(parts[-i:])}" for i in range(min(5, len(parts)))]
+            )
+        return hostname_expressions
+
+    hostname_expressions = execute_with_ray(
+        [(raw_url_chunk,) for raw_url_chunk in raw_url_chunks],
+        aux,
+        progress_bar=False,
+    )
+
+    return list(set().union(*hostname_expressions))
 
 
 def get_top1m_url_list() -> list[str]:
@@ -28,14 +58,11 @@ def get_top1m_url_list() -> list[str]:
             ):
                 f.write(data)
             zipfile = ZipFile(f)
-            top1m_raw_urls = [
+            raw_urls = [
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
             ]
-            top1m_tlds = [
-                tldextract.extract(x).registered_domain for x in top1m_raw_urls
-            ]
-            top1m_urls = list(set(top1m_raw_urls + top1m_tlds))
+            top1m_urls = generate_hostname_expressions(raw_urls)
             logging.info("Downloading TOP1M list... [DONE]")
             return top1m_urls
     except requests.exceptions.RequestException as e:
@@ -59,14 +86,11 @@ def get_top10m_url_list() -> list[str]:
             ):
                 f.write(data)
             zipfile = ZipFile(f)
-            top10m_raw_urls = [
+            raw_urls = [
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             ]
-            top10m_tlds = [
-                tldextract.extract(x).registered_domain for x in top10m_raw_urls
-            ]
-            top10m_urls = list(set(top10m_raw_urls + top10m_tlds))
+            top10m_urls = generate_hostname_expressions(raw_urls)
             logging.info("Downloading TOP10M list... [DONE]")
             return top10m_urls
     except requests.exceptions.RequestException as e:
@@ -80,8 +104,7 @@ def get_local_file_url_list(file: str) -> list[str]:
     try:
         with open(file, "r") as f:
             raw_urls = [_.strip() for _ in f.readlines()]
-            tlds = [tldextract.extract(x).registered_domain for x in raw_urls]
-            urls = list(set(raw_urls + tlds))
+            urls = generate_hostname_expressions(raw_urls)
             logging.info(f"Extracting local list ({file}) ... [DONE]")
         return urls
     except OSError as e:

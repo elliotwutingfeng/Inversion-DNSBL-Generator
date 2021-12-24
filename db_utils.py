@@ -1,9 +1,9 @@
+from __future__ import annotations
 import apsw
 from apsw import Error
 import logging
 from hashlib import sha256
 from tqdm import tqdm
-import ray
 from list_utils import chunks, flatten
 import os
 from logger_utils import init_logger
@@ -38,7 +38,7 @@ def create_connection(filename):
             "PRAGMA journal_mode = WAL"
         )  # Enable Write-Ahead Log option; https://www.sqlite.org/wal.html
     except Error as e:
-        logging.error(e)
+        logging.error(f"filename:{filename} {e}")
 
     return conn
 
@@ -59,7 +59,7 @@ def create_urls_table(filename):
                            );"""
             )
     except Error as e:
-        logging.error(e)
+        logging.error(f"filename:{filename} {e}")
     conn.close()
 
 
@@ -102,7 +102,7 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}...[DONE]"
             )
     except Error as e:
-        logging.error(e)
+        logging.error(f"filename:{filename} {e}")
     conn.close()
 
 
@@ -111,7 +111,7 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
     logging.info(f"Updating DB with {vendor} malicious URL hashes")
-    conn = create_connection("maliciousHashPrefixes")
+    conn = create_connection("malicious")
     try:
         with conn:
             cur = conn.cursor()
@@ -129,7 +129,7 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
                 ),
             )
     except Error as e:
-        logging.error(e)
+        logging.error(f"vendor:{vendor} {e}")
     conn.close()
 
 
@@ -140,25 +140,30 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
         with conn:
             cur = conn.cursor()
             cur = cur.execute(
-                "ATTACH database 'databases/maliciousHashPrefixes.db' as maliciousHashPrefixes"
+                f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
             )
-
             cur = cur.execute(
                 f"""SELECT url from urls 
-                WHERE substring(urls.hash,1,?) in (select hashPrefix from maliciousHashPrefixes.maliciousHashPrefixes
+                WHERE substring(urls.hash,1,?) in (select hashPrefix from malicious.maliciousHashPrefixes
                 WHERE vendor = ?)""",
                 (prefixSize, vendor),
             )
             urls = [x[0] for x in cur.fetchall()]
+        with conn:
+            cur = conn.cursor()
+            cur = cur.execute("DETACH database malicious")
     except Error as e:
-        logging.error(e)
+        logging.error(
+            f"filename:{filename} prefixSize:{prefixSize} vendor:{vendor} {e}"
+        )
     conn.close()
 
     return urls
 
 
-def retrieve_vendor_prefixSizes(vendor):
-    conn = create_connection("maliciousHashPrefixes")
+def retrieve_vendor_prefixSizes(vendor) -> list[int]:
+    conn = create_connection("malicious")
+    prefixSizes = []
     try:
         with conn:
             # Find all prefixSizes
@@ -169,7 +174,7 @@ def retrieve_vendor_prefixSizes(vendor):
             )
             prefixSizes = [x[0] for x in cur.fetchall()]
     except Error as e:
-        logging.error(e)
+        logging.error(f"vendor: {vendor} {e}")
     conn.close()
     return prefixSizes
 
@@ -177,6 +182,7 @@ def retrieve_vendor_prefixSizes(vendor):
 def identify_suspected_urls(vendor, filename, prefixSizes):
     # logging.info(f"Identifying suspected {vendor} malicious URLs for {filename}")
     conn = create_connection(filename)
+    suspected_urls = []
     try:
         # Find all urls with matching hash_prefixes
         suspected_urls = flatten(
@@ -191,7 +197,9 @@ def identify_suspected_urls(vendor, filename, prefixSizes):
             f"{len(suspected_urls)} URLs from {filename} potentially marked malicious by {vendor} Safe Browsing API."
         )
     except Error as e:
-        logging.error(e)
+        logging.error(
+            f"vendor:{vendor} filename:{filename} prefixSizes:{prefixSizes} {e}"
+        )
     conn.close()
 
     return suspected_urls
@@ -203,7 +211,7 @@ def create_maliciousHashPrefixes_table():
     :param create_table_sql: a CREATE TABLE statement
     :return:
     """
-    conn = create_connection("maliciousHashPrefixes")
+    conn = create_connection("malicious")
     try:
         with conn:
             cur = conn.cursor()
@@ -215,13 +223,15 @@ def create_maliciousHashPrefixes_table():
                                             );"""
             )
     except Error as e:
-        logging.error(e)
+        logging.error(f"{e}")
     conn.close()
 
 
 def initialise_database(urls_filenames):
     # initialise tables
-    logging.info(f"Creating .db files for {len(urls_filenames)} .txt files")
+    logging.info(
+        f"Creating .db files if they do not exist yet for {len(urls_filenames)} .txt files"
+    )
     execute_with_ray([(filename,) for filename in urls_filenames], create_urls_table)
     create_maliciousHashPrefixes_table()
 
@@ -232,7 +242,10 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
     i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
     logging.info(f"Updating {filename} DB with verified {vendor} malicious URLs")
-    vendorToColumn = {"Google": "lastGoogleMalicious", "Yandex": "lastYandexMalicious"}
+    vendorToColumn = {
+        "Google": "lastGoogleMalicious",
+        "Yandex": "lastYandexMalicious",
+    }
     if vendor not in vendorToColumn:
         raise ValueError('vendor must be "Google" or "Yandex"')
     conn = create_connection(filename)
@@ -252,11 +265,11 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
                     (updateTime, *malicious_url_batch),
                 )
     except Error as e:
-        logging.error(e)
+        logging.error(f"vendor:{vendor} filename:{filename} {e}")
     conn.close()
 
 
-def retrieve_malicious_URLs(urls_filenames):
+def retrieve_malicious_URLs(urls_filenames) -> list[str]:
     """
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
@@ -282,7 +295,7 @@ def retrieve_malicious_URLs(urls_filenames):
                 )
                 malicious_urls.update([x[0] for x in cur.fetchall()])
         except Error as e:
-            logging.error(e)
+            logging.error(f"filename:{filename} {e}")
         conn.close()
 
         return malicious_urls
@@ -320,5 +333,5 @@ def update_activity_URLs(alive_urls, updateTime, filenames):
                         (updateTime, *alive_url_batch),
                     )
         except Error as e:
-            logging.error(e)
+            logging.error(f"{e}")
         conn.close()

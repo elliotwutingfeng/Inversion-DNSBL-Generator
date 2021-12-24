@@ -7,6 +7,35 @@ from ray_utils import execute_with_ray
 
 logger = init_logger()
 
+"""
+### Install [fping](https://fping.org)
+
+```bash
+# Debian/Ubuntu
+sudo apt install fping
+```
+
+```bash
+# CentOS/RHEL
+sudo yum install fping
+```
+
+```bash
+# Fedora/Rocky Linux/AlmaLinux
+sudo dnf install fping
+```
+
+```bash
+# Arch Linux/Manjaro/EndeavourOS
+sudo pacman -S fping
+```
+
+```bash
+# macOS
+brew install fping
+```
+"""
+
 
 def fping(url):
     # "fast pings" a given url, visit https://fping.org/ to learn more about the 'fping' command

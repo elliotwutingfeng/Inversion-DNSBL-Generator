@@ -1,48 +1,111 @@
-import logging
-import argparse
-import ray
-from logger_utils import init_logger
+from argparse import (
+    ArgumentParser,
+    RawDescriptionHelpFormatter,
+    RawTextHelpFormatter,
+    ArgumentDefaultsHelpFormatter,
+)
 from update_database import update_database
 
-from url_utils import get_top1m_url_list
-from safebrowsing import SafeBrowsing
-from filewriter import write_top1m_malicious_urls_to_file
 
-logger = init_logger()
+class CustomFormatter(
+    RawTextHelpFormatter, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
+):
+    pass
+
 
 if __name__ == "__main__":
+    parser = ArgumentParser(
+        description="""
+    Create and/or update local [SQLite](https://www.sqlite.org) databases with URLs sourced from 
+    various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API 
+    to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) 
+    applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) 
+    or [Pi-hole](https://pi-hole.net).
 
-    testing_quantity = 1500
-    parser = argparse.ArgumentParser(
-        description="""Python script to periodically update a local SQLite database with popular URLs 
-    sourced from various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API to generate a 
-    malicious URL blocklist for applications like pfBlockerNG/Pi-hole etc. Uses [Ray](http://www.ray.io/) to make 
-    parallel requests with pipelining to the Google Safe Browsing API and Yandex Safe Browsing API."""
+    For example, to generate a blocklist of malicious URLs from Tranco TOP1M using Google Safe Browsing API, 
+    run `python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google`
+    """,
+        formatter_class=CustomFormatter,
     )
     parser.add_argument(
-        "--mode",
-        required=True,
-        choices=["testing", "full"],
-        help=f"""
-    testing: Generate URLs_marked_malicious_by_Safe_Browsing.txt based on last {testing_quantity} URLs from Tranco TOP1M list 
-    | full: Update local database with latest TOP1M+TOP10M URLs and generate URLs_marked_malicious_by_Safe_Browsing.txt from local database""",
+        "-f",
+        "--fetch-urls",
+        dest="fetch",
+        action="store_true",
+        help="""
+        Fetch URL datasets from local and/or remote sources, 
+        and update them to database
+        """,
     )
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "-i",
+        "--identify-malicious-urls",
+        dest="identify",
+        action="store_true",
+        help="""
+        Use Safe Browsing API to identify malicious URLs in database, 
+        write the URLs to a .txt file blocklist, 
+        and update database with these malicious URLs
+        (this flag cannot be enabled together with '--retrieve-known-malicious-urls')
+        """,
+    )
+    group.add_argument(
+        "-r",
+        "--retrieve-known-malicious-urls",
+        dest="retrieve",
+        action="store_true",
+        help="""
+        Retrieve URLs in database that have been flagged 
+        as malicious, then create a .txt file blocklist
+        (this flag cannot be enabled together with '--identify-malicious-urls')
+        """,
+    )
+
+    parser.add_argument(
+        "-s",
+        "--sources",
+        nargs="+",
+        required=False,
+        choices=["top1m", "top10m", "domainsproject"],
+        help="""
+        (OPTIONAL: Omit this flag to use all URL sources)
+        Choose 1 or more URL sources
+        ----------------------------
+        top1m -> Tranco TOP1M
+        top10m -> DomCop TOP10M
+        domainsproject -> domainsproject.org
+        """,
+        default=["top1m", "top10m", "domainsproject"],
+        type=str,
+    )
+    parser.add_argument(
+        "-p",
+        "--vendors",
+        nargs="+",
+        required=False,
+        choices=["google", "yandex"],
+        help="""
+        (OPTIONAL: Omit this flag to use all Safe Browsing API vendors)
+        Choose 1 or more URL sources
+        ----------------------------
+        google -> Google Safe Browsing API
+        yandex -> Yandex Safe Browsing API  
+        """,
+        default=["google", "yandex"],
+        type=str,
+    )
+
     args = parser.parse_args()
+    args.vendors = sorted([x.capitalize() for x in args.vendors])
+    if not (args.fetch or args.identify or args.retrieve):
+        parser.error("No action requested, add -h for help")
 
-    if args.mode == "full":
-        update_database()
-    else:
-        ray.shutdown()
-        ray.init(include_dashboard=False)
-        test_urls = get_top1m_url_list()[-testing_quantity:]
-
-        gsb = SafeBrowsing("Google")
-        google_malicious_urls = gsb.get_malicious_URLs(test_urls)
-
-        ysb = SafeBrowsing("Yandex")
-        yandex_malicious_urls = ysb.get_malicious_URLs(test_urls)
-
-        malicious_urls = list(set(google_malicious_urls + yandex_malicious_urls))
-
-        write_top1m_malicious_urls_to_file(malicious_urls, test_urls)
-        ray.shutdown()
+    update_database(
+        fetch=args.fetch,
+        identify=args.identify,
+        retrieve=args.retrieve,
+        sources=args.sources,
+        vendors=args.vendors,
+    )
