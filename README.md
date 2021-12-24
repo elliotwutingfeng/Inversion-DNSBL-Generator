@@ -44,54 +44,50 @@ git lfs install # you will need to install Git LFS first (https://git-lfs.github
 ## Usage
 
 ### Quick start (try this first)
+\
+Download URLs from Tranco TOP1M and DomCop TOP10M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
 ```bash
-# Download URLs from Tranco TOP1M and DomCop TOP10M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
 python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m --vendors google
 ```
-
+---
 ### Some other examples
-
+\
+Download URLs from Tranco TOP1M and update local database (no blocklist generated)
 ```bash
-# Download URLs from Tranco TOP1M and update local database (no blocklist generated)
 python3 main.py --fetch-urls --sources top1m
 ```
-
+\
+Download URLs from Tranco TOP1M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
 ```bash
-# Download URLs from Tranco TOP1M, generate malicious URL blocklist using Google Safe Browsing API, and update local database
 python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google
 ```
-
+\
+Download URLs from DomCop TOP10M, then generate malicious URL blocklist using both Google Safe Browsing API and Yandex Safe Browsing API, and update local database
 ```bash
-# Download URLs from DomCop TOP10M, then generate malicious URL blocklist using both Google Safe Browsing API and Yandex Safe Browsing API, 
-# and update local database
 python3 main.py --fetch-urls --identify-malicious-urls --sources top10m --vendors google
 # or alternatively
 python3 main.py --fetch-urls --identify-malicious-urls --sources top10m
 ```
-
+\
+**(Warning: this needs at least 500GB free space)** Download URLs from Domains Project (domainsproject.org), generate malicious URL blocklist using Google Safe Browsing API, and update local database
 ```bash
-# (Warning: need at least 500GB free space) Download URLs from Domains Project (domainsproject.org), 
-# generate malicious URL blocklist using Google Safe Browsing API,
-# and update local database
 python3 main.py --fetch-urls --identify-malicious-urls --sources domainsproject --vendors google
 ```
-
+\
+**(Warning: this needs at least 500GB free space)** Download URLs from all sources (Tranco TOP1M, DomCop TOP10M, and Domains Project), generate malicious URL blocklist using Google Safe Browsing API and Yandex Safe Browsing API, and update local database
 ```bash
-# (Warning: need at least 500GB free space) Download URLs from all sources (Tranco TOP1M, DomCop TOP10M, and Domains Project), 
-# generate malicious URL blocklist using Google Safe Browsing API and Yandex Safe Browsing API,
-# and update local database
 python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject --vendors google yandex
 # or alternatively
 python3 main.py --fetch-urls --identify-malicious-urls
 ```
-
+\
+From all existing URLs in local database, generate malicious URL blocklist using Yandex Safe Browsing API
 ```bash
-# From all existing URLs in local database, generate malicious URL blocklist using Yandex Safe Browsing API
-python3 main.py --identify-malicious-urls --vendors Yandex
+python3 main.py --identify-malicious-urls --vendors yandex
 ```
-
+\
+Show help message
 ```bash
-# Show help message
 python3 main.py --help
 ```
 
