@@ -16,12 +16,10 @@ class CustomFormatter(
 if __name__ == "__main__":
     parser = ArgumentParser(
         description="""
-    Create and/or update local [SQLite](https://www.sqlite.org) databases with URLs sourced from 
-    various public lists (e.g. Tranco TOP1M), and use the Google Safe Browsing API and Yandex Safe Browsing API 
-    to generate a malicious URL blocklist for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) 
-    applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) 
-    or [Pi-hole](https://pi-hole.net).
-
+    Generate malicious URL blocklists for DNSBL applications like pfBlockerNG or Pi-hole using the 
+    Safe Browsing API from Google and/or Yandex, with URLs sourced from various public lists like 
+    Tranco TOP1M, DomCop TOP10M, and Domains Project.
+    
     For example, to generate a blocklist of malicious URLs from Tranco TOP1M using Google Safe Browsing API, 
     run `python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google`
     """,
@@ -58,7 +56,7 @@ if __name__ == "__main__":
         action="store_true",
         help="""
         Retrieve URLs in database that have been flagged 
-        as malicious, then create a .txt file blocklist
+        as malicious from past scans, then create a .txt file blocklist
         (this flag cannot be enabled together with '--identify-malicious-urls')
         """,
     )
