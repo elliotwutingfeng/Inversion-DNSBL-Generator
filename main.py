@@ -79,7 +79,7 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
-        "-p",
+        "-v",
         "--vendors",
         nargs="+",
         required=False,
