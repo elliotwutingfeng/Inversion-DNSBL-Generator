@@ -1,17 +1,17 @@
-<div align="center">
-    <h1>Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator</h1>
-    <img src="https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator" />
-    <img src="https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator" />
-    <img src="https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator" />
-    <img src="https://img.shields.io/github/languages/code-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator" />
-    <img src="https://img.shields.io/github/license/elliotwutingfeng/Safe-Browsing-DNSBL-Generator" />
+# Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
 
-</div>
+[![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)
+![GitHub repo size](https://img.shields.io/github/repo-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)
+[![GitHub issues](https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues)
+[![GitHub license](https://img.shields.io/github/license/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/blob/master/LICENSE)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)
 
 \
 Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net) using the Safe Browsing API from [Google](https://developers.google.com/safe-browsing) and/or [Yandex](https://yandex.com/dev/safebrowsing), with URLs sourced from various public lists like [Tranco TOP1M](https://tranco-list.eu), [DomCop TOP10M](https://www.domcop.com/top-10-million-domains), and [Domains Project](https://domainsproject.org).
 
-<hr />
+---
 
 ## URL sources
 
@@ -25,7 +25,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Tested on Python 3.8.12
 -   Multi-core x86-64 CPU; for Python Ray support
 -   Recommended: At least 8GB RAM
--   Recommended: At least 5GB SSD free storage space; **at least 500GB SSD free storage space needed for processing Domains Project URLs**
+-   At least 5GB SSD free storage space; **at least 500GB required to process Domains Project URLs**
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -46,15 +46,12 @@ git lfs install # you will need to install Git LFS first (https://git-lfs.github
 ./unpack.sh
 ```
 
-## Usage
+## Usage Examples
 
-### Quick start (try this first)
-
-Fetch Tranco TOP1M and DomCop TOP10M, add its contents to local database, and generate a blocklist using Google Safe Browsing API
+**Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, and generate a blocklist using Google Safe Browsing API
 
 -   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate blocklist
--   :x: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate blocklist
+-   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
 -   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**
 -   :shield: Vendors: **Google**
@@ -65,14 +62,9 @@ python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m --
 
 ---
 
-### Some other examples
-
-Fetch Tranco TOP1M blocklist and add its contents to local database (no blocklist will be generated)
+Fetch Tranco TOP1M and insert its contents to local database (no blocklist will be generated)
 
 -   :heavy_check_mark: Download/Extract URLs to local database
--   :x: Identify malicious URLs from local database using Safe Browsing API, and generate blocklist
--   :x: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate blocklist
--   :x: Update local database with latest malicious URL statuses
 -   :memo: Sources: **Tranco TOP1M**
 -   :shield: Vendors: **Not Applicable**
 
@@ -82,30 +74,10 @@ python3 main.py --fetch-urls --sources top1m
 
 ---
 
-Fetch DomCop TOP10M, add its contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API
+Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 500GB free space)**
 
 -   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate blocklist
--   :x: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate blocklist
--   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **DomCop TOP10M**
--   :shield: Vendors: **Google**, **Yandex**
-
-```bash
-python3 main.py --fetch-urls --identify-malicious-urls --sources top10m --vendors google yandex
-# or alternatively
-python3 main.py --fetch-urls --identify-malicious-urls --sources top10m
-```
-
----
-
-Fetch URLs from all sources, add their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API
-
-**:warning: Warning: this needs at least 500GB free space**
-
--   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate blocklist
--   :x: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate blocklist
+-   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
 -   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Domains Project**
 -   :shield: Vendors: **Google**, **Yandex**
@@ -121,10 +93,7 @@ python3 main.py --fetch-urls --identify-malicious-urls
 
 Generate a (potentially outdated) blocklist from local database using malicious URL statuses attained from past scans
 
--   :x: Download/Extract URLs to local database
--   :x: Identify malicious URLs from local database using Safe Browsing API, and generate blocklist
--   :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate blocklist
--   :x: Update local database with latest malicious URL statuses
+-   :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate a blocklist
 -   :memo: Sources: **DomCop TOP10M**, **Domains Project**
 -   :shield: Vendors: **Google**
 
@@ -134,7 +103,7 @@ python3 main.py --retrieve-known-malicious-urls --sources top10m domainsproject 
 
 ---
 
-### Show help message
+Show help message
 
 ```bash
 python3 main.py --help
