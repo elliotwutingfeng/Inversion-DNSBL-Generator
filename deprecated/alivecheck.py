@@ -39,8 +39,8 @@ brew install fping
 
 def fping(url):
     # "fast pings" a given url, visit https://fping.org/ to learn more about the 'fping' command
-    CMD = f"fping {url}"
-    output = subprocess.run(CMD, shell=True, capture_output=True)
+    CMD = ["fping", url]
+    output = subprocess.run(CMD, shell=False, capture_output=True)
     return output
 
 
@@ -92,14 +92,13 @@ if __name__ == "__main__":
     ray.shutdown()
     ray.init(include_dashboard=False)
 
-    with open("URLs_marked_malicious_by_Safe_Browsing.txt", "r") as f:
-        dangerous_urls = [x.strip() for x in f.readlines()]
+    urls = ["google.com", "yandex.com"]
     (
         alive_and_not_dns_blocked_urls,
         alive_and_dns_blocked_urls,
         unreachable_urls,
         name_not_known_urls,
         unknown_urls,
-    ) = check_activity_URLs(dangerous_urls)
+    ) = check_activity_URLs(urls)
 
     ray.shutdown()

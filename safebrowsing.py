@@ -109,11 +109,7 @@ class SafeBrowsing:
 
         malicious = list(
             itertools.chain(
-                *[
-                    res.json()["matches"]
-                    for res in results
-                    if len(list(res.json().keys())) != 0
-                ]
+                *[res.json()["matches"] for res in results if "matches" in res.json()]
             )
         )
         # Remove http, https prefixes
@@ -147,7 +143,9 @@ class SafeBrowsing:
 
         if self.vendor == "Google":
             url_threatlist_combinations = [
-                x for x in threatlist_combinations if x["threatEntryType"] == "URL"
+                x
+                for x in threatlist_combinations
+                if "threatEntryType" in x and x["threatEntryType"] == "URL"
             ]
         else:
             # Yandex API returns status code 204 with no content if url_threatlist_combinations is too large
