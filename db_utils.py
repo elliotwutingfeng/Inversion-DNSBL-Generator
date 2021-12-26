@@ -8,6 +8,8 @@ from list_utils import chunks, flatten
 import os
 from logger_utils import init_logger
 from ray_utils import execute_with_ray
+import socket
+import struct
 
 
 # sqlite> .header on
@@ -43,6 +45,23 @@ def create_connection(filename):
     return conn
 
 
+def create_ips_table(filename="ipv4"):
+    conn = create_connection(filename)
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur.execute(
+                f"""CREATE TABLE IF NOT EXISTS ips (
+                           lastGoogleMalicious integer,
+                           lastYandexMalicious integer,
+                           hash blob
+                           );"""
+            )
+    except Error as e:
+        logging.error(f"filename:{filename} {e}")
+    conn.close()
+
+
 def create_urls_table(filename):
     conn = create_connection(filename)
     try:
@@ -54,7 +73,6 @@ def create_urls_table(filename):
                            lastListed integer,
                            lastGoogleMalicious integer,
                            lastYandexMalicious integer,
-                           lastReachable integer,
                            hash blob
                            );"""
             )
@@ -68,9 +86,45 @@ def compute_url_hash(url):
     return sha256(f"{url}/".encode()).digest()
 
 
+# select hash from ips where rowid = 1;
+# Note that rowid begins with 1, not 0.
+
+
+def int_addr_to_ip(int_addr):
+    return socket.inet_ntoa(struct.pack("!I", int_addr))
+
+
+def int_addr_to_hash(int_addr):
+    return compute_url_hash(socket.inet_ntoa(struct.pack("!I", int_addr)))
+
+
+def add_IPs(filename="ipv4"):
+    """
+    Add all 2**32 ips and their hashes into ips table
+    """
+    conn = create_connection(filename)
+    try:
+        with conn:
+            cur = conn.cursor()
+            logging.info(f"INSERT ipv4 addresses to ips table of {filename}...")
+            for int_addr in tqdm(range(2 ** 32)):
+                cur.execute(
+                    f"""
+                INSERT INTO ips (hash)
+                VALUES (?)
+                """,
+                    (int_addr_to_hash(int_addr),),
+                )
+
+            logging.info(f"INSERT ipv4 addresses to ips table of {filename}...[DONE]")
+    except Error as e:
+        logging.error(f"filename:{filename} {e}")
+    conn.close()
+
+
 def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
     """
-    Add a list of urls into filename's urls_{id} table
+    Add a list of urls into filename's urls table
     If any given url already exists, update its lastListed field
     """
     urls = url_list_fetcher() if filepath == None else url_list_fetcher(filepath)
@@ -233,6 +287,7 @@ def initialise_database(urls_filenames):
         f"Creating .db files if they do not exist yet for {len(urls_filenames)} .txt files"
     )
     execute_with_ray([(filename,) for filename in urls_filenames], create_urls_table)
+    create_ips_table()
     create_maliciousHashPrefixes_table()
 
 
@@ -307,31 +362,3 @@ def retrieve_malicious_URLs(urls_filenames) -> list[str]:
     )
 
     return list(malicious_urls)
-
-
-def update_activity_URLs(alive_urls, updateTime, filenames):
-    """
-    Updates alive status of all urls currently in DB
-    i.e. urls found alive, set lastReachable value to updateTime
-    """
-    logging.info("Updating DB with URL host statuses")
-    for filename in tqdm(filenames):
-        conn = create_connection(filename)
-        try:
-            batch_size = 30_000
-            alive_url_batches = list(chunks(alive_urls, batch_size))
-            for alive_url_batch in alive_url_batches:
-                alive_url_batch_length = len(alive_url_batch)
-                with conn:
-                    cur = conn.cursor()
-                    cur.execute(
-                        f"""
-                    UPDATE urls
-                    SET lastReachable = ?
-                    WHERE url IN ({','.join('?'*alive_url_batch_length)})
-                    """,
-                        (updateTime, *alive_url_batch),
-                    )
-        except Error as e:
-            logging.error(f"{e}")
-        conn.close()

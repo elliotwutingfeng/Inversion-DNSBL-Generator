@@ -42,6 +42,8 @@ def update_database(fetch, identify, retrieve, sources, vendors):
         urls_filenames.append("top1m_urls")
     if "top10m" in sources:
         urls_filenames.append("top10m_urls")
+    if "ipv4" in sources:
+        urls_filenames.append("ipv4")
 
     # Create DB files
     initialise_database(urls_filenames)

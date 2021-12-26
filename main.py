@@ -66,7 +66,7 @@ if __name__ == "__main__":
         "--sources",
         nargs="+",
         required=False,
-        choices=["top1m", "top10m", "domainsproject"],
+        choices=["top1m", "top10m", "domainsproject", "ipv4"],
         help="""
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
@@ -74,8 +74,9 @@ if __name__ == "__main__":
         top1m -> Tranco TOP1M
         top10m -> DomCop TOP10M
         domainsproject -> domainsproject.org
+        ipv4 -> ipv4 addresses
         """,
-        default=["top1m", "top10m", "domainsproject"],
+        default=["top1m", "top10m", "domainsproject", "ipv4"],
         type=str,
     )
     parser.add_argument(
