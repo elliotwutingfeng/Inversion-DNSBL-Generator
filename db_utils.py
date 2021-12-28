@@ -137,7 +137,7 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}..."
             )
             batch_size = 50
-            url_batches = list(chunks(urls, batch_size))
+            url_batches = chunks(urls, batch_size)
 
             for url_batch in url_batches:
                 cur.execute(
@@ -177,10 +177,7 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
                 INSERT INTO maliciousHashPrefixes (hashPrefix,prefixSize,vendor)
                 VALUES (?, ?, ?);
                 """,
-                (
-                    (hashPrefix, len(hashPrefix), vendor)
-                    for hashPrefix in list(hash_prefixes)
-                ),
+                ((hashPrefix, len(hashPrefix), vendor) for hashPrefix in hash_prefixes),
             )
     except Error as e:
         logging.error(f"vendor:{vendor} {e}")
@@ -306,7 +303,7 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
     conn = create_connection(filename)
     try:
         batch_size = 30_000
-        malicious_url_batches = list(chunks(malicious_urls, batch_size))
+        malicious_url_batches = chunks(malicious_urls, batch_size)
         for malicious_url_batch in malicious_url_batches:
             malicious_url_batch_length = len(malicious_url_batch)
             with conn:
@@ -348,7 +345,7 @@ def retrieve_malicious_URLs(urls_filenames) -> list[str]:
         """,
                     (lastGoogleMalicious, lastYandexMalicious),
                 )
-                malicious_urls.update([x[0] for x in cur.fetchall()])
+                malicious_urls.update((x[0] for x in cur.fetchall()))
         except Error as e:
             logging.error(f"filename:{filename} {e}")
         conn.close()

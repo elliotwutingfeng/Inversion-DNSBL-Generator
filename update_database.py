@@ -32,7 +32,7 @@ def update_database(fetch, identify, retrieve, sources, vendors):
         # Scan Domains Project's "domains" directory for local urls_filenames
         local_domains_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
         local_domains_filepaths = []
-        for root, _, files in tqdm(list(os.walk(local_domains_dir))):
+        for root, _, files in os.walk(local_domains_dir):
             for file in files:
                 if file.lower().endswith(".txt"):
                     urls_filenames.append(f"{file[:-4]}")

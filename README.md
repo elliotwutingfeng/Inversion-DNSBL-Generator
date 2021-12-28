@@ -43,6 +43,11 @@ cd ../
 git clone https://github.com/tb0hdan/domains.git
 cd domains
 git lfs install # you will need to install Git LFS first (https://git-lfs.github.com)
+```
+
+Edit `unpack.sh` and remove `combine` from the last line, then run:
+
+```bash
 ./unpack.sh
 ```
 

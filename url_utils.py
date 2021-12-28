@@ -8,7 +8,6 @@ from logger_utils import init_logger
 from ray_utils import execute_with_ray
 from requests_utils import get_with_retries
 from tqdm import tqdm
-import math
 from list_utils import chunks
 
 logger = init_logger()
@@ -54,7 +53,7 @@ def get_top1m_url_list() -> list[str]:
             chunk_size = 4096
             for data in tqdm(
                 resp.iter_content(chunk_size=chunk_size),
-                total=math.ceil(int(resp.headers["Content-Length"]) / chunk_size),
+                total=-(-int(resp.headers["Content-Length"]) // chunk_size),
             ):
                 f.write(data)
             zipfile = ZipFile(f)
@@ -82,7 +81,7 @@ def get_top10m_url_list() -> list[str]:
             chunk_size = 4096
             for data in tqdm(
                 resp.iter_content(chunk_size=chunk_size),
-                total=math.ceil(int(resp.headers["Content-Length"]) / chunk_size),
+                total=-(-int(resp.headers["Content-Length"]) // chunk_size),
             ):
                 f.write(data)
             zipfile = ZipFile(f)

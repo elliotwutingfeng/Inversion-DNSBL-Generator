@@ -105,9 +105,6 @@ def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
     if len(tasks) == 0:
         return []
 
-    def process_incremental(acc, result):
-        return acc + [result]
-
     if progress_bar:
         # Progressbar Ray Actor
         num_ticks = len(tasks)
@@ -128,6 +125,6 @@ def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
     results = []
     while len(tasks_pre_launch):
         done_id, tasks_pre_launch = ray.wait(tasks_pre_launch)
-        results = process_incremental(results, ray.get(done_id[0]))
+        results.append(ray.get(done_id[0]))
 
     return results
