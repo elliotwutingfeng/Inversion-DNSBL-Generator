@@ -94,7 +94,7 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             malicious_urls[vendor] = vendor_malicious_urls
 
         # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(flatten(list(malicious_urls.values())))
+        write_db_malicious_urls_to_file(flatten(malicious_urls.values()))
 
         # TODO push blocklist to GitHub
 
