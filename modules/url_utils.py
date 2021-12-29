@@ -105,7 +105,7 @@ def get_local_file_url_list(file: str) -> list[str]:
         with open(file, "r") as f:
             urls = generate_hostname_expressions((_.strip() for _ in f.readlines()))
             logging.info(f"Extracting local list ({file}) ... [DONE]")
-        return urls
+            return urls
     except OSError as e:
         logging.warning(
             f"Failed to retrieve local list ({file}); returning empty list: {e}"
