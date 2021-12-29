@@ -8,7 +8,8 @@ from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import get_with_retries
 from tqdm import tqdm
-from modules.list_utils import chunks
+
+from more_itertools import chunked
 
 logger = init_logger()
 
@@ -18,7 +19,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
     """
 
-    raw_url_chunks = chunks(raw_urls, 50_000)
+    raw_url_chunks: list[list[str]] = chunked(raw_urls, 50_000)
 
     def aux(raw_url_chunk):
         hostname_expressions = set()
@@ -102,8 +103,7 @@ def get_local_file_url_list(file: str) -> list[str]:
     logging.info(f"Extracting local list ({file}) ...")
     try:
         with open(file, "r") as f:
-            raw_urls = [_.strip() for _ in f.readlines()]
-            urls = generate_hostname_expressions(raw_urls)
+            urls = generate_hostname_expressions((_.strip() for _ in f.readlines()))
             logging.info(f"Extracting local list ({file}) ... [DONE]")
         return urls
     except OSError as e:

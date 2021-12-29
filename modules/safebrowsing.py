@@ -1,7 +1,7 @@
 from __future__ import annotations
 import time
 from dotenv import dotenv_values
-from modules.list_utils import chunks
+from more_itertools.more import chunked
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 import requests
@@ -99,7 +99,7 @@ class SafeBrowsing:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
         logging.info(f"Verifying suspected {self.vendor} malicious URLs")
         # Split list of URLs into sublists of length == maximum_url_batch_size
-        url_batches = chunks(urls, self.maximum_url_batch_size)
+        url_batches = chunked(urls, self.maximum_url_batch_size)
         logging.info(f"{-(-len(urls)//self.maximum_url_batch_size)} batches")
         results = execute_with_ray(
             [(url_batch,) for url_batch in url_batches],

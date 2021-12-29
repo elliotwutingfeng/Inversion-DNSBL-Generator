@@ -5,11 +5,12 @@ import logging
 from hashlib import sha256
 from tqdm import tqdm
 import os
-from modules.list_utils import chunks, flatten
+from modules.list_utils import flatten
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 import socket
 import struct
+from more_itertools import chunked
 
 
 # sqlite> .header on
@@ -137,7 +138,7 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}..."
             )
             batch_size = 50
-            url_batches = chunks(urls, batch_size)
+            url_batches = chunked(urls, batch_size)
 
             for url_batch in url_batches:
                 cur.execute(
@@ -303,7 +304,7 @@ def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
     conn = create_connection(filename)
     try:
         batch_size = 30_000
-        malicious_url_batches = chunks(malicious_urls, batch_size)
+        malicious_url_batches = chunked(malicious_urls, batch_size)
         for malicious_url_batch in malicious_url_batches:
             malicious_url_batch_length = len(malicious_url_batch)
             with conn:
