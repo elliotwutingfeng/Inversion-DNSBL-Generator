@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 import pathlib
 
-from db_utils import (
+from modules.db_utils import (
     add_maliciousHashPrefixes,
     identify_suspected_urls,
     initialise_database,
@@ -14,11 +14,15 @@ from db_utils import (
     update_malicious_URLs,
 )
 
-from filewriter import write_db_malicious_urls_to_file
-from ray_utils import execute_with_ray
-from safebrowsing import SafeBrowsing
-from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_url_list
-from list_utils import flatten
+from modules.filewriter import write_db_malicious_urls_to_file
+from modules.ray_utils import execute_with_ray
+from modules.safebrowsing import SafeBrowsing
+from modules.url_utils import (
+    get_local_file_url_list,
+    get_top10m_url_list,
+    get_top1m_url_list,
+)
+from modules.list_utils import flatten
 
 
 def update_database(fetch, identify, retrieve, sources, vendors):

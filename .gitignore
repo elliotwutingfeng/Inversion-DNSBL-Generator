@@ -1,7 +1,4 @@
 .env
-debug.py
-debug.rest
-sandbox.ipynb
 .ipynb_checkpoints/
 logs/
 blocklists/

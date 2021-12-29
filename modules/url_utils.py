@@ -4,11 +4,11 @@ from zipfile import ZipFile
 import requests
 import logging
 import tldextract
-from logger_utils import init_logger
-from ray_utils import execute_with_ray
-from requests_utils import get_with_retries
+from modules.logger_utils import init_logger
+from modules.ray_utils import execute_with_ray
+from modules.requests_utils import get_with_retries
 from tqdm import tqdm
-from list_utils import chunks
+from modules.list_utils import chunks
 
 logger = init_logger()
 
