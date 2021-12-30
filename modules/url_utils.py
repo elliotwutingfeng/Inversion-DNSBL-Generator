@@ -19,7 +19,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
     """
 
-    raw_url_chunks: list[list[str]] = chunked(raw_urls, 10_000)
+    # raw_url_chunks: list[list[str]] = chunked(raw_urls, 10_000)
 
     def generate_hostname_expressions_(raw_url_chunk):
         hostname_expressions = set()
@@ -34,13 +34,17 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
             )
         return hostname_expressions
 
+    """
     hostname_expressions = execute_with_ray(
         [(raw_url_chunk,) for raw_url_chunk in raw_url_chunks],
         generate_hostname_expressions_,
         progress_bar=False,
     )
+    """
+    hostname_expressions = list(generate_hostname_expressions_(raw_urls))
 
-    return list(set().union(*hostname_expressions))
+    # return list(set().union(*hostname_expressions))
+    return hostname_expressions
 
 
 def get_top1m_url_list() -> list[str]:

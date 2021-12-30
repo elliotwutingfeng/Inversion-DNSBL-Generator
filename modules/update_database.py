@@ -27,7 +27,7 @@ from modules.list_utils import flatten
 
 def update_database(fetch, identify, retrieve, sources, vendors):
     ray.shutdown()
-    ray.init(include_dashboard=True)
+    ray.init(include_dashboard=True, num_cpus=2)
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames = []
