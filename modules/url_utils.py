@@ -21,7 +21,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
 
     raw_url_chunks: list[list[str]] = chunked(raw_urls, 10_000)
 
-    def aux(raw_url_chunk):
+    def generate_hostname_expressions_(raw_url_chunk):
         hostname_expressions = set()
         for raw_url in raw_url_chunk:
             ext = tldextract.extract(raw_url)
@@ -36,7 +36,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
 
     hostname_expressions = execute_with_ray(
         [(raw_url_chunk,) for raw_url_chunk in raw_url_chunks],
-        aux,
+        generate_hostname_expressions_,
         progress_bar=False,
     )
 
