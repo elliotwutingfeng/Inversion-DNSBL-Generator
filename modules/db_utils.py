@@ -137,6 +137,7 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
             logging.info(
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}..."
             )
+
             for url_batch in urls:
                 cur.executemany(
                     f"""

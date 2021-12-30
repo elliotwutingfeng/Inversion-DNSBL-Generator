@@ -19,7 +19,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
     """
 
-    raw_url_chunks: list[list[str]] = chunked(raw_urls, 50_000)
+    raw_url_chunks: list[list[str]] = chunked(raw_urls, 10_000)
 
     def aux(raw_url_chunk):
         hostname_expressions = set()
@@ -58,17 +58,15 @@ def get_top1m_url_list() -> list[str]:
             ):
                 f.write(data)
             zipfile = ZipFile(f)
-            raw_urls = [
+            raw_urls = (
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
-            ]
-            logging.info("Downloading TOP1M list... [DONE]")
-            top1m_urls = (
-                generate_hostname_expressions(raw_urls)
-                for raw_urls in chunked(raw_urls, 400_000)
             )
+            logging.info("Downloading TOP1M list... [DONE]")
 
-            return top1m_urls
+            for batch in chunked(raw_urls, 40_000):
+                yield generate_hostname_expressions(batch)
+
     except requests.exceptions.RequestException as e:
         logging.warning(f"Failed to retrieve TOP1M list; returning empty list: {e}")
         return []
@@ -90,34 +88,28 @@ def get_top10m_url_list() -> list[str]:
             ):
                 f.write(data)
             zipfile = ZipFile(f)
-            raw_urls = [
+            raw_urls = (
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
-            ]
-            logging.info("Downloading TOP10M list... [DONE]")
-            top10m_urls = (
-                generate_hostname_expressions(raw_urls)
-                for raw_urls in chunked(raw_urls, 400_000)
             )
+            logging.info("Downloading TOP10M list... [DONE]")
 
-            return top10m_urls
+            for batch in chunked(raw_urls, 40_000):
+                yield generate_hostname_expressions(batch)
+
     except requests.exceptions.RequestException as e:
         logging.warning(f"Failed to retrieve TOP10M list; returning empty list: {e}")
-        return []
+        yield []
 
 
 def get_local_file_url_list(file: str) -> list[str]:
     """Returns all listed URLs from local text file"""
     try:
         with open(file, "r") as f:
-            urls = (
-                generate_hostname_expressions(raw_urls)
-                for raw_urls in chunked((_.strip() for _ in f.readlines()), 400_000)
-            )
-
-            return urls
+            for raw_urls in chunked((_.strip() for _ in f.readlines()), 40_000):
+                yield generate_hostname_expressions(raw_urls)
     except OSError as e:
         logging.warning(
             f"Failed to retrieve local list ({file}); returning empty list: {e}"
         )
-        return []
+        yield []
