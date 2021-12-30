@@ -62,8 +62,12 @@ def get_top1m_url_list() -> list[str]:
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
             ]
-            top1m_urls = generate_hostname_expressions(raw_urls)
             logging.info("Downloading TOP1M list... [DONE]")
+            top1m_urls = (
+                generate_hostname_expressions(raw_urls)
+                for raw_urls in chunked(raw_urls, 400_000)
+            )
+
             return top1m_urls
     except requests.exceptions.RequestException as e:
         logging.warning(f"Failed to retrieve TOP1M list; returning empty list: {e}")
@@ -90,8 +94,12 @@ def get_top10m_url_list() -> list[str]:
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             ]
-            top10m_urls = generate_hostname_expressions(raw_urls)
             logging.info("Downloading TOP10M list... [DONE]")
+            top10m_urls = (
+                generate_hostname_expressions(raw_urls)
+                for raw_urls in chunked(raw_urls, 400_000)
+            )
+
             return top10m_urls
     except requests.exceptions.RequestException as e:
         logging.warning(f"Failed to retrieve TOP10M list; returning empty list: {e}")
@@ -100,21 +108,16 @@ def get_top10m_url_list() -> list[str]:
 
 def get_local_file_url_list(file: str) -> list[str]:
     """Returns all listed URLs from local text file"""
-    logging.info(f"Extracting local list ({file}) ...")
     try:
         with open(file, "r") as f:
-            urls = generate_hostname_expressions((_.strip() for _ in f.readlines()))
-            logging.info(f"Extracting local list ({file}) ... [DONE]")
+            urls = (
+                generate_hostname_expressions(raw_urls)
+                for raw_urls in chunked((_.strip() for _ in f.readlines()), 400_000)
+            )
+
             return urls
     except OSError as e:
         logging.warning(
             f"Failed to retrieve local list ({file}); returning empty list: {e}"
         )
         return []
-
-
-if __name__ == "__main__":
-    top1m_urls, top10m_urls = get_top1m_url_list(), get_top10m_url_list()
-
-    logging.info(len(top1m_urls))
-    logging.info(len(top10m_urls))

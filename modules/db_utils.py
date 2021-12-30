@@ -137,16 +137,16 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
             logging.info(
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}..."
             )
-
-            cur.executemany(
-                f"""
-            INSERT INTO urls (url, lastListed, hash)
-            VALUES (?,?,?)
-            ON CONFLICT(url)
-            DO UPDATE SET lastListed=excluded.lastListed
-            """,
-                ((url, lastListed, compute_url_hash(url)) for url in urls),
-            )
+            for url_batch in urls:
+                cur.executemany(
+                    f"""
+                INSERT INTO urls (url, lastListed, hash)
+                VALUES (?,?,?)
+                ON CONFLICT(url)
+                DO UPDATE SET lastListed=excluded.lastListed
+                """,
+                    ((url, lastListed, compute_url_hash(url)) for url in url_batch),
+                )
 
             logging.info(
                 f"Performing INSERT-UPDATE URLs to urls table of {filename}...[DONE]"
