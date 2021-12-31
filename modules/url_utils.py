@@ -5,7 +5,6 @@ import requests
 import logging
 import tldextract
 from modules.logger_utils import init_logger
-from modules.ray_utils import execute_with_ray
 from modules.requests_utils import get_with_retries
 from tqdm import tqdm
 
@@ -18,8 +17,6 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     """Generate Safe Browsing API-compliant hostname expressions
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
     """
-
-    # raw_url_chunks: list[list[str]] = chunked(raw_urls, 10_000)
 
     def generate_hostname_expressions_(raw_url_chunk):
         hostname_expressions = set()
@@ -34,16 +31,8 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
             )
         return hostname_expressions
 
-    """
-    hostname_expressions = execute_with_ray(
-        [(raw_url_chunk,) for raw_url_chunk in raw_url_chunks],
-        generate_hostname_expressions_,
-        progress_bar=False,
-    )
-    """
     hostname_expressions = list(generate_hostname_expressions_(raw_urls))
 
-    # return list(set().union(*hostname_expressions))
     return hostname_expressions
 
 

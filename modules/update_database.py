@@ -1,3 +1,4 @@
+from more_itertools.more import sort_together
 import ray
 import time
 import os
@@ -42,15 +43,17 @@ def update_database(fetch, identify, retrieve, sources, vendors):
                     urls_filenames.append(f"{file[:-4]}")
                     local_domains_filepaths.append(os.path.join(root, file))
         # Sort local_domains_filepaths and urls_filenames by ascending filesize
+
         local_domains_filesizes = [
             os.path.getsize(path) for path in local_domains_filepaths
         ]
-        local_domains_filepaths = [
-            x for _, x in sorted(zip(local_domains_filesizes, local_domains_filepaths))
-        ]
-        urls_filenames = [
-            x for _, x in sorted(zip(local_domains_filesizes, urls_filenames))
-        ]
+        (
+            local_domains_filesizes,
+            local_domains_filepaths,
+            urls_filenames,
+        ) = sort_together(
+            [local_domains_filesizes, local_domains_filepaths, urls_filenames]
+        )
 
     if "top1m" in sources:
         urls_filenames.append("top1m_urls")
