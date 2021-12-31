@@ -22,7 +22,7 @@ from modules.url_utils import (
     get_top10m_url_list,
     get_top1m_url_list,
 )
-from modules.list_utils import flatten
+from more_itertools import flatten
 
 
 def update_database(fetch, identify, retrieve, sources, vendors):
@@ -93,10 +93,15 @@ def update_database(fetch, identify, retrieve, sources, vendors):
 
             prefixSizes = retrieve_vendor_prefixSizes(vendor)
             # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
-            suspected_urls = flatten(
-                execute_with_ray(
-                    [(vendor, filename, prefixSizes) for filename in urls_filenames],
-                    identify_suspected_urls,
+            suspected_urls = list(
+                flatten(
+                    execute_with_ray(
+                        [
+                            (vendor, filename, prefixSizes)
+                            for filename in urls_filenames
+                        ],
+                        identify_suspected_urls,
+                    )
                 )
             )
 
@@ -108,7 +113,7 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             malicious_urls[vendor] = vendor_malicious_urls
 
         # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(flatten(malicious_urls.values()))
+        write_db_malicious_urls_to_file(list(flatten(malicious_urls.values())))
 
         # TODO push blocklist to GitHub
 

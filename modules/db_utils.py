@@ -5,7 +5,7 @@ import logging
 from hashlib import sha256
 from tqdm import tqdm
 import os
-from modules.list_utils import flatten
+from more_itertools import flatten
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 import socket
@@ -233,11 +233,13 @@ def identify_suspected_urls(vendor, filename, prefixSizes):
     suspected_urls = []
     try:
         # Find all urls with matching hash_prefixes
-        suspected_urls = flatten(
-            execute_with_ray(
-                [(filename, prefixSize, vendor) for prefixSize in prefixSizes],
-                get_matching_hashPrefix_urls,
-                progress_bar=False,
+        suspected_urls = list(
+            flatten(
+                execute_with_ray(
+                    [(filename, prefixSize, vendor) for prefixSize in prefixSizes],
+                    get_matching_hashPrefix_urls,
+                    progress_bar=False,
+                )
             )
         )
 
