@@ -6,6 +6,7 @@ from tqdm import tqdm
 import pathlib
 
 from modules.db_utils import (
+    add_IPs,
     add_maliciousHashPrefixes,
     identify_suspected_urls,
     initialise_database,
@@ -80,6 +81,9 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             # Download and Add TOP10M URLs to DB
             add_URLs_jobs.append((get_top10m_url_list, updateTime, "top10m_urls"))
         execute_with_ray(add_URLs_jobs, add_URLs)
+        if "ipv4" in sources:
+            # Generate and Add ipv4 addresses to DB
+            add_IPs()
 
     if identify:
         for vendor in vendors:

@@ -145,7 +145,12 @@ class SafeBrowsing:
             url_threatlist_combinations = [
                 x
                 for x in threatlist_combinations
-                if "threatEntryType" in x and x["threatEntryType"] == "URL"
+                if "threatEntryType" in x
+                and x["threatEntryType"]
+                in (
+                    "URL",
+                    "IP_RANGE",
+                )  # TODO: Check if "IP_RANGE" is useful, currently Google has only one hashPrefix entry.
             ]
         else:
             # Yandex API returns status code 204 with no content if url_threatlist_combinations is too large
