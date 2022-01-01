@@ -40,6 +40,7 @@ def create_connection(filename):
         cur.execute(
             "PRAGMA journal_mode = WAL"
         )  # Enable Write-Ahead Log option; https://www.sqlite.org/wal.html
+        cur.execute("PRAGMA auto_vacuum = 1")  # Enable auto_vacuum
     except Error as e:
         logging.error(f"filename:{filename} {e}")
 
