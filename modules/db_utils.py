@@ -294,7 +294,7 @@ def initialise_database(urls_filenames):
     create_maliciousHashPrefixes_table()
 
 
-def update_malicious_URLs(malicious_urls, updateTime, vendor, filename):
+def update_malicious_URLs(updateTime, vendor, filename, malicious_urls):
     """
     Updates malicious status of all urls currently in DB
     i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime

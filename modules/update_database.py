@@ -124,13 +124,16 @@ def update_database(fetch, identify, retrieve, sources, vendors):
 
         # TODO push blocklist to GitHub
 
-        # TODO parallelise this section
         # Update malicious URL statuses in DB
-        for filename in tqdm(urls_filenames):
-            for vendor in vendors:
-                update_malicious_URLs(
-                    malicious_urls[vendor], updateTime, vendor, filename
-                )
+        execute_with_ray(
+            [
+                (updateTime, vendor, filename)
+                for vendor in vendors
+                for filename in urls_filenames
+            ],
+            update_malicious_URLs,
+            store={"malicious_urls": malicious_urls[vendor]},
+        )
 
     if retrieve:
         malicious_urls = retrieve_malicious_URLs(urls_filenames)

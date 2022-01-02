@@ -88,15 +88,16 @@ class ProgressBar:
 
 
 @ray.remote
-def aux(task_handler, task, actor_id=None):
+def aux(task_handler, task, store, actor_id=None):
     """Runs task handler on task, updates progressbar and finally returns the result"""
-    result = task_handler(*task)
+
+    result = task_handler(*task, **{key: ray.get(store[key]) for key in store})
     if actor_id != None:
         actor_id.update.remote(1)
     return result
 
 
-def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
+def execute_with_ray(tasks: list, task_handler, store=None, progress_bar=True) -> list:
     """Apply task_handler to list of tasks.
 
     Tasks are processed in parallel with pipelining.
@@ -113,7 +114,14 @@ def execute_with_ray(tasks: list, task_handler, progress_bar=True) -> list:
         actor_id = ray.put(actor)
 
     tasks_pre_launch = [
-        aux.remote(task_handler, task, actor_id=actor_id if progress_bar else None)
+        aux.remote(
+            task_handler,
+            task,
+            store={key: ray.put(store[key]) for key in store}
+            if store is not None
+            else {},
+            actor_id=actor_id if progress_bar else None,
+        )
         for task in tasks
     ]
 
