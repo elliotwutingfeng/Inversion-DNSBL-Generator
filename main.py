@@ -4,7 +4,7 @@ from argparse import (
     RawTextHelpFormatter,
     ArgumentDefaultsHelpFormatter,
 )
-from update_database import update_database
+from modules.update_database import update_database
 
 
 class CustomFormatter(

@@ -1,9 +1,9 @@
 from __future__ import annotations
 import time
 from dotenv import dotenv_values
-from list_utils import chunks
-from logger_utils import init_logger
-from ray_utils import execute_with_ray
+from more_itertools.more import chunked
+from modules.logger_utils import init_logger
+from modules.ray_utils import execute_with_ray
 import requests
 from requests.models import Response
 import itertools
@@ -11,7 +11,7 @@ import logging
 from tqdm import tqdm
 import base64
 
-from requests_utils import get_with_retries, post_with_retries
+from modules.requests_utils import get_with_retries, post_with_retries
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
@@ -99,8 +99,8 @@ class SafeBrowsing:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
         logging.info(f"Verifying suspected {self.vendor} malicious URLs")
         # Split list of URLs into sublists of length == maximum_url_batch_size
-        url_batches = list(chunks(urls, self.maximum_url_batch_size))
-        logging.info(f"{len(url_batches)} batches")
+        url_batches = chunked(urls, self.maximum_url_batch_size)
+        logging.info(f"{-(-len(urls)//self.maximum_url_batch_size)} batches")
         results = execute_with_ray(
             [(url_batch,) for url_batch in url_batches],
             self.threatMatches_lookup,
@@ -109,16 +109,16 @@ class SafeBrowsing:
 
         malicious = list(
             itertools.chain(
-                *[res.json()["matches"] for res in results if "matches" in res.json()]
+                *(res.json()["matches"] for res in results if "matches" in res.json())
             )
         )
         # Remove http, https prefixes
         malicious_urls = list(
             set(
-                [
+                (
                     x["threat"]["url"].replace("https://", "").replace("http://", "")
                     for x in malicious
-                ]
+                )
             )
         )
 
@@ -145,7 +145,12 @@ class SafeBrowsing:
             url_threatlist_combinations = [
                 x
                 for x in threatlist_combinations
-                if "threatEntryType" in x and x["threatEntryType"] == "URL"
+                if "threatEntryType" in x
+                and x["threatEntryType"]
+                in (
+                    "URL",
+                    "IP_RANGE",
+                )  # TODO: Check if "IP_RANGE" is useful, currently Google has only one hashPrefix entry.
             ]
         else:
             # Yandex API returns status code 204 with no content if url_threatlist_combinations is too large
@@ -212,7 +217,7 @@ class SafeBrowsing:
         # The uncompressed threat entries in hash format of a particular prefix length.
         # Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes,
         # but some hashes are lengthened if they collide with the hash of a popular URL.
-        assert set([len(x) for x in hashes]) == prefixSizes
+        assert set((len(x) for x in hashes)) == prefixSizes
         return hashes
 
     def get_malicious_hash_prefixes(self):

@@ -15,9 +15,17 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 
 ## URL sources
 
--   Tranco TOP1M (~1 million URLs): https://tranco-list.eu
--   DomCop TOP10M (~10 million URLs): https://www.domcop.com/top-10-million-domains
--   Domains Project (~1.7 billion URLs): https://domainsproject.org
+-   Tranco TOP1M (~1 million URLs): <https://tranco-list.eu>
+-   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
+-   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
+-   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
+
+## Safe Browsing API vendors
+
+| <a href="https://developers.google.com/safe-browsing"><img height="100px" src="images/google.svg" alt="Google Safe Browsing API" /></a> | <a href="https://yandex.com/dev/safebrowsing"><img height="100px" src="images/yandex.png" alt="Yandex Safe Browsing API" /></a> |
+| :-------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
+|                                          [Google](https://developers.google.com/safe-browsing)                                          |                                          [Yandex](https://yandex.com/dev/safebrowsing)                                          |
+|                                        [ToS](https://developers.google.com/safe-browsing/terms)                                         |                                      [ToS](https://yandex.ru/legal/yandex_sb_api/?lang=en)                                      |
 
 ## Requirements
 
@@ -25,7 +33,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Tested on Python 3.8.12
 -   Multi-core x86-64 CPU; for Python Ray support
 -   Recommended: At least 8GB RAM
--   At least 5GB SSD free storage space; **at least 500GB required to process Domains Project URLs**
+-   At least 5GB SSD free storage space; **at least 600GB required to process Domains Project URLs and IPv4 Addresses**
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -43,6 +51,11 @@ cd ../
 git clone https://github.com/tb0hdan/domains.git
 cd domains
 git lfs install # you will need to install Git LFS first (https://git-lfs.github.com)
+```
+
+Edit `unpack.sh` and remove `combine` from the last line, then run:
+
+```bash
 ./unpack.sh
 ```
 
@@ -74,16 +87,16 @@ python3 main.py --fetch-urls --sources top1m
 
 ---
 
-Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 500GB free space)**
+Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 600GB free space)**
 
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Domains Project**
+-   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Domains Project**, **IPv4 Addresses**
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject \
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject ipv4 \
 --vendors google yandex
 # or alternatively
 python3 main.py --fetch-urls --identify-malicious-urls
@@ -113,11 +126,9 @@ python3 main.py --help
 
 -   Yandex Safe Browsing API calls often fail with either ConnectionResetError or HTTP Status Code 204. Yandex Technical support has been notified. _Temporary workaround: Keep retrying API call until it succeeds_
 
-## User Protection Notice
+## Disclaimer
 
-### Google
-
-Google works to provide the most accurate and up-to-date information about unsafe web resources. However, Google cannot guarantee that its information is comprehensive and error-free: some risky sites may not be identified, and some safe sites may be identified in error.
+This project is not sponsored, endorsed, or otherwise affiliated with Google and/or Yandex.
 
 ## Libraries/Frameworks used
 
@@ -128,9 +139,9 @@ Google works to provide the most accurate and up-to-date information about unsaf
 
 ## References
 
--   https://developers.google.com/safe-browsing
--   https://yandex.com/dev/safebrowsing
--   https://tranco-list.eu
--   https://www.domcop.com/top-10-million-domains
--   https://domainsproject.org
--   https://remusao.github.io/posts/few-tips-sqlite-perf.html
+-   <https://developers.google.com/safe-browsing>
+-   <https://yandex.com/dev/safebrowsing>
+-   <https://tranco-list.eu>
+-   <https://www.domcop.com/top-10-million-domains>
+-   <https://domainsproject.org>
+-   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>

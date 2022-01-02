@@ -1,10 +1,12 @@
+from more_itertools.more import sort_together
 import ray
 import time
 import os
 from tqdm import tqdm
 import pathlib
 
-from db_utils import (
+from modules.db_utils import (
+    add_IPs,
     add_maliciousHashPrefixes,
     identify_suspected_urls,
     initialise_database,
@@ -14,16 +16,20 @@ from db_utils import (
     update_malicious_URLs,
 )
 
-from filewriter import write_db_malicious_urls_to_file
-from ray_utils import execute_with_ray
-from safebrowsing import SafeBrowsing
-from url_utils import get_local_file_url_list, get_top10m_url_list, get_top1m_url_list
-from list_utils import flatten
+from modules.filewriter import write_db_malicious_urls_to_file
+from modules.ray_utils import execute_with_ray
+from modules.safebrowsing import SafeBrowsing
+from modules.url_utils import (
+    get_local_file_url_list,
+    get_top10m_url_list,
+    get_top1m_url_list,
+)
+from more_itertools import flatten
 
 
 def update_database(fetch, identify, retrieve, sources, vendors):
     ray.shutdown()
-    ray.init(include_dashboard=False)
+    ray.init(include_dashboard=True)
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames = []
@@ -32,11 +38,23 @@ def update_database(fetch, identify, retrieve, sources, vendors):
         # Scan Domains Project's "domains" directory for local urls_filenames
         local_domains_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
         local_domains_filepaths = []
-        for root, _, files in tqdm(list(os.walk(local_domains_dir))):
+        for root, _, files in os.walk(local_domains_dir):
             for file in files:
                 if file.lower().endswith(".txt"):
                     urls_filenames.append(f"{file[:-4]}")
                     local_domains_filepaths.append(os.path.join(root, file))
+        # Sort local_domains_filepaths and urls_filenames by ascending filesize
+
+        local_domains_filesizes = [
+            os.path.getsize(path) for path in local_domains_filepaths
+        ]
+        (
+            local_domains_filesizes,
+            local_domains_filepaths,
+            urls_filenames,
+        ) = sort_together(
+            [local_domains_filesizes, local_domains_filepaths, urls_filenames]
+        )
 
     if "top1m" in sources:
         urls_filenames.append("top1m_urls")
@@ -63,6 +81,9 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             # Download and Add TOP10M URLs to DB
             add_URLs_jobs.append((get_top10m_url_list, updateTime, "top10m_urls"))
         execute_with_ray(add_URLs_jobs, add_URLs)
+        if "ipv4" in sources:
+            # Generate and Add ipv4 addresses to DB
+            add_IPs()
 
     if identify:
         for vendor in vendors:
@@ -79,10 +100,15 @@ def update_database(fetch, identify, retrieve, sources, vendors):
 
             prefixSizes = retrieve_vendor_prefixSizes(vendor)
             # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
-            suspected_urls = flatten(
-                execute_with_ray(
-                    [(vendor, filename, prefixSizes) for filename in urls_filenames],
-                    identify_suspected_urls,
+            suspected_urls = list(
+                flatten(
+                    execute_with_ray(
+                        [
+                            (vendor, filename, prefixSizes)
+                            for filename in urls_filenames
+                        ],
+                        identify_suspected_urls,
+                    )
                 )
             )
 
@@ -94,17 +120,20 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             malicious_urls[vendor] = vendor_malicious_urls
 
         # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(flatten(list(malicious_urls.values())))
+        write_db_malicious_urls_to_file(list(flatten(malicious_urls.values())))
 
         # TODO push blocklist to GitHub
 
-        # TODO parallelise this section
         # Update malicious URL statuses in DB
-        for filename in tqdm(urls_filenames):
-            for vendor in vendors:
-                update_malicious_URLs(
-                    malicious_urls[vendor], updateTime, vendor, filename
-                )
+        execute_with_ray(
+            [
+                (updateTime, vendor, filename)
+                for vendor in vendors
+                for filename in urls_filenames
+            ],
+            update_malicious_URLs,
+            store={"malicious_urls": malicious_urls[vendor]},
+        )
 
     if retrieve:
         malicious_urls = retrieve_malicious_URLs(urls_filenames)

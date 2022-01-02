@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 
-from logger_utils import init_logger
+from modules.logger_utils import init_logger
 
 blocklists_folder = "blocklists"
 blocklist_filename = "URLs_marked_malicious_by_Safe_Browsing"

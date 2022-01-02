@@ -3,7 +3,7 @@ import requests
 import time
 import json
 
-from logger_utils import init_logger
+from modules.logger_utils import init_logger
 
 
 headers = {
