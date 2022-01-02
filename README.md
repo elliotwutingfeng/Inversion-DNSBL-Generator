@@ -20,22 +20,12 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
 
-## Safe Browsing API Vendors
+## Safe Browsing API vendors
 
-<div style="display:flex;">
-<a href="https://developers.google.com/safe-browsing">
-<figure style="text-align:center;">
-<img height="100px" src="images/google.svg" alt="Google Safe Browsing API" />
-<figcaption>Google</figcaption>
-</figure>
-</a>
-<a href="https://yandex.com/dev/safebrowsing">
-<figure style="text-align:center;">
-<img height="100px" src="images/yandex.png" alt="Yandex Safe Browsing API" />
-<figcaption>Yandex</figcaption>
-</figure>
-</a>
-</div>
+| <a href="https://developers.google.com/safe-browsing"><img height="100px" src="images/google.svg" alt="Google Safe Browsing API" /></a> | <a href="https://yandex.com/dev/safebrowsing"><img height="100px" src="images/yandex.png" alt="Yandex Safe Browsing API" /></a> |
+| :-------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
+|                                          [Google](https://developers.google.com/safe-browsing)                                          |                                          [Yandex](https://yandex.com/dev/safebrowsing)                                          |
+|                                        [ToS](https://developers.google.com/safe-browsing/terms)                                         |                                      [ToS](https://yandex.ru/legal/yandex_sb_api/?lang=en)                                      |
 
 ## Requirements
 
@@ -139,11 +129,6 @@ python3 main.py --help
 ## Disclaimer
 
 This project is not sponsored, endorsed, or otherwise affiliated with Google and/or Yandex.
-
-## ToS
-
--   [Google Safe Browsing API ToS](https://developers.google.com/safe-browsing/terms)
--   [Yandex Safe Browsing API ToS](https://yandex.ru/legal/yandex_sb_api/?lang=en)
 
 ## Libraries/Frameworks used
 
