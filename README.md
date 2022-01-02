@@ -15,10 +15,27 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 
 ## URL sources
 
--   Tranco TOP1M (~1 million URLs): https://tranco-list.eu
--   DomCop TOP10M (~10 million URLs): https://www.domcop.com/top-10-million-domains
--   Domains Project (~1.7 billion URLs): https://domainsproject.org
--   IPv4 Addresses (0.0.0.0 - 255.255.255.255)
+-   Tranco TOP1M (~1 million URLs): <https://tranco-list.eu>
+-   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
+-   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
+-   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
+
+## Safe Browsing API Vendors
+
+<div style="display:flex;">
+<a href="https://developers.google.com/safe-browsing">
+<figure style="text-align:center;">
+<img height="100px" src="images/google.svg" alt="Google Safe Browsing API" />
+<figcaption>Google</figcaption>
+</figure>
+</a>
+<a href="https://yandex.com/dev/safebrowsing">
+<figure style="text-align:center;">
+<img height="100px" src="images/yandex.png" alt="Yandex Safe Browsing API" />
+<figcaption>Yandex</figcaption>
+</figure>
+</a>
+</div>
 
 ## Requirements
 
@@ -119,11 +136,14 @@ python3 main.py --help
 
 -   Yandex Safe Browsing API calls often fail with either ConnectionResetError or HTTP Status Code 204. Yandex Technical support has been notified. _Temporary workaround: Keep retrying API call until it succeeds_
 
-## User Protection Notice
+## Disclaimer
 
-### Google
+This project is not sponsored, endorsed, or otherwise affiliated with Google and/or Yandex.
 
-Google works to provide the most accurate and up-to-date information about unsafe web resources. However, Google cannot guarantee that its information is comprehensive and error-free: some risky sites may not be identified, and some safe sites may be identified in error.
+## ToS
+
+-   [Google Safe Browsing API ToS](https://developers.google.com/safe-browsing/terms)
+-   [Yandex Safe Browsing API ToS](https://yandex.ru/legal/yandex_sb_api/?lang=en)
 
 ## Libraries/Frameworks used
 
@@ -134,9 +154,9 @@ Google works to provide the most accurate and up-to-date information about unsaf
 
 ## References
 
--   https://developers.google.com/safe-browsing
--   https://yandex.com/dev/safebrowsing
--   https://tranco-list.eu
--   https://www.domcop.com/top-10-million-domains
--   https://domainsproject.org
--   https://remusao.github.io/posts/few-tips-sqlite-perf.html
+-   <https://developers.google.com/safe-browsing>
+-   <https://yandex.com/dev/safebrowsing>
+-   <https://tranco-list.eu>
+-   <https://www.domcop.com/top-10-million-domains>
+-   <https://domainsproject.org>
+-   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>
