@@ -1,21 +1,24 @@
-from typing import Any, Iterable, List, Tuple
-from more_itertools.more import sort_together
-import ray
+"""
+Update Database
+"""
 import time
 import os
 import pathlib
+from typing import Any, List, Tuple
+from more_itertools import flatten
+from more_itertools.more import sort_together
+import ray
 
 from modules.db_utils import (
-    add_IPs,
-    add_maliciousHashPrefixes,
-    get_matching_hashPrefix_urls,
+    add_ip_addresses,
+    add_malicious_hash_prefixes,
+    get_matching_hash_prefix_urls,
     initialise_database,
-    add_URLs,
-    retrieve_malicious_URLs,
-    retrieve_vendor_prefixSizes,
-    update_malicious_URLs,
+    add_urls,
+    retrieve_malicious_urls,
+    retrieve_vendor_prefix_sizes,
+    update_malicious_urls,
 )
-
 from modules.filewriter import write_db_malicious_urls_to_file
 from modules.ray_utils import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
@@ -24,15 +27,17 @@ from modules.url_utils import (
     get_top10m_url_list,
     get_top1m_url_list,
 )
-from more_itertools import flatten
 
 
 def update_database(
     fetch: bool, identify: bool, retrieve: bool, sources: List[str], vendors: List[str]
 ) -> None:
+    """
+    Update Database
+    """
     ray.shutdown()
     ray.init(include_dashboard=True)
-    updateTime = int(time.time())  # seconds since UNIX Epoch
+    update_time = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames: List[str] = []
     ips_filenames: List[str] = []
@@ -64,59 +69,59 @@ def update_database(
     if "top10m" in sources:
         urls_filenames.append("top10m_urls")
     if "ipv4" in sources:
-        add_IPs_jobs = [
+        add_ip_addresses_jobs = [
             (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
         ]
-        ips_filenames = [_[0] for _ in add_IPs_jobs]
+        ips_filenames = [_[0] for _ in add_ip_addresses_jobs]
 
     # Create DB files
     initialise_database(urls_filenames, mode="domains")
     initialise_database(ips_filenames, mode="ips")
 
     if fetch:
-        add_URLs_jobs: List[Tuple[Any, ...]] = []
+        add_urls_jobs: List[Tuple[Any, ...]] = []
         if "domainsproject" in sources:
             # Extract and Add local URLs to DB
-            add_URLs_jobs += [
-                (get_local_file_url_list, updateTime, filename, filepath)
+            add_urls_jobs += [
+                (get_local_file_url_list, update_time, filename, filepath)
                 for filepath, filename in zip(local_domains_filepaths, urls_filenames)
             ]
         if "top1m" in sources:
             # Download and Add TOP1M URLs to DB
-            add_URLs_jobs.append((get_top1m_url_list, updateTime, "top1m_urls"))
+            add_urls_jobs.append((get_top1m_url_list, update_time, "top1m_urls"))
         if "top10m" in sources:
             # Download and Add TOP10M URLs to DB
-            add_URLs_jobs.append((get_top10m_url_list, updateTime, "top10m_urls"))
-        execute_with_ray(add_URLs, add_URLs_jobs)
+            add_urls_jobs.append((get_top10m_url_list, update_time, "top10m_urls"))
+        execute_with_ray(add_urls, add_urls_jobs)
 
         if "ipv4" in sources:
             # Generate and Add ipv4 addresses to DB
-            execute_with_ray(add_IPs, add_IPs_jobs)
+            execute_with_ray(add_ip_addresses, add_ip_addresses_jobs)
 
     if identify:
         for vendor in vendors:
-            sb = SafeBrowsing(vendor)
+            safebrowsing = SafeBrowsing(vendor)
 
             # Download and Update Safe Browsing API Malicious Hash Prefixes to DB
-            hash_prefixes = sb.get_malicious_hash_prefixes()
-            add_maliciousHashPrefixes(hash_prefixes, vendor)
+            hash_prefixes = safebrowsing.get_malicious_hash_prefixes()
+            add_malicious_hash_prefixes(hash_prefixes, vendor)
             del hash_prefixes  # "frees" memory
 
         malicious_urls = dict()
         for vendor in vendors:
-            sb = SafeBrowsing(vendor)
+            safebrowsing = SafeBrowsing(vendor)
 
-            prefixSizes = retrieve_vendor_prefixSizes(vendor)
+            prefix_sizes = retrieve_vendor_prefix_sizes(vendor)
             suspected_urls = set()
-            for prefixSize in prefixSizes:
+            for prefix_size in prefix_sizes:
                 # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
                 suspected_urls.update(
                     set(
                         flatten(
                             execute_with_ray(
-                                get_matching_hashPrefix_urls,
+                                get_matching_hash_prefix_urls,
                                 [
-                                    (filename, prefixSize, vendor)
+                                    (filename, prefix_size, vendor)
                                     for filename in urls_filenames + ips_filenames
                                 ],
                             ),
@@ -124,10 +129,12 @@ def update_database(
                     )
                 )
 
-                # To Improve: Store suspected_urls into malicious.db under suspected_urls table columns: [url,Google,Yandex]
+            # To Improve: Store suspected_urls into malicious.db under
+            # suspected_urls table columns: [url,Google,Yandex]
 
-            # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
-            vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
+            # Among these URLs, identify those with full Hashes
+            # found on Safe Browsing API Server
+            vendor_malicious_urls = safebrowsing.get_malicious_urls(suspected_urls)
             del suspected_urls  # "frees" memory
             malicious_urls[vendor] = vendor_malicious_urls
 
@@ -139,9 +146,9 @@ def update_database(
         # Update malicious URL statuses in DB
         for vendor in vendors:
             execute_with_ray(
-                update_malicious_URLs,
+                update_malicious_urls,
                 [
-                    (updateTime, vendor, filename)
+                    (update_time, vendor, filename)
                     for filename in urls_filenames + ips_filenames
                 ],
                 store={"malicious_urls": malicious_urls[vendor]},
@@ -149,5 +156,5 @@ def update_database(
 
     if retrieve:
         # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(retrieve_malicious_URLs(urls_filenames))
+        write_db_malicious_urls_to_file(retrieve_malicious_urls(urls_filenames))
     ray.shutdown()

@@ -5,7 +5,7 @@ import os
 import logging
 
 
-LOGS_FOLDER = "logs"
+LOGS_FOLDER: str = "logs"
 
 
 def init_logger() -> logging.Logger:

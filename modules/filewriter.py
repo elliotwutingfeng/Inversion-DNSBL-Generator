@@ -10,8 +10,8 @@ from typing import List
 
 from modules.logger_utils import init_logger
 
-blocklists_folder: str = "blocklists"
-blocklist_filename: str = "URLs_marked_malicious_by_Safe_Browsing"
+BLOCKLISTS_FOLDER: str = "blocklists"
+BLOCKLIST_FILENAME: str = "URLs_marked_malicious_by_Safe_Browsing"
 
 logger: logging.Logger = init_logger()
 
@@ -32,10 +32,10 @@ def write_db_malicious_urls_to_file(malicious_urls: List[str]) -> None:
         len(malicious_urls),
     )
 
-    if not os.path.exists(blocklists_folder):
-        os.mkdir(blocklists_folder)
+    if not os.path.exists(BLOCKLISTS_FOLDER):
+        os.mkdir(BLOCKLISTS_FOLDER)
 
-    txt_filename = f"{blocklist_filename}_{current_timestamp_str()}.txt"
-    with open(f"{blocklists_folder}{os.sep}{txt_filename}", "a") as outfile:
+    txt_filename = f"{BLOCKLIST_FILENAME}_{current_timestamp_str()}.txt"
+    with open(f"{BLOCKLISTS_FOLDER}{os.sep}{txt_filename}", "a") as outfile:
         outfile.writelines("\n".join(malicious_urls))
         logging.info("File written: %s", txt_filename)
