@@ -27,7 +27,10 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
             else:
                 parts = ext.subdomain.split(".") + [ext.registered_domain]
             hostname_expressions.update(
-                [f"{'.'.join(parts[-i:])}" for i in range(min(5, len(parts)))]
+                [
+                    f"{'.'.join(parts[-i:])}"
+                    for i in range(len(parts) if len(parts) < 5 else 5)
+                ]
             )
         return hostname_expressions
 
