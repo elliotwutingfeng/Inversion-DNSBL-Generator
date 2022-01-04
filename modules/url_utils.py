@@ -1,15 +1,17 @@
+"""
+URL Utilities
+"""
 from __future__ import annotations
 from io import BytesIO
 from typing import Iterator, List
 from zipfile import ZipFile
-import requests
 import logging
+import requests
 import tldextract  # type: ignore
+from tqdm import tqdm  # type: ignore
+from more_itertools import chunked
 from modules.logger_utils import init_logger
 from modules.requests_utils import get_with_retries
-from tqdm import tqdm  # type: ignore
-
-from more_itertools import chunked
 
 logger = init_logger()
 
@@ -39,7 +41,7 @@ def get_top1m_url_list() -> Iterator[List[str]]:
     """Downloads the Tranco TOP1M dataset and yields all listed URLs."""
     logging.info("Downloading TOP1M list...")
     try:
-        with BytesIO() as f:
+        with BytesIO() as file:
             resp = get_with_retries(
                 "https://tranco-list.eu/top-1m.csv.zip", stream=True
             )
@@ -48,8 +50,8 @@ def get_top1m_url_list() -> Iterator[List[str]]:
                 resp.iter_content(chunk_size=chunk_size),
                 total=-(-int(resp.headers["Content-Length"]) // chunk_size),
             ):
-                f.write(data)
-            zipfile = ZipFile(f)
+                file.write(data)
+            zipfile = ZipFile(file)
             raw_urls = (
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
@@ -59,8 +61,8 @@ def get_top1m_url_list() -> Iterator[List[str]]:
             for batch in chunked(raw_urls, 40_000):
                 yield generate_hostname_expressions(batch)
 
-    except requests.exceptions.RequestException as e:
-        logging.warning(f"Failed to retrieve TOP1M list; yielding empty list: {e}")
+    except requests.exceptions.RequestException as error:
+        logging.warning(f"Failed to retrieve TOP1M list; yielding empty list: {error}")
         yield []
 
 
@@ -68,7 +70,7 @@ def get_top10m_url_list() -> Iterator[List[str]]:
     """Downloads the DomCop TOP10M dataset and yields all listed URLs."""
     logging.info("Downloading TOP10M list...")
     try:
-        with BytesIO() as f:
+        with BytesIO() as file:
             resp = get_with_retries(
                 "https://www.domcop.com/files/top/top10milliondomains.csv.zip",
                 stream=True,
@@ -78,8 +80,8 @@ def get_top10m_url_list() -> Iterator[List[str]]:
                 resp.iter_content(chunk_size=chunk_size),
                 total=-(-int(resp.headers["Content-Length"]) // chunk_size),
             ):
-                f.write(data)
-            zipfile = ZipFile(f)
+                file.write(data)
+            zipfile = ZipFile(file)
             raw_urls = (
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
@@ -89,19 +91,19 @@ def get_top10m_url_list() -> Iterator[List[str]]:
             for batch in chunked(raw_urls, 40_000):
                 yield generate_hostname_expressions(batch)
 
-    except requests.exceptions.RequestException as e:
-        logging.warning(f"Failed to retrieve TOP10M list; yielding empty list: {e}")
+    except requests.exceptions.RequestException as error:
+        logging.warning(f"Failed to retrieve TOP10M list; yielding empty list: {error}")
         yield []
 
 
 def get_local_file_url_list(file: str) -> Iterator[List[str]]:
     """Yields all listed URLs from local text file"""
     try:
-        with open(file, "r") as f:
-            for raw_urls in chunked((_.strip() for _ in f.readlines()), 40_000):
+        with open(file, "r") as file:
+            for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):
                 yield generate_hostname_expressions(raw_urls)
-    except OSError as e:
+    except OSError as error:
         logging.warning(
-            f"Failed to retrieve local list ({file}); yielding empty list: {e}"
+            f"Failed to retrieve local list ({file}); yielding empty list: {error}"
         )
         yield []

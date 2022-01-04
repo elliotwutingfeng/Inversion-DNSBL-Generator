@@ -30,8 +30,8 @@ def get_with_retries(endpoint: str, stream: bool = False) -> Response:
                         f"Status Code not 200. Actual Code is {resp.status_code}"
                     )
                 return resp
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"Attempt {attempt} failed -> {e}")
+        except requests.exceptions.RequestException as error:
+            logging.warning(f"Attempt {attempt} failed -> {error}")
         attempt += 1
         time.sleep(1)
 
@@ -48,7 +48,7 @@ def post_with_retries(endpoint: str, payload: Mapping) -> Response:
                     f"Status Code not 200. Actual Code is {resp.status_code}"
                 )
             return resp
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"Attempt {attempt} failed -> {e}")
+        except requests.exceptions.RequestException as error:
+            logging.warning(f"Attempt {attempt} failed -> {error}")
         attempt += 1
         time.sleep(1)

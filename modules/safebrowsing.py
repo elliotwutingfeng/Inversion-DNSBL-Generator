@@ -90,7 +90,7 @@ class SafeBrowsing:
         try:
             # Make POST request for each sublist of URLs
             res = post_with_retries(self.threatMatchesEndpoint, data)
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             res = requests.Response()
 
         time.sleep(2)  # To prevent rate limiting

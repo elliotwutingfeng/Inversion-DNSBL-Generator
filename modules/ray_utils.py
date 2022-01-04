@@ -1,6 +1,12 @@
-# Inspiration: https://github.com/honnibal/spacy-ray/pull/
-# 1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
-# Modified from https://docs.ray.io/en/latest/auto_examples/progress_bar.html
+"""
+Ray Utilities
+
+Inspired by:
+https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
+
+Modified from:
+https://docs.ray.io/en/latest/auto_examples/progress_bar.html
+"""
 from __future__ import annotations
 from asyncio import Event
 from typing import Any, Callable, List, Mapping, Optional, Tuple
@@ -11,6 +17,10 @@ import ray
 
 @ray.remote
 class ProgressBarActor:
+    """
+    Utility class for ProgressBar
+    """
+
     counter: int
     delta: int
     event: Event
@@ -49,15 +59,22 @@ class ProgressBarActor:
 
 
 class ProgressBar:
+    """
+    Ray-compatible progressbar
+    """
+
     progress_actor: ActorHandle
     total: int
     description: str
     pbar: tqdm
 
     def __init__(self, total: int, description: str = "") -> None:
-        # Ray actors don't seem to play nice with mypy, generating
-        # a spurious warning for the following line,
-        # which we need to suppress. The code is fine.
+        """
+        Ray actors don't seem to play nice with mypy, generating
+        a spurious warning for the following line,
+        which we need to suppress. The code is fine.
+        """
+        # pylint: disable=no-member
         self.progress_actor = ProgressBarActor.remote()  # type: ignore
         self.total = total
         self.description = description
@@ -92,12 +109,12 @@ def aux(
     task_handler: Callable,
     task: Tuple,
     store: Mapping,
-    actor_id: Optional[type[ray._raylet.ObjectRef]] = None,
+    actor_id: Optional[Any] = None,
 ) -> Any:
     """Runs task handler on task, updates progressbar and finally returns the result"""
 
     result = task_handler(*task, **{key: ray.get(store[key]) for key in store})
-    if actor_id != None:
+    if actor_id is not None:
         actor_id.update.remote(1)  # type: ignore
     return result
 
@@ -119,8 +136,8 @@ def execute_with_ray(
     if progress_bar:
         # Progressbar Ray Actor
         num_ticks = len(tasks)
-        pb = ProgressBar(num_ticks)
-        actor = pb.actor
+        pbar = ProgressBar(num_ticks)
+        actor = pbar.actor
         actor_id = ray.put(actor)
 
     tasks_pre_launch = [
@@ -137,11 +154,11 @@ def execute_with_ray(
 
     # Opens progressbar until all tasks are completed
     if progress_bar:
-        pb.print_until_done()
+        pbar.print_until_done()
 
     # Processes tasks with pipelining
     results = []
-    while len(tasks_pre_launch):
+    while len(tasks_pre_launch) != 0:
         done_id, tasks_pre_launch = ray.wait(tasks_pre_launch)
         results.append(ray.get(done_id[0]))
 

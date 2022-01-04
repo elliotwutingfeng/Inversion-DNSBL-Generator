@@ -1,19 +1,25 @@
-import logging
+"""
+Logger Utilities
+"""
 import os
+import logging
 
-logs_folder = "logs"
+
+LOGS_FOLDER = "logs"
 
 
 def init_logger() -> logging.Logger:
-    if not os.path.exists(logs_folder):
-        os.mkdir(logs_folder)
+    if not os.path.exists(LOGS_FOLDER):
+        os.mkdir(LOGS_FOLDER)
     # Add date and timestamp to logging messages
     logging.basicConfig(
         handlers=[
-            logging.FileHandler(f"{logs_folder}{os.sep}progress.log", mode="a"),
+            logging.FileHandler(f"{LOGS_FOLDER}{os.sep}progress.log", mode="a"),
             logging.StreamHandler(),
         ],
-        format="%(asctime)s %(levelname)-4s [%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s",
+        format="""
+        %(asctime)s %(levelname)-4s [%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s
+        """,
         level=logging.INFO,
         datefmt="%d-%m-%Y %H:%M:%S",
     )

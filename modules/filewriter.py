@@ -6,10 +6,10 @@ from typing import List
 
 from modules.logger_utils import init_logger
 
-blocklists_folder = "blocklists"
-blocklist_filename = "URLs_marked_malicious_by_Safe_Browsing"
+blocklists_folder: str = "blocklists"
+blocklist_filename: str = "URLs_marked_malicious_by_Safe_Browsing"
 
-logger = init_logger()
+logger: logging.Logger = init_logger()
 
 
 def current_timestamp_str() -> str:

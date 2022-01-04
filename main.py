@@ -1,3 +1,6 @@
+"""
+Main
+"""
 from argparse import (
     ArgumentParser,
     RawDescriptionHelpFormatter,
@@ -10,7 +13,9 @@ from modules.update_database import update_database
 class CustomFormatter(
     RawTextHelpFormatter, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
 ):
-    pass
+    """
+    Custom
+    """
 
 
 if __name__ == "__main__":
