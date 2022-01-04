@@ -2,13 +2,12 @@ from more_itertools.more import sort_together
 import ray
 import time
 import os
-from tqdm import tqdm
 import pathlib
 
 from modules.db_utils import (
     add_IPs,
     add_maliciousHashPrefixes,
-    identify_suspected_urls,
+    get_matching_hashPrefix_urls,
     initialise_database,
     add_URLs,
     retrieve_malicious_URLs,
@@ -33,6 +32,7 @@ def update_database(fetch, identify, retrieve, sources, vendors):
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames = []
+    ips_filenames = []
 
     if "domainsproject" in sources:
         # Scan Domains Project's "domains" directory for local urls_filenames
@@ -61,10 +61,14 @@ def update_database(fetch, identify, retrieve, sources, vendors):
     if "top10m" in sources:
         urls_filenames.append("top10m_urls")
     if "ipv4" in sources:
-        urls_filenames.append("ipv4")
+        add_IPs_jobs = [
+            (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
+        ]
+        ips_filenames = [_[0] for _ in add_IPs_jobs]
 
     # Create DB files
-    initialise_database(urls_filenames)
+    initialise_database(urls_filenames, mode="domains")
+    initialise_database(ips_filenames, mode="ips")
 
     if fetch:
         add_URLs_jobs = []
@@ -81,9 +85,10 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             # Download and Add TOP10M URLs to DB
             add_URLs_jobs.append((get_top10m_url_list, updateTime, "top10m_urls"))
         execute_with_ray(add_URLs_jobs, add_URLs)
+
         if "ipv4" in sources:
             # Generate and Add ipv4 addresses to DB
-            add_IPs()
+            execute_with_ray(add_IPs_jobs, add_IPs)
 
     if identify:
         for vendor in vendors:
@@ -99,20 +104,24 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             sb = SafeBrowsing(vendor)
 
             prefixSizes = retrieve_vendor_prefixSizes(vendor)
-            # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
-            suspected_urls = list(
-                flatten(
-                    execute_with_ray(
-                        [
-                            (vendor, filename, prefixSizes)
-                            for filename in urls_filenames
-                        ],
-                        identify_suspected_urls,
+            suspected_urls = set()
+            for prefixSize in prefixSizes:
+                # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
+                suspected_urls.update(
+                    set(
+                        flatten(
+                            execute_with_ray(
+                                [
+                                    (filename, prefixSize, vendor)
+                                    for filename in urls_filenames + ips_filenames
+                                ],
+                                get_matching_hashPrefix_urls,
+                            )
+                        )
                     )
                 )
-            )
 
-            # To Improve: Store suspected_urls into malicious.db under suspected_urls table columns: [url,Google,Yandex]
+                # To Improve: Store suspected_urls into malicious.db under suspected_urls table columns: [url,Google,Yandex]
 
             # Among these URLs, identify those with full Hashes are found on Safe Browsing API Server
             vendor_malicious_urls = sb.get_malicious_URLs(suspected_urls)
@@ -120,20 +129,20 @@ def update_database(fetch, identify, retrieve, sources, vendors):
             malicious_urls[vendor] = vendor_malicious_urls
 
         # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(list(flatten(malicious_urls.values())))
+        write_db_malicious_urls_to_file(list(set(flatten(malicious_urls.values()))))
 
         # TODO push blocklist to GitHub
 
         # Update malicious URL statuses in DB
-        execute_with_ray(
-            [
-                (updateTime, vendor, filename)
-                for vendor in vendors
-                for filename in urls_filenames
-            ],
-            update_malicious_URLs,
-            store={"malicious_urls": malicious_urls[vendor]},
-        )
+        for vendor in vendors:
+            execute_with_ray(
+                [
+                    (updateTime, vendor, filename)
+                    for filename in urls_filenames + ips_filenames
+                ],
+                update_malicious_URLs,
+                store={"malicious_urls": malicious_urls[vendor]},
+            )
 
     if retrieve:
         malicious_urls = retrieve_malicious_URLs(urls_filenames)

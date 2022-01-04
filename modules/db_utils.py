@@ -3,7 +3,6 @@ import apsw
 from apsw import Error
 import logging
 from hashlib import sha256
-from tqdm import tqdm
 import os
 from more_itertools import flatten
 from modules.logger_utils import init_logger
@@ -47,7 +46,7 @@ def create_connection(filename):
     return conn
 
 
-def create_ips_table(filename="ipv4"):
+def create_ips_table(filename):
     conn = create_connection(filename)
     try:
         with conn:
@@ -95,20 +94,21 @@ def int_addr_to_ip_and_hash(int_addr):
     return (ip, hash)
 
 
-def add_IPs(filename="ipv4"):
+def add_IPs(filename, first_octet):
     """
-    Add all 2 ** 32 ips and their hashes into urls table
+    Add all 2 ** 32 ips and their hashes into urls table of 255 .db files.
+    1 file for each bit in first octet.
     """
     conn = create_connection(filename)
-    ips_to_generate = 2 ** 32
+    ips_to_generate = 2 ** 24
     try:
-        # Check if there are 2 ** 32 ips in DB
+        # Check if there are 2 ** 24 ips in DB
         with conn:
             cur = conn.cursor()
             cur.execute("SELECT MAX(_rowid_) FROM urls")
             number_of_ipv4_addresses = cur.fetchall()[0][0]
         if number_of_ipv4_addresses != ips_to_generate:
-            # If DB does not have 2 ** 32 IPs, delete all rows from ipv4 urls table and regenerate IPs
+            # If DB does not have 2 ** 24 IPs, delete all rows from ipv4_ urls table and regenerate IPs
             logging.info(
                 f"INSERT {ips_to_generate} ipv4 addresses to urls table of {filename}..."
             )
@@ -117,13 +117,13 @@ def add_IPs(filename="ipv4"):
                 cur.execute("DELETE FROM urls")
             with conn:
                 cur = conn.cursor()
-                for int_addr in tqdm(range(ips_to_generate)):
+                for int_addr in range(ips_to_generate):
                     cur.execute(
                         f"""
                     INSERT INTO urls (url,hash)
                     VALUES (?,?)
                     """,
-                        int_addr_to_ip_and_hash(int_addr),
+                        int_addr_to_ip_and_hash(int_addr + (2 ** 24) * first_octet),
                     )
 
                 logging.info(
@@ -236,32 +236,6 @@ def retrieve_vendor_prefixSizes(vendor) -> list[int]:
     return prefixSizes
 
 
-def identify_suspected_urls(vendor, filename, prefixSizes):
-    conn = create_connection(filename)
-    suspected_urls = []
-    try:
-        # Find all urls with matching hash_prefixes
-        suspected_urls = list(
-            flatten(
-                execute_with_ray(
-                    [(filename, prefixSize, vendor) for prefixSize in prefixSizes],
-                    get_matching_hashPrefix_urls,
-                    progress_bar=False,
-                )
-            )
-        )
-        logging.info(
-            f"{len(suspected_urls)} URLs FROM {filename} potentially marked malicious by {vendor} Safe Browsing API."
-        )
-    except Error as e:
-        logging.error(
-            f"vendor:{vendor} filename:{filename} prefixSizes:{prefixSizes} {e}"
-        )
-    conn.close()
-
-    return suspected_urls
-
-
 def create_maliciousHashPrefixes_table():
     """create a table from the create_table_sql statement
     :param conn: Connection object
@@ -284,13 +258,17 @@ def create_maliciousHashPrefixes_table():
     conn.close()
 
 
-def initialise_database(urls_filenames):
+def initialise_database(filenames, mode):
     # initialise tables
     logging.info(
-        f"Creating .db files if they do not exist yet for {len(urls_filenames)} .txt files"
+        f"Creating .db files if they do not exist yet for {len(filenames)} .txt files"
     )
-    execute_with_ray([(filename,) for filename in urls_filenames], create_urls_table)
-    create_ips_table()
+    if mode == "domains":
+        execute_with_ray([(filename,) for filename in filenames], create_urls_table)
+    elif mode == "ips":
+        execute_with_ray([(filename,) for filename in filenames], create_ips_table)
+    else:
+        raise ValueError('mode must be "domains" or "ips"')
     create_maliciousHashPrefixes_table()
 
 
@@ -322,6 +300,9 @@ def update_malicious_URLs(updateTime, vendor, filename, malicious_urls):
                     """,
                     (updateTime, *malicious_url_batch),
                 )
+        logging.info(
+            f"Updating {filename} DB with verified {vendor} malicious URLs...[DONE]"
+        )
     except Error as e:
         logging.error(f"vendor:{vendor} filename:{filename} {e}")
     conn.close()

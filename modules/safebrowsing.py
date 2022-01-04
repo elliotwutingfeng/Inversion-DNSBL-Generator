@@ -95,7 +95,7 @@ class SafeBrowsing:
         time.sleep(2)  # To prevent rate limiting
         return res
 
-    def get_malicious_URLs(self, urls: list[str]) -> list[str]:
+    def get_malicious_URLs(self, urls: set[str]) -> list[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
         logging.info(f"Verifying suspected {self.vendor} malicious URLs")
         # Split list of URLs into sublists of length == maximum_url_batch_size
