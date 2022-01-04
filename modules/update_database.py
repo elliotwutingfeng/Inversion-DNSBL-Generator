@@ -112,22 +112,19 @@ def update_database(
             safebrowsing = SafeBrowsing(vendor)
 
             prefix_sizes = retrieve_vendor_prefix_sizes(vendor)
-            suspected_urls = set()
-            for prefix_size in prefix_sizes:
-                # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
-                suspected_urls.update(
-                    set(
-                        flatten(
-                            execute_with_ray(
-                                get_matching_hash_prefix_urls,
-                                [
-                                    (filename, prefix_size, vendor)
-                                    for filename in urls_filenames + ips_filenames
-                                ],
-                            ),
-                        )
-                    )
+
+            # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
+            suspected_urls = set(
+                flatten(
+                    execute_with_ray(
+                        get_matching_hash_prefix_urls,
+                        [
+                            (filename, prefix_sizes, vendor)
+                            for filename in urls_filenames + ips_filenames
+                        ],
+                    ),
                 )
+            )
 
             # To Improve: Store suspected_urls into malicious.db under
             # suspected_urls table columns: [url,Google,Yandex]

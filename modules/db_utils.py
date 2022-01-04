@@ -224,7 +224,7 @@ def add_malicious_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
 
 
 def get_matching_hash_prefix_urls(
-    filename: str, prefix_size: int, vendor: str
+    filename: str, prefix_sizes: List[int], vendor: str
 ) -> List[str]:
     """
     Identify urls with hashes beginning with
@@ -239,16 +239,17 @@ def get_matching_hash_prefix_urls(
                 cur = cur.execute(
                     f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
                 )
-                cur = cur.execute(
-                    """
-                    SELECT url FROM urls
-                    WHERE substring(urls.hash,1,?)
-                    IN (SELECT hashPrefix FROM malicious.maliciousHashPrefixes
-                    WHERE vendor = ?)
-                    """,
-                    (prefix_size, vendor),
-                )
-                urls = [x[0] for x in cur.fetchall()]
+                for prefix_size in prefix_sizes:
+                    cur = cur.execute(
+                        """
+                        SELECT url FROM urls
+                        WHERE substring(urls.hash,1,?)
+                        IN (SELECT hashPrefix FROM malicious.maliciousHashPrefixes
+                        WHERE vendor = ?)
+                        """,
+                        (prefix_size, vendor),
+                    )
+                    urls += [x[0] for x in cur.fetchall()]
             with conn:
                 cur = conn.cursor()
                 cur = cur.execute("DETACH database malicious")
@@ -256,7 +257,7 @@ def get_matching_hash_prefix_urls(
             logging.error(
                 "filename:%s prefix_size:%s vendor:%s %s",
                 filename,
-                prefix_size,
+                prefix_sizes,
                 vendor,
                 error,
             )
