@@ -9,7 +9,7 @@ import requests
 from requests.models import Response
 import itertools
 import logging
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 import base64
 
 from modules.requests_utils import get_with_retries, post_with_retries

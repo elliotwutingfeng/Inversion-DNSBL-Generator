@@ -1,13 +1,13 @@
 from __future__ import annotations
 from io import BytesIO
-from typing import Generator, List
+from typing import Iterator, List
 from zipfile import ZipFile
 import requests
 import logging
-import tldextract
+import tldextract  # type: ignore
 from modules.logger_utils import init_logger
 from modules.requests_utils import get_with_retries
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 from more_itertools import chunked
 
@@ -35,7 +35,7 @@ def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
     return list(hostname_expressions)
 
 
-def get_top1m_url_list() -> Generator[List[str]]:
+def get_top1m_url_list() -> Iterator[List[str]]:
     """Downloads the Tranco TOP1M dataset and yields all listed URLs."""
     logging.info("Downloading TOP1M list...")
     try:
@@ -64,7 +64,7 @@ def get_top1m_url_list() -> Generator[List[str]]:
         yield []
 
 
-def get_top10m_url_list() -> Generator[List[str]]:
+def get_top10m_url_list() -> Iterator[List[str]]:
     """Downloads the DomCop TOP10M dataset and yields all listed URLs."""
     logging.info("Downloading TOP10M list...")
     try:
@@ -94,7 +94,7 @@ def get_top10m_url_list() -> Generator[List[str]]:
         yield []
 
 
-def get_local_file_url_list(file: str) -> Generator[List[str]]:
+def get_local_file_url_list(file: str) -> Iterator[List[str]]:
     """Yields all listed URLs from local text file"""
     try:
         with open(file, "r") as f:

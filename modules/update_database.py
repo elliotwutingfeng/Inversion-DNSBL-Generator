@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Iterable, List, Tuple
 from more_itertools.more import sort_together
 import ray
 import time
@@ -34,13 +34,13 @@ def update_database(
     ray.init(include_dashboard=True)
     updateTime = int(time.time())  # seconds since UNIX Epoch
 
-    urls_filenames = []
-    ips_filenames = []
+    urls_filenames: List[str] = []
+    ips_filenames: List[str] = []
 
     if "domainsproject" in sources:
         # Scan Domains Project's "domains" directory for local urls_filenames
         local_domains_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
-        local_domains_filepaths = []
+        local_domains_filepaths: List[str] = []
         for root, _, files in os.walk(local_domains_dir):
             for file in files:
                 if file.lower().endswith(".txt"):
@@ -48,16 +48,16 @@ def update_database(
                     local_domains_filepaths.append(os.path.join(root, file))
         # Sort local_domains_filepaths and urls_filenames by ascending filesize
 
-        local_domains_filesizes = [
+        local_domains_filesizes: List[int] = [
             os.path.getsize(path) for path in local_domains_filepaths
         ]
-        (
-            local_domains_filesizes,
-            local_domains_filepaths,
-            urls_filenames,
-        ) = sort_together(
-            [local_domains_filesizes, local_domains_filepaths, urls_filenames]
-        )
+
+        [local_domains_filesizes, local_domains_filepaths, urls_filenames] = [
+            list(_)
+            for _ in sort_together(
+                (local_domains_filesizes, local_domains_filepaths, urls_filenames)
+            )
+        ]
 
     if "top1m" in sources:
         urls_filenames.append("top1m_urls")
@@ -74,7 +74,7 @@ def update_database(
     initialise_database(ips_filenames, mode="ips")
 
     if fetch:
-        add_URLs_jobs = []
+        add_URLs_jobs: List[Tuple[Any, ...]] = []
         if "domainsproject" in sources:
             # Extract and Add local URLs to DB
             add_URLs_jobs += [
@@ -148,7 +148,6 @@ def update_database(
             )
 
     if retrieve:
-        malicious_urls = retrieve_malicious_URLs(urls_filenames)
         # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(malicious_urls)
+        write_db_malicious_urls_to_file(retrieve_malicious_URLs(urls_filenames))
     ray.shutdown()

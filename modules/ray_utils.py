@@ -5,7 +5,7 @@ from __future__ import annotations
 from asyncio import Event
 from typing import Any, Callable, List, Mapping, Optional, Tuple
 from ray.actor import ActorHandle
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 import ray
 
 
@@ -98,7 +98,7 @@ def aux(
 
     result = task_handler(*task, **{key: ray.get(store[key]) for key in store})
     if actor_id != None:
-        actor_id.update.remote(1)
+        actor_id.update.remote(1)  # type: ignore
     return result
 
 
