@@ -37,7 +37,7 @@ def create_connection(filename: str) -> Optional[apsw.Connection]:
             "PRAGMA auto_vacuum = 1"
         )  # https://www.sqlite.org/pragma.html#pragma_auto_vacuum
     except Error as error:
-        logging.error(f"filename:{filename} {error}")
+        logging.error("filename:%s %s", filename, error)
     return conn
 
 
@@ -48,7 +48,7 @@ def create_ips_table(filename: str) -> None:
             with conn:
                 cur = conn.cursor()
                 cur.execute(
-                    f"""CREATE TABLE IF NOT EXISTS urls (
+                    """CREATE TABLE IF NOT EXISTS urls (
                             url text,
                             lastGoogleMalicious integer,
                             lastYandexMalicious integer,
@@ -56,7 +56,7 @@ def create_ips_table(filename: str) -> None:
                             )"""
                 )
         except Error as error:
-            logging.error(f"filename:{filename} {error}")
+            logging.error("filename:%s %s", filename, error)
         conn.close()
 
 
@@ -67,7 +67,7 @@ def create_urls_table(filename: str) -> None:
             with conn:
                 cur = conn.cursor()
                 cur.execute(
-                    f"""CREATE TABLE IF NOT EXISTS urls (
+                    """CREATE TABLE IF NOT EXISTS urls (
                             url text UNIQUE,
                             lastListed integer,
                             lastGoogleMalicious integer,
@@ -76,7 +76,7 @@ def create_urls_table(filename: str) -> None:
                             )"""
                 )
         except Error as error:
-            logging.error(f"filename:{filename} {error}")
+            logging.error("filename:%s %s", filename, error)
         conn.close()
 
 
@@ -108,7 +108,9 @@ def add_IPs(filename: str, first_octet: int) -> None:
             if number_of_ipv4_addresses != ips_to_generate:
                 # If DB does not have 2 ** 24 IPs, delete all rows from ipv4_ urls table and regenerate IPs
                 logging.info(
-                    f"INSERT {ips_to_generate} ipv4 addresses to urls table of {filename}..."
+                    "INSERT %d ipv4 addresses to urls table of %s...",
+                    ips_to_generate,
+                    filename,
                 )
                 with conn:
                     cur = conn.cursor()
@@ -117,7 +119,7 @@ def add_IPs(filename: str, first_octet: int) -> None:
                     cur = conn.cursor()
                     for int_addr in range(ips_to_generate):
                         cur.execute(
-                            f"""
+                            """
                         INSERT INTO urls (url,hash)
                         VALUES (?,?)
                         """,
@@ -128,7 +130,7 @@ def add_IPs(filename: str, first_octet: int) -> None:
                         f"INSERT {ips_to_generate} ipv4 addresses to urls table of {filename}...[DONE]"
                     )
         except Error as error:
-            logging.error(f"filename:{filename} {error}")
+            logging.error("filename:%s %s", filename, error)
         conn.close()
 
 
@@ -155,7 +157,7 @@ def add_URLs(
 
                 for url_batch in urls:
                     cur.executemany(
-                        f"""
+                        """
                     INSERT INTO urls (url, lastListed, hash)
                     VALUES (?,?,?)
                     ON CONFLICT(url)
@@ -168,7 +170,7 @@ def add_URLs(
                     f"Performing INSERT-UPDATE URLs to urls table of {filename}...[DONE]"
                 )
         except Error as error:
-            logging.error(f"filename:{filename} {error}")
+            logging.error("filename:%s %s", filename, error)
         conn.close()
 
 
@@ -176,7 +178,7 @@ def add_maliciousHashPrefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
     """
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
-    logging.info(f"Updating DB with {vendor} malicious URL hashes")
+    logging.info("Updating DB with %s malicious URL hashes", vendor)
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -196,7 +198,7 @@ def add_maliciousHashPrefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
                     ),
                 )
         except Error as error:
-            logging.error(f"vendor:{vendor} {error}")
+            logging.error("vendor:%s %s", vendor, error)
         conn.close()
 
 
@@ -213,9 +215,12 @@ def get_matching_hashPrefix_urls(
                     f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
                 )
                 cur = cur.execute(
-                    f"""SELECT url FROM urls 
-                    WHERE substring(urls.hash,1,?) IN (SELECT hashPrefix FROM malicious.maliciousHashPrefixes
-                    WHERE vendor = ?)""",
+                    """
+                    SELECT url FROM urls
+                    WHERE substring(urls.hash,1,?)
+                    IN (SELECT hashPrefix FROM malicious.maliciousHashPrefixes
+                    WHERE vendor = ?)
+                    """,
                     (prefixSize, vendor),
                 )
                 urls = [x[0] for x in cur.fetchall()]
@@ -224,7 +229,11 @@ def get_matching_hashPrefix_urls(
                 cur = cur.execute("DETACH database malicious")
         except Error as error:
             logging.error(
-                f"filename:{filename} prefixSize:{prefixSize} vendor:{vendor} {error}"
+                "filename:%s prefixSize:%s vendor:%s %s",
+                filename,
+                prefixSize,
+                vendor,
+                error,
             )
         conn.close()
 
@@ -246,7 +255,7 @@ def retrieve_vendor_prefixSizes(vendor: str) -> List[int]:
                 )
                 prefixSizes = [x[0] for x in cur.fetchall()]
         except Error as error:
-            logging.error(f"vendor: {vendor} {error}")
+            logging.error("vendor:%s %s", vendor, error)
         conn.close()
     return prefixSizes
 
@@ -270,7 +279,7 @@ def create_maliciousHashPrefixes_table() -> None:
                                                 )"""
                 )
         except Error as error:
-            logging.error(f"{error}")
+            logging.error("%s", error)
         conn.close()
 
 
@@ -301,12 +310,12 @@ def update_malicious_URLs(
     Updates malicious status of all urls currently in DB
     i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
     """
-    logging.info(f"Updating {filename} DB with verified {vendor} malicious URLs")
-    vendorToColumn = {
+    logging.info("Updating %s DB with verified %s malicious URLs", filename, vendor)
+    vendor_to_column = {
         "Google": "lastGoogleMalicious",
         "Yandex": "lastYandexMalicious",
     }
-    if vendor not in vendorToColumn:
+    if vendor not in vendor_to_column:
         raise ValueError('vendor must be "Google" or "Yandex"')
     conn = create_connection(filename)
     if conn is not None:
@@ -320,7 +329,7 @@ def update_malicious_URLs(
                     cur.execute(
                         f"""
                         UPDATE urls
-                        SET {vendorToColumn[vendor]} = ?
+                        SET {vendor_to_column[vendor]} = ?
                         WHERE url IN ({','.join('?'*malicious_url_batch_length)})
                         """,
                         (updateTime, *malicious_url_batch),
@@ -329,7 +338,7 @@ def update_malicious_URLs(
                 f"Updating {filename} DB with verified {vendor} malicious URLs...[DONE]"
             )
         except Error as error:
-            logging.error(f"vendor:{vendor} filename:{filename} {error}")
+            logging.error("vendor:%s filename:%s %s", vendor, filename, error)
         conn.close()
 
 
@@ -346,13 +355,13 @@ def retrieve_malicious_URLs(urls_filenames: List[str]) -> List[str]:
                 with conn:
                     cur = conn.cursor()
                     # Most recent lastGoogleMalicious timestamp
-                    cur.execute(f"SELECT MAX(lastGoogleMalicious) FROM urls")
+                    cur.execute("SELECT MAX(lastGoogleMalicious) FROM urls")
                     lastGoogleMalicious = [x[0] for x in cur.fetchall()][0]
                     # Most recent lastYandexMalicious timestamp
-                    cur.execute(f"SELECT MAX(lastYandexMalicious) FROM urls")
+                    cur.execute("SELECT MAX(lastYandexMalicious) FROM urls")
                     lastYandexMalicious = [x[0] for x in cur.fetchall()][0]
                     cur.execute(
-                        f"""
+                        """
             SELECT url FROM urls
             WHERE lastGoogleMalicious = ? OR lastYandexMalicious = ?
             """,
@@ -360,7 +369,7 @@ def retrieve_malicious_URLs(urls_filenames: List[str]) -> List[str]:
                     )
                     malicious_urls.update((x[0] for x in cur.fetchall()))
             except Error as error:
-                logging.error(f"filename:{filename} {error}")
+                logging.error("filename:%s %s", filename, error)
             conn.close()
 
         return malicious_urls

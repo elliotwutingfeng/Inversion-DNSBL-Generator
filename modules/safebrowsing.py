@@ -98,10 +98,10 @@ class SafeBrowsing:
 
     def get_malicious_URLs(self, urls: Set[str]) -> List[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
-        logging.info(f"Verifying suspected {self.vendor} malicious URLs")
+        logging.info("Verifying suspected %s malicious URLs", self.vendor)
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = chunked(urls, self.maximum_url_batch_size)
-        logging.info(f"{-(-len(urls)//self.maximum_url_batch_size)} batches")
+        logging.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
         results = execute_with_ray(
             self.threatMatches_lookup,
             [(url_batch,) for url_batch in url_batches],
@@ -193,7 +193,7 @@ class SafeBrowsing:
         )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
         if "listUpdateResponses" not in res_json:
             return {}
-        logging.info(f"Minimum wait duration: {res_json['minimumWaitDuration']}")
+        logging.info("Minimum wait duration: %d", res_json["minimumWaitDuration"])
         return res_json
 
     @staticmethod
@@ -224,7 +224,7 @@ class SafeBrowsing:
 
     def get_malicious_hash_prefixes(self) -> Set[bytes]:
         """Download latest malicious hash prefixes from Safe Browsing API"""
-        logging.info(f"Downloading {self.vendor} malicious URL hashes")
+        logging.info("Downloading %s malicious URL hashes", self.vendor)
         res_json = self.retrieve_threatListUpdates()
         if res_json == {}:
             return set()

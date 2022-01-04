@@ -62,7 +62,7 @@ def get_top1m_url_list() -> Iterator[List[str]]:
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as error:
-        logging.warning(f"Failed to retrieve TOP1M list; yielding empty list: {error}")
+        logging.warning("Failed to retrieve TOP1M list; yielding empty list: %s", error)
         yield []
 
 
@@ -92,18 +92,23 @@ def get_top10m_url_list() -> Iterator[List[str]]:
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as error:
-        logging.warning(f"Failed to retrieve TOP10M list; yielding empty list: {error}")
+        logging.warning(
+            "Failed to retrieve TOP10M list; yielding empty list: %s", error
+        )
         yield []
 
 
-def get_local_file_url_list(file: str) -> Iterator[List[str]]:
+def get_local_file_url_list(filename: str) -> Iterator[List[str]]:
     """Yields all listed URLs from local text file"""
     try:
-        with open(file, "r") as file:
+        with open(filename, "r") as file:
             for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
+
         logging.warning(
-            f"Failed to retrieve local list ({file}); yielding empty list: {error}"
+            "Failed to retrieve local list (%s); yielding empty list: %s",
+            filename,
+            error,
         )
         yield []

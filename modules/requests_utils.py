@@ -31,7 +31,7 @@ def get_with_retries(endpoint: str, stream: bool = False) -> Response:
                     )
                 return resp
         except requests.exceptions.RequestException as error:
-            logging.warning(f"Attempt {attempt} failed -> {error}")
+            logging.warning("Attempt %d failed -> %s", attempt, error)
         attempt += 1
         time.sleep(1)
 
@@ -49,6 +49,6 @@ def post_with_retries(endpoint: str, payload: Mapping) -> Response:
                 )
             return resp
         except requests.exceptions.RequestException as error:
-            logging.warning(f"Attempt {attempt} failed -> {error}")
+            logging.warning("Attempt %d failed -> %s", attempt, error)
         attempt += 1
         time.sleep(1)

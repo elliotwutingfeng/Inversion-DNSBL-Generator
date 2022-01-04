@@ -9,6 +9,9 @@ LOGS_FOLDER = "logs"
 
 
 def init_logger() -> logging.Logger:
+    """
+    Initialise a logging.Logger instance with custom format settings
+    """
     if not os.path.exists(LOGS_FOLDER):
         os.mkdir(LOGS_FOLDER)
     # Add date and timestamp to logging messages
