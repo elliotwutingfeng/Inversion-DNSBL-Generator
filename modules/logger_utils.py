@@ -4,7 +4,7 @@ import os
 logs_folder = "logs"
 
 
-def init_logger():
+def init_logger() -> logging.Logger:
     if not os.path.exists(logs_folder):
         os.mkdir(logs_folder)
     # Add date and timestamp to logging messages

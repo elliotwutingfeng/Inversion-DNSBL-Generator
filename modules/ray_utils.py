@@ -3,7 +3,7 @@
 # Modified from https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 from __future__ import annotations
 from asyncio import Event
-from typing import Tuple
+from typing import Any, Callable, List, Mapping, Optional, Tuple
 from ray.actor import ActorHandle
 from tqdm import tqdm
 import ray
@@ -54,7 +54,7 @@ class ProgressBar:
     description: str
     pbar: tqdm
 
-    def __init__(self, total: int, description: str = ""):
+    def __init__(self, total: int, description: str = "") -> None:
         # Ray actors don't seem to play nice with mypy, generating
         # a spurious warning for the following line,
         # which we need to suppress. The code is fine.
@@ -88,7 +88,12 @@ class ProgressBar:
 
 
 @ray.remote
-def aux(task_handler, task, store, actor_id=None):
+def aux(
+    task_handler: Callable,
+    task: Tuple,
+    store: Mapping,
+    actor_id: Optional[type[ray._raylet.ObjectRef]] = None,
+) -> Any:
     """Runs task handler on task, updates progressbar and finally returns the result"""
 
     result = task_handler(*task, **{key: ray.get(store[key]) for key in store})
@@ -97,7 +102,12 @@ def aux(task_handler, task, store, actor_id=None):
     return result
 
 
-def execute_with_ray(tasks: list, task_handler, store=None, progress_bar=True) -> list:
+def execute_with_ray(
+    task_handler: Callable,
+    tasks: List,
+    store: Optional[Mapping] = None,
+    progress_bar: bool = True,
+) -> List:
     """Apply task_handler to list of tasks.
 
     Tasks are processed in parallel with pipelining.

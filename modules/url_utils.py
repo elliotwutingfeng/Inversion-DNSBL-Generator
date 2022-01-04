@@ -1,5 +1,6 @@
 from __future__ import annotations
 from io import BytesIO
+from typing import Generator, List
 from zipfile import ZipFile
 import requests
 import logging
@@ -13,34 +14,29 @@ from more_itertools import chunked
 logger = init_logger()
 
 
-def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
+def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
     """Generate Safe Browsing API-compliant hostname expressions
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
     """
 
-    def generate_hostname_expressions_(raw_url_chunk):
-        hostname_expressions = set()
-        for raw_url in raw_url_chunk:
-            ext = tldextract.extract(raw_url)
-            if ext.subdomain == "":
-                parts = [ext.registered_domain]
-            else:
-                parts = ext.subdomain.split(".") + [ext.registered_domain]
-            hostname_expressions.update(
-                [
-                    f"{'.'.join(parts[-i:])}"
-                    for i in range(len(parts) if len(parts) < 5 else 5)
-                ]
-            )
-        return hostname_expressions
-
-    hostname_expressions = list(generate_hostname_expressions_(raw_urls))
-
-    return hostname_expressions
+    hostname_expressions = set()
+    for raw_url in raw_urls:
+        ext = tldextract.extract(raw_url)
+        if ext.subdomain == "":
+            parts = [ext.registered_domain]
+        else:
+            parts = ext.subdomain.split(".") + [ext.registered_domain]
+        hostname_expressions.update(
+            [
+                f"{'.'.join(parts[-i:])}"
+                for i in range(len(parts) if len(parts) < 5 else 5)
+            ]
+        )
+    return list(hostname_expressions)
 
 
-def get_top1m_url_list() -> list[str]:
-    """Downloads the Tranco TOP1M dataset and returns all listed URLs."""
+def get_top1m_url_list() -> Generator[List[str]]:
+    """Downloads the Tranco TOP1M dataset and yields all listed URLs."""
     logging.info("Downloading TOP1M list...")
     try:
         with BytesIO() as f:
@@ -64,12 +60,12 @@ def get_top1m_url_list() -> list[str]:
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as e:
-        logging.warning(f"Failed to retrieve TOP1M list; returning empty list: {e}")
-        return []
+        logging.warning(f"Failed to retrieve TOP1M list; yielding empty list: {e}")
+        yield []
 
 
-def get_top10m_url_list() -> list[str]:
-    """Downloads the DomCop TOP10M dataset and returns all listed URLs."""
+def get_top10m_url_list() -> Generator[List[str]]:
+    """Downloads the DomCop TOP10M dataset and yields all listed URLs."""
     logging.info("Downloading TOP10M list...")
     try:
         with BytesIO() as f:
@@ -94,18 +90,18 @@ def get_top10m_url_list() -> list[str]:
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as e:
-        logging.warning(f"Failed to retrieve TOP10M list; returning empty list: {e}")
+        logging.warning(f"Failed to retrieve TOP10M list; yielding empty list: {e}")
         yield []
 
 
-def get_local_file_url_list(file: str) -> list[str]:
-    """Returns all listed URLs from local text file"""
+def get_local_file_url_list(file: str) -> Generator[List[str]]:
+    """Yields all listed URLs from local text file"""
     try:
         with open(file, "r") as f:
             for raw_urls in chunked((_.strip() for _ in f.readlines()), 40_000):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as e:
         logging.warning(
-            f"Failed to retrieve local list ({file}); returning empty list: {e}"
+            f"Failed to retrieve local list ({file}); yielding empty list: {e}"
         )
         yield []

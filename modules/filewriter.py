@@ -2,6 +2,7 @@ from __future__ import annotations
 import logging
 import os
 from datetime import datetime
+from typing import List
 
 from modules.logger_utils import init_logger
 
@@ -11,11 +12,11 @@ blocklist_filename = "URLs_marked_malicious_by_Safe_Browsing"
 logger = init_logger()
 
 
-def current_timestamp_str():
+def current_timestamp_str() -> str:
     return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
-def write_db_malicious_urls_to_file(malicious_urls: list[str]) -> None:
+def write_db_malicious_urls_to_file(malicious_urls: List[str]) -> None:
     """
     Writes all database URLs marked malicious by Safe Browsing API to TXT file.
     """

@@ -1,3 +1,4 @@
+from typing import List
 from more_itertools.more import sort_together
 import ray
 import time
@@ -26,7 +27,9 @@ from modules.url_utils import (
 from more_itertools import flatten
 
 
-def update_database(fetch, identify, retrieve, sources, vendors):
+def update_database(
+    fetch: bool, identify: bool, retrieve: bool, sources: List[str], vendors: List[str]
+) -> None:
     ray.shutdown()
     ray.init(include_dashboard=True)
     updateTime = int(time.time())  # seconds since UNIX Epoch
@@ -84,11 +87,11 @@ def update_database(fetch, identify, retrieve, sources, vendors):
         if "top10m" in sources:
             # Download and Add TOP10M URLs to DB
             add_URLs_jobs.append((get_top10m_url_list, updateTime, "top10m_urls"))
-        execute_with_ray(add_URLs_jobs, add_URLs)
+        execute_with_ray(add_URLs, add_URLs_jobs)
 
         if "ipv4" in sources:
             # Generate and Add ipv4 addresses to DB
-            execute_with_ray(add_IPs_jobs, add_IPs)
+            execute_with_ray(add_IPs, add_IPs_jobs)
 
     if identify:
         for vendor in vendors:
@@ -111,12 +114,12 @@ def update_database(fetch, identify, retrieve, sources, vendors):
                     set(
                         flatten(
                             execute_with_ray(
+                                get_matching_hashPrefix_urls,
                                 [
                                     (filename, prefixSize, vendor)
                                     for filename in urls_filenames + ips_filenames
                                 ],
-                                get_matching_hashPrefix_urls,
-                            )
+                            ),
                         )
                     )
                 )
@@ -136,11 +139,11 @@ def update_database(fetch, identify, retrieve, sources, vendors):
         # Update malicious URL statuses in DB
         for vendor in vendors:
             execute_with_ray(
+                update_malicious_URLs,
                 [
                     (updateTime, vendor, filename)
                     for filename in urls_filenames + ips_filenames
                 ],
-                update_malicious_URLs,
                 store={"malicious_urls": malicious_urls[vendor]},
             )
 

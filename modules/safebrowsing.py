@@ -1,5 +1,6 @@
 from __future__ import annotations
 import time
+from typing import Dict, List, Mapping, Set
 from dotenv import dotenv_values
 from more_itertools.more import chunked
 from modules.logger_utils import init_logger
@@ -20,7 +21,7 @@ logger = init_logger()
 
 
 class SafeBrowsing:
-    def __init__(self, vendor):
+    def __init__(self, vendor: str) -> None:
         self.vendor = vendor
         if vendor == "Google":
             self.threatMatchesEndpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}"
@@ -45,7 +46,7 @@ class SafeBrowsing:
 
     ######## Safe Browsing Lookup API ########
     @staticmethod
-    def threatMatches_payload(url_list: list[str]) -> dict:
+    def threatMatches_payload(url_list: List[str]) -> Dict:
         """
         For a given list of URLs, generate a POST request payload for Safe Browsing Lookup API endpoint.
         Google API Reference: https://developers.google.com/safe-browsing/v4/lookup-api
@@ -82,7 +83,7 @@ class SafeBrowsing:
         }
         return data
 
-    def threatMatches_lookup(self, url_batch: list[str]) -> Response:
+    def threatMatches_lookup(self, url_batch: List[str]) -> Response:
         """Returns Safe Browsing API threatMatches for a given list of URLs"""
 
         data = SafeBrowsing.threatMatches_payload(url_batch)
@@ -95,15 +96,15 @@ class SafeBrowsing:
         time.sleep(2)  # To prevent rate limiting
         return res
 
-    def get_malicious_URLs(self, urls: set[str]) -> list[str]:
+    def get_malicious_URLs(self, urls: Set[str]) -> List[str]:
         """Find all URLs in a given list of URLs deemed by Safe Browsing API to be malicious."""
         logging.info(f"Verifying suspected {self.vendor} malicious URLs")
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = chunked(urls, self.maximum_url_batch_size)
         logging.info(f"{-(-len(urls)//self.maximum_url_batch_size)} batches")
         results = execute_with_ray(
-            [(url_batch,) for url_batch in url_batches],
             self.threatMatches_lookup,
+            [(url_batch,) for url_batch in url_batches],
             progress_bar=False,
         )
 
@@ -129,7 +130,7 @@ class SafeBrowsing:
         return malicious_urls
 
     ######## Safe Browsing Update API ########
-    def retrieve_threatListUpdates(self):
+    def retrieve_threatListUpdates(self) -> Dict:
         """Before sending a request to the Safe Browsing servers,
         the client should retrieve the names of the currently available Safe Browsing lists.
         This will help ensure that the parameters or type combinations specified in the request are valid.
@@ -196,7 +197,7 @@ class SafeBrowsing:
         return res_json
 
     @staticmethod
-    def get_malicious_hashes(listUpdateResponses):
+    def get_malicious_hashes(listUpdateResponses: Mapping) -> Set[bytes]:
         hashes = set()
         prefixSizes = set()
         for x in tqdm(listUpdateResponses):
@@ -218,9 +219,10 @@ class SafeBrowsing:
         # Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes,
         # but some hashes are lengthened if they collide with the hash of a popular URL.
         assert set((len(x) for x in hashes)) == prefixSizes
+
         return hashes
 
-    def get_malicious_hash_prefixes(self):
+    def get_malicious_hash_prefixes(self) -> Set[bytes]:
         """Download latest malicious hash prefixes from Safe Browsing API"""
         logging.info(f"Downloading {self.vendor} malicious URL hashes")
         res_json = self.retrieve_threatListUpdates()

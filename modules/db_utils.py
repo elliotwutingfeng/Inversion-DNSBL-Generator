@@ -1,10 +1,10 @@
 from __future__ import annotations
+from typing import Callable, List, Optional, Set, Tuple
 import apsw
 from apsw import Error
 import logging
 from hashlib import sha256
 import os
-from more_itertools import flatten
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 import socket
@@ -18,7 +18,7 @@ from more_itertools import chunked
 logger = init_logger()
 
 
-def create_connection(filename):
+def create_connection(filename: str) -> Optional[apsw.Connection]:
     """create a database connection to the SQLite database
         specified by db_file, if db_file is None, connect to a new in-memory database
     :param db_file: database file
@@ -42,11 +42,10 @@ def create_connection(filename):
         cur.execute("PRAGMA auto_vacuum = 1")  # Enable auto_vacuum
     except Error as e:
         logging.error(f"filename:{filename} {e}")
-
     return conn
 
 
-def create_ips_table(filename):
+def create_ips_table(filename: str) -> None:
     conn = create_connection(filename)
     try:
         with conn:
@@ -64,7 +63,7 @@ def create_ips_table(filename):
     conn.close()
 
 
-def create_urls_table(filename):
+def create_urls_table(filename: str) -> None:
     conn = create_connection(filename)
     try:
         with conn:
@@ -83,18 +82,18 @@ def create_urls_table(filename):
     conn.close()
 
 
-def compute_url_hash(url):
+def compute_url_hash(url: str) -> bytes:
     """Returns sha256 hash of url as specified by Safe Browsing API"""
     return sha256(f"{url}/".encode()).digest()
 
 
-def int_addr_to_ip_and_hash(int_addr):
+def int_addr_to_ip_and_hash(int_addr: int) -> Tuple[str, bytes]:
     ip = socket.inet_ntoa(struct.pack("!I", int_addr))
     hash = compute_url_hash(ip)
     return (ip, hash)
 
 
-def add_IPs(filename, first_octet):
+def add_IPs(filename: str, first_octet: int) -> None:
     """
     Add all 2 ** 32 ips and their hashes into urls table of 255 .db files.
     1 file for each bit in first octet.
@@ -134,7 +133,12 @@ def add_IPs(filename, first_octet):
     conn.close()
 
 
-def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
+def add_URLs(
+    url_list_fetcher: Callable[[Optional[str]], List[str]],
+    updateTime: int,
+    filename: str,
+    filepath: Optional[str] = None,
+) -> None:
     """
     Add a list of urls into filename's urls table
     If any given url already exists, update its lastListed field
@@ -168,7 +172,7 @@ def add_URLs(url_list_fetcher, updateTime, filename, filepath=None):
     conn.close()
 
 
-def add_maliciousHashPrefixes(hash_prefixes, vendor):
+def add_maliciousHashPrefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
     """
     Replace maliciousHashPrefixes table contents with list of hash prefixes
     """
@@ -190,7 +194,9 @@ def add_maliciousHashPrefixes(hash_prefixes, vendor):
     conn.close()
 
 
-def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
+def get_matching_hashPrefix_urls(
+    filename: str, prefixSize: int, vendor: str
+) -> List[str]:
     conn = create_connection(filename)
     urls = []
     try:
@@ -218,7 +224,7 @@ def get_matching_hashPrefix_urls(filename, prefixSize, vendor):
     return urls
 
 
-def retrieve_vendor_prefixSizes(vendor) -> list[int]:
+def retrieve_vendor_prefixSizes(vendor: str) -> List[int]:
     conn = create_connection("malicious")
     prefixSizes = []
     try:
@@ -236,7 +242,7 @@ def retrieve_vendor_prefixSizes(vendor) -> list[int]:
     return prefixSizes
 
 
-def create_maliciousHashPrefixes_table():
+def create_maliciousHashPrefixes_table() -> None:
     """create a table from the create_table_sql statement
     :param conn: Connection object
     :param create_table_sql: a CREATE TABLE statement
@@ -258,21 +264,29 @@ def create_maliciousHashPrefixes_table():
     conn.close()
 
 
-def initialise_database(filenames, mode):
+def initialise_database(filenames: List[str], mode: str) -> None:
     # initialise tables
     logging.info(
         f"Creating .db files if they do not exist yet for {len(filenames)} .txt files"
     )
     if mode == "domains":
-        execute_with_ray([(filename,) for filename in filenames], create_urls_table)
+        execute_with_ray(
+            create_urls_table,
+            [(filename,) for filename in filenames],
+        )
     elif mode == "ips":
-        execute_with_ray([(filename,) for filename in filenames], create_ips_table)
+        execute_with_ray(
+            create_ips_table,
+            [(filename,) for filename in filenames],
+        )
     else:
         raise ValueError('mode must be "domains" or "ips"')
     create_maliciousHashPrefixes_table()
 
 
-def update_malicious_URLs(updateTime, vendor, filename, malicious_urls):
+def update_malicious_URLs(
+    updateTime: int, vendor: str, filename: str, malicious_urls: List[str]
+) -> None:
     """
     Updates malicious status of all urls currently in DB
     i.e. for urls found in malicious_urls, set lastGoogleMalicious or lastYandexMalicious value to updateTime
@@ -308,12 +322,12 @@ def update_malicious_URLs(updateTime, vendor, filename, malicious_urls):
     conn.close()
 
 
-def retrieve_malicious_URLs(urls_filenames) -> list[str]:
+def retrieve_malicious_URLs(urls_filenames: List[str]) -> List[str]:
     """
     Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
     """
 
-    def retrieve_malicious_URLs_(filename):
+    def retrieve_malicious_URLs_(filename: str) -> Set[str]:
         malicious_urls = set()
         conn = create_connection(filename)
         try:
@@ -341,7 +355,7 @@ def retrieve_malicious_URLs(urls_filenames) -> list[str]:
 
     malicious_urls = set().union(
         *execute_with_ray(
-            [(filename,) for filename in urls_filenames], retrieve_malicious_URLs_
+            retrieve_malicious_URLs_, [(filename,) for filename in urls_filenames]
         )
     )
 

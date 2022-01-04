@@ -1,7 +1,10 @@
 import logging
+from typing import Mapping
 import requests
 import time
 import json
+
+from requests.models import Response
 
 from modules.logger_utils import init_logger
 
@@ -14,7 +17,7 @@ headers = {
 logger = init_logger()
 
 
-def get_with_retries(endpoint, stream=False):
+def get_with_retries(endpoint: str, stream: bool = False) -> Response:
     attempt = 1
     while True:
         try:
@@ -33,7 +36,7 @@ def get_with_retries(endpoint, stream=False):
         time.sleep(1)
 
 
-def post_with_retries(endpoint, payload):
+def post_with_retries(endpoint: str, payload: Mapping) -> Response:
     attempt = 1
     while True:
         try:
