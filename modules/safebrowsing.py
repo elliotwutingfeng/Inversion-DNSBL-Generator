@@ -228,7 +228,7 @@ class SafeBrowsing:
         )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
         if "listUpdateResponses" not in res_json:
             return {}
-        logging.info("Minimum wait duration: %d", res_json["minimumWaitDuration"])
+        logging.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
         return res_json
 
     @staticmethod
