@@ -7,7 +7,7 @@ Enables unlimited retries for GET and POST requests.
 import logging
 import time
 import json
-from typing import Mapping
+from typing import Mapping, Text, Union
 import requests
 from requests.models import Response
 
@@ -23,25 +23,27 @@ headers = {
 logger = init_logger()
 
 
-def get_with_retries(endpoint: str, stream: bool = False) -> Response:
-    """GET request with unlimited retries
+def get_with_retries(url: Union[Text, bytes], stream: bool = False) -> Response:
+    """GET request with unlimited retries.
 
     Args:
-        endpoint (str): [description]
-        stream (bool, optional): [description]. Defaults to False.
+        url (Union[Text, bytes]): URL for the new `Request` object
+        stream (bool, optional): if False, the response content
+        will be immediately downloaded. Defaults to False.
 
     Raises:
-        requests.exceptions.RequestException: [description]
+        requests.exceptions.RequestException: There was an
+        ambiguous exception that occurred while handling your request
 
     Returns:
-        Response: [description]
+        Response: Contains a server's response to an HTTP request
     """
     attempt = 1
     while True:
         try:
             if stream:
-                return requests.get(endpoint, stream=True, headers=headers, timeout=90)
-            resp = requests.get(endpoint, headers=headers, timeout=15)
+                return requests.get(url, stream=True, headers=headers, timeout=180)
+            resp = requests.get(url, headers=headers, timeout=15)
             if resp.status_code != 200:
                 raise requests.exceptions.RequestException(
                     f"Status Code not 200. Actual Code is {resp.status_code}"
@@ -53,24 +55,25 @@ def get_with_retries(endpoint: str, stream: bool = False) -> Response:
         time.sleep(1)
 
 
-def post_with_retries(endpoint: str, payload: Mapping) -> Response:
-    """POST request with unlimited retries
+def post_with_retries(url: Union[Text, bytes], payload: Mapping) -> Response:
+    """POST request with unlimited retries.
 
     Args:
-        endpoint (str): [description]
-        payload (Mapping): [description]
+        url (Union[Text, bytes]): URL for the new `Request` object
+        payload (Mapping): Dictionary to send in the body of the `Request`.
 
     Raises:
-        requests.exceptions.RequestException: [description]
+        requests.exceptions.RequestException: There was an
+        ambiguous exception that occurred while handling your request
 
     Returns:
-        Response: [description]
+        Response: Contains a server's response to an HTTP request
     """
     attempt = 1
     while True:
         try:
             resp = requests.post(
-                endpoint, data=json.dumps(payload), headers=headers, timeout=90
+                url, data=json.dumps(payload), headers=headers, timeout=180
             )
             if resp.status_code != 200:
                 raise requests.exceptions.RequestException(

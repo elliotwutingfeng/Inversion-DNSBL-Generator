@@ -191,7 +191,7 @@ def execute_with_ray(
         aux.remote(
             task_handler,
             task_args,
-            store={
+            task_obj_store_args={
                 key: ray.put(task_obj_store_args[key]) for key in task_obj_store_args
             }
             if task_obj_store_args is not None
