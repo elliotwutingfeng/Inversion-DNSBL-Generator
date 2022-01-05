@@ -1,5 +1,5 @@
 """
-For writing text files
+File Writer: For writing URLs to .txt file
 """
 
 from __future__ import annotations
@@ -16,26 +16,27 @@ BLOCKLIST_FILENAME: str = "URLs_marked_malicious_by_Safe_Browsing"
 logger: logging.Logger = init_logger()
 
 
-def current_timestamp_str() -> str:
-    """
-    Gets current time and returns timestamp string
+def current_datetime_str() -> str:
+    """Current time's datetime string in UTC
+
+    Returns:
+        str: Timestamp in format "%d_%b_%Y_%H_%M_%S-UTC"
     """
     return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
-def write_db_malicious_urls_to_file(malicious_urls: List[str]) -> None:
-    """
-    Writes all database URLs marked malicious by Safe Browsing API to TXT file.
-    """
-    logging.info(
-        "%d URLs confirmed to be marked malicious by all Safe Browsing APIs.",
-        len(malicious_urls),
-    )
+def write_urls_to_txt_file(urls: List[str]) -> None:
+    """Writes list of URLs to .txt file placed in BLOCKLISTS_FOLDER
 
+    BLOCKLISTS_FOLDER is created beforehand if it does not exist yet.
+
+    Args:
+        urls (List[str]): List of URLs
+    """
     if not os.path.exists(BLOCKLISTS_FOLDER):
         os.mkdir(BLOCKLISTS_FOLDER)
 
-    txt_filename = f"{BLOCKLIST_FILENAME}_{current_timestamp_str()}.txt"
+    txt_filename = f"{BLOCKLIST_FILENAME}_{current_datetime_str()}.txt"
     with open(f"{BLOCKLISTS_FOLDER}{os.sep}{txt_filename}", "a") as outfile:
-        outfile.writelines("\n".join(malicious_urls))
-        logging.info("File written: %s", txt_filename)
+        outfile.writelines("\n".join(urls))
+        logging.info("%d URLs written to file: %s", len(urls), txt_filename)

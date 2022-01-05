@@ -19,7 +19,7 @@ from modules.db_utils import (
     retrieve_vendor_prefix_sizes,
     update_malicious_urls,
 )
-from modules.filewriter import write_db_malicious_urls_to_file
+from modules.filewriter import write_urls_to_txt_file
 from modules.ray_utils import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
 from modules.url_utils import (
@@ -40,7 +40,6 @@ def update_database(
     update_time = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames: List[str] = []
-    ips_filenames: List[str] = []
 
     if "domainsproject" in sources:
         # Scan Domains Project's "domains" directory for local urls_filenames
@@ -68,11 +67,12 @@ def update_database(
         urls_filenames.append("top1m_urls")
     if "top10m" in sources:
         urls_filenames.append("top10m_urls")
+
     if "ipv4" in sources:
         add_ip_addresses_jobs = [
             (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
         ]
-        ips_filenames = [_[0] for _ in add_ip_addresses_jobs]
+        ips_filenames: List[str] = [_[0] for _ in add_ip_addresses_jobs]
 
     # Create DB files
     initialise_database(urls_filenames, mode="domains")
@@ -99,6 +99,7 @@ def update_database(
             execute_with_ray(add_ip_addresses, add_ip_addresses_jobs)
 
     if identify:
+        malicious_urls = dict()
         for vendor in vendors:
             safebrowsing = SafeBrowsing(vendor)
 
@@ -106,10 +107,6 @@ def update_database(
             hash_prefixes = safebrowsing.get_malicious_hash_prefixes()
             add_malicious_hash_prefixes(hash_prefixes, vendor)
             del hash_prefixes  # "frees" memory
-
-        malicious_urls = dict()
-        for vendor in vendors:
-            safebrowsing = SafeBrowsing(vendor)
 
             prefix_sizes = retrieve_vendor_prefix_sizes(vendor)
 
@@ -128,15 +125,13 @@ def update_database(
 
             # To Improve: Store suspected_urls into malicious.db under
             # suspected_urls table columns: [url,Google,Yandex]
-
             # Among these URLs, identify those with full Hashes
             # found on Safe Browsing API Server
             vendor_malicious_urls = safebrowsing.get_malicious_urls(suspected_urls)
             del suspected_urls  # "frees" memory
             malicious_urls[vendor] = vendor_malicious_urls
 
-        # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(list(set(flatten(malicious_urls.values()))))
+        write_urls_to_txt_file(list(set(flatten(malicious_urls.values()))))
 
         # TODO push blocklist to GitHub
 
@@ -152,6 +147,5 @@ def update_database(
             )
 
     if retrieve:
-        # Write malicious_urls to TXT file
-        write_db_malicious_urls_to_file(retrieve_malicious_urls(urls_filenames))
+        write_urls_to_txt_file(retrieve_malicious_urls(urls_filenames))
     ray.shutdown()
