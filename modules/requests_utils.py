@@ -1,5 +1,8 @@
 """
 Requests Utilities
+
+Enables unlimited retries for GET and POST requests.
+
 """
 import logging
 import time
@@ -21,8 +24,17 @@ logger = init_logger()
 
 
 def get_with_retries(endpoint: str, stream: bool = False) -> Response:
-    """
-    GET request with unlimited retries
+    """GET request with unlimited retries
+
+    Args:
+        endpoint (str): [description]
+        stream (bool, optional): [description]. Defaults to False.
+
+    Raises:
+        requests.exceptions.RequestException: [description]
+
+    Returns:
+        Response: [description]
     """
     attempt = 1
     while True:
@@ -42,8 +54,17 @@ def get_with_retries(endpoint: str, stream: bool = False) -> Response:
 
 
 def post_with_retries(endpoint: str, payload: Mapping) -> Response:
-    """
-    POST request with unlimited retries
+    """POST request with unlimited retries
+
+    Args:
+        endpoint (str): [description]
+        payload (Mapping): [description]
+
+    Raises:
+        requests.exceptions.RequestException: [description]
+
+    Returns:
+        Response: [description]
     """
     attempt = 1
     while True:

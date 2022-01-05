@@ -9,7 +9,7 @@ LOGS_FOLDER: str = "logs"
 
 
 def init_logger() -> logging.Logger:
-    """Returns a logger with custom format settings
+    """Returns a logger with custom format settings.
 
     LOGS_FOLDER is created beforehand if it does not exist yet.
 

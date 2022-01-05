@@ -28,6 +28,15 @@ class SafeBrowsing:
     """
 
     def __init__(self, vendor: str) -> None:
+        """Initializes Safe Browsing API helper class
+        for a given vendor (e.g. "Google", "Yandex" etc.)
+
+        Args:
+            vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+
+        Raises:
+            ValueError: 'vendor must be "Google" or "Yandex"'
+        """
         self.vendor = vendor
         if vendor == "Google":
             endpoint_prefix = "https://safebrowsing.googleapis.com/v4/"

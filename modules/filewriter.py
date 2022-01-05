@@ -1,5 +1,7 @@
 """
-File Writer: For writing URLs to .txt file
+File Writer
+
+For writing URLs to .txt file with timestamping
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ logger: logging.Logger = init_logger()
 
 
 def current_datetime_str() -> str:
-    """Current time's datetime string in UTC
+    """Current time's datetime string in UTC.
 
     Returns:
         str: Timestamp in format "%d_%b_%Y_%H_%M_%S-UTC"
@@ -26,7 +28,7 @@ def current_datetime_str() -> str:
 
 
 def write_urls_to_txt_file(urls: List[str]) -> None:
-    """Writes list of URLs to .txt file placed in BLOCKLISTS_FOLDER
+    """Writes list of URLs to .txt file with timestamping and stores it in BLOCKLISTS_FOLDER.
 
     BLOCKLISTS_FOLDER is created beforehand if it does not exist yet.
 
