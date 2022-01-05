@@ -32,14 +32,19 @@ from modules.url_utils import (
 def update_database(
     fetch: bool, identify: bool, retrieve: bool, sources: List[str], vendors: List[str]
 ) -> None:
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-branches
     """Update Database
 
     Args:
-        fetch (bool): [description]
-        identify (bool): [description]
-        retrieve (bool): [description]
-        sources (List[str]): [description]
-        vendors (List[str]): [description]
+        fetch (bool): If True, fetch URL datasets from local and/or remote sources,
+        and update them to database
+        identify (bool): If True, use Safe Browsing API to identify malicious URLs in database,
+        write the URLs to a .txt file blocklist, and update database with these malicious URLs
+        retrieve (bool): If True, retrieve URLs in database that have been flagged
+        as malicious from past scans, then create a .txt file blocklist
+        sources (List[str]): URL sources (e.g. top1m, top10m etc.)
+        vendors (List[str]): Safe Browsing API vendors (e.g. Google, Yandex etc.)
     """
     ray.shutdown()
     ray.init(include_dashboard=True)

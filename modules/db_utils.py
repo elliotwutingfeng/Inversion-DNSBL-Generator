@@ -18,11 +18,15 @@ from modules.ray_utils import execute_with_ray
 logger = init_logger()
 
 
-def create_connection(filename: str) -> Optional[Type[apsw.Connection]]:
-    """create a database connection to the SQLite database
-        specified by db_file, if db_file is None, connect to a new in-memory database
-    :param db_file: database file
-    :return: Connection object or None
+def create_connection(db_filename: str) -> Optional[Type[apsw.Connection]]:
+    """Create a database connection to the SQLite database specified by db_filename,
+     if db_filename is None, connect to a new in-memory database.
+
+    Args:
+        db_filename (str): SQLite database filename
+
+    Returns:
+        Optional[Type[apsw.Connection]]: SQLite database connection
     """
     databases_folder = "databases"
     conn = None
@@ -32,8 +36,8 @@ def create_connection(filename: str) -> Optional[Type[apsw.Connection]]:
             os.mkdir(databases_folder)
         conn = apsw.Connection(
             ":memory:"
-            if filename is None
-            else f"{databases_folder}{os.sep}{filename}.db"
+            if db_filename is None
+            else f"{databases_folder}{os.sep}{db_filename}.db"
         )
         cur = conn.cursor()
         cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
@@ -41,15 +45,17 @@ def create_connection(filename: str) -> Optional[Type[apsw.Connection]]:
             "PRAGMA auto_vacuum = 1"
         )  # https://www.sqlite.org/pragma.html#pragma_auto_vacuum
     except Error as error:
-        logging.error("filename:%s %s", filename, error)
+        logging.error("filename:%s %s", db_filename, error)
     return conn
 
 
-def create_ips_table(filename: str) -> None:
+def create_ips_table(db_filename: str) -> None:
+    """Create SQLite table for storing ipv4 addresses.
+
+    Args:
+        db_filename (str): [description]
     """
-    Create ips table
-    """
-    conn = create_connection(filename)
+    conn = create_connection(db_filename)
     if conn is not None:
         try:
             with conn:
@@ -63,15 +69,17 @@ def create_ips_table(filename: str) -> None:
                             )"""
                 )
         except Error as error:
-            logging.error("filename:%s %s", filename, error)
+            logging.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
-def create_urls_table(filename: str) -> None:
+def create_urls_table(db_filename: str) -> None:
+    """Create SQLite table for storing URLs.
+
+    Args:
+        db_filename (str): [description]
     """
-    Create urls table
-    """
-    conn = create_connection(filename)
+    conn = create_connection(db_filename)
     if conn is not None:
         try:
             with conn:
@@ -86,19 +94,31 @@ def create_urls_table(filename: str) -> None:
                             )"""
                 )
         except Error as error:
-            logging.error("filename:%s %s", filename, error)
+            logging.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
 def compute_url_hash(url: str) -> bytes:
-    """Returns sha256 hash of url as specified by Safe Browsing API"""
+    """Returns sha256 hash of url as specified by Safe Browsing API.
+
+    Args:
+        url (str): [description]
+
+    Returns:
+        bytes: [description]
+    """
     return sha256(f"{url}/".encode()).digest()
 
 
 def int_addr_to_ip_and_hash(int_addr: int) -> Tuple[str, bytes]:
-    """
-    Convert integer representation of ipv4 address
+    """Convert integer representation of ipv4 address
     to ip_address string and its Safe Browsing API hash
+
+    Args:
+        int_addr (int): [description]
+
+    Returns:
+        Tuple[str, bytes]: [description]
     """
     ip_address = socket.inet_ntoa(struct.pack("!I", int_addr))
     ip_hash = compute_url_hash(ip_address)
@@ -106,9 +126,12 @@ def int_addr_to_ip_and_hash(int_addr: int) -> Tuple[str, bytes]:
 
 
 def add_ip_addresses(filename: str, first_octet: int) -> None:
-    """
-    Add all 2 ** 32 ips and their hashes into urls table of 255 .db files.
+    """Add all 2 ** 32 ips and their hashes into urls table of 255 .db files.
     1 file for each bit in first octet.
+
+    Args:
+        filename (str): [description]
+        first_octet (int): [description]
     """
     conn = create_connection(filename)
     if conn is not None:
@@ -157,10 +180,16 @@ def add_urls(
     filename: str,
     filepath: Optional[str] = None,
 ) -> None:
-    """
-    Add a list of urls into filename's urls table
+    """Add a list of urls into filename's urls table
     If any given url already exists, update its lastListed field
+
+    Args:
+        url_list_fetcher (Callable[..., List[str]]): [description]
+        update_time (int): [description]
+        filename (str): [description]
+        filepath (Optional[str], optional): [description]. Defaults to None.
     """
+
     urls = url_list_fetcher() if filepath is None else url_list_fetcher(filepath)
     last_listed = update_time
     conn = create_connection(filename)
@@ -196,8 +225,11 @@ def add_urls(
 
 
 def add_malicious_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
-    """
-    Replace maliciousHashPrefixes table contents with list of hash prefixes
+    """Replace maliciousHashPrefixes table contents with list of hash prefixes
+
+    Args:
+        hash_prefixes (Set[bytes]): [description]
+        vendor (str): [description]
     """
     logging.info("Updating DB with %s malicious URL hashes", vendor)
     conn = create_connection("malicious")
@@ -226,9 +258,16 @@ def add_malicious_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
 def get_matching_hash_prefix_urls(
     filename: str, prefix_sizes: List[int], vendor: str
 ) -> List[str]:
-    """
-    Identify urls with hashes beginning with
+    """Identify urls with hashes beginning with
     any of the malicious hash prefixes in database
+
+    Args:
+        filename (str): [description]
+        prefix_sizes (List[int]): [description]
+        vendor (str): [description]
+
+    Returns:
+        List[str]: [description]
     """
     conn = create_connection(filename)
     urls = []
@@ -267,8 +306,13 @@ def get_matching_hash_prefix_urls(
 
 
 def retrieve_vendor_prefix_sizes(vendor: str) -> List[int]:
-    """
-    Retrieve vendor prefix sizes from database
+    """Retrieve vendor prefix sizes from database.
+
+    Args:
+        vendor (str): [description]
+
+    Returns:
+        List[int]: [description]
     """
     prefix_sizes = []
 
@@ -290,11 +334,7 @@ def retrieve_vendor_prefix_sizes(vendor: str) -> List[int]:
 
 
 def create_malicious_hash_prefixes_table() -> None:
-    """create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
+    """Create maliciousHashPrefixes table"""
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -313,8 +353,14 @@ def create_malicious_hash_prefixes_table() -> None:
 
 
 def initialise_database(filenames: List[str], mode: str) -> None:
-    """
-    Initialise database tables
+    """Initialise database tables.
+
+    Args:
+        filenames (List[str]): [description]
+        mode (str): [description]
+
+    Raises:
+        ValueError: [description]
     """
     logging.info(
         "Creating .db files if they do not exist yet for %d .txt files", len(filenames)
@@ -337,10 +383,18 @@ def initialise_database(filenames: List[str], mode: str) -> None:
 def update_malicious_urls(
     update_time: int, vendor: str, filename: str, malicious_urls: List[str]
 ) -> None:
-    """
-    Updates malicious status of all urls currently in DB
+    """Updates malicious status of all urls currently in DB
     i.e. for urls found in malicious_urls,
-    set lastGoogleMalicious or lastYandexMalicious value to update_time
+    set lastGoogleMalicious or lastYandexMalicious value to update_time.
+
+    Args:
+        update_time (int): [description]
+        vendor (str): [description]
+        filename (str): [description]
+        malicious_urls (List[str]): [description]
+
+    Raises:
+        ValueError: [description]
     """
     logging.info("Updating %s DB with verified %s malicious URLs", filename, vendor)
     vendor_to_column = {
@@ -380,8 +434,13 @@ def update_malicious_urls(
 
 
 def retrieve_malicious_urls(urls_filenames: List[str]) -> List[str]:
-    """
-    Retrieves all urls from DB most recently marked as malicious by Safe Browsing API
+    """Retrieves all urls from DB most recently marked as malicious by Safe Browsing API.
+
+    Args:
+        urls_filenames (List[str]): [description]
+
+    Returns:
+        List[str]: [description]
     """
 
     def retrieve_malicious_urls_(filename: str) -> Set[str]:

@@ -7,6 +7,7 @@ from argparse import (
     RawTextHelpFormatter,
     ArgumentDefaultsHelpFormatter,
 )
+from typing import List
 from modules.update_database import update_database
 
 
@@ -106,10 +107,10 @@ if __name__ == "__main__":
     if not (args.fetch or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
-    update_database(
-        fetch=args.fetch,
-        identify=args.identify,
-        retrieve=args.retrieve,
-        sources=args.sources,
-        vendors=args.vendors,
-    )
+    fetch: bool = args.fetch
+    identify: bool = args.identify
+    retrieve: bool = args.retrieve
+    sources: List[str] = args.sources
+    vendors: List[str] = args.vendor
+
+    update_database(fetch, identify, retrieve, sources, vendors)
