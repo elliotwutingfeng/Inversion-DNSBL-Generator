@@ -15,7 +15,7 @@ https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 from __future__ import annotations
 from asyncio import Event
-from typing import Any, Callable, List, Mapping, Optional, Tuple
+from typing import Any, Callable, List, Mapping, Optional, Sequence, Tuple
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
 import ray
@@ -128,23 +128,29 @@ class ProgressBar:
 @ray.remote
 def aux(
     task_handler: Callable,
-    task: Tuple,
-    store: Mapping,
+    task_args: Tuple,
+    task_obj_store_args: Mapping,
     actor_id: Optional[Any] = None,
 ) -> Any:
-    """Runs `task_handler` on `task`, updates progressbar and returns the value returned by `task_handler`
+    """Runs `task_handler` on `task_args`,
+    updates progressbar and returns the value returned by `task_handler`
 
     Args:
         task_handler (Callable): Callable function to parallelise
-        task (Tuple): Arguments to be passed into task_handler function
-        store (Mapping): [description]
-        actor_id (Optional[Any], optional): Object reference assigned to `ProgressBar` actor. Defaults to None.
+        task_args (Tuple): Arguments to be passed into `task_handler`
+        task_obj_store_args (Mapping): Object IDs to be passed
+        from ray object store into `task_handler`
+        actor_id (Optional[Any], optional): Object reference assigned
+        to `ProgressBar` actor. Defaults to None.
 
     Returns:
-        Any: [description]
+        Any: Value returned by `task_handler`
     """
 
-    result = task_handler(*task, **{key: ray.get(store[key]) for key in store})
+    result = task_handler(
+        *task_args,
+        **{arg: ray.get(task_obj_store_args[arg]) for arg in task_obj_store_args}
+    )
     if actor_id is not None:
         actor_id.update.remote(1)  # type: ignore
     return result
@@ -152,8 +158,8 @@ def aux(
 
 def execute_with_ray(
     task_handler: Callable,
-    tasks: List[Tuple],
-    store: Optional[Mapping] = None,
+    task_args_list: Sequence[Tuple],
+    task_obj_store_args: Optional[Mapping] = None,
     progress_bar: bool = True,
 ) -> List:
     """Apply task_handler to list of tasks.
@@ -161,21 +167,22 @@ def execute_with_ray(
     Tasks are processed in parallel with pipelining to maximise throughput.
 
     Args:
-        task_handler (Callable): [description]
-        tasks (List[Tuple]): [description]
-        store (Optional[Mapping], optional): [description]. Defaults to None.
+        task_handler (Callable): Callable function to parallelise
+        task_args_list (Sequence[Tuple]): Sequence of Tuples of Arguments
+        to be passed into each `task_handler` instance
+        task_obj_store_args (Optional[Mapping], optional): Object IDs to be passed
+        from ray object store into `task_handler`, if any. Defaults to None.
         progress_bar (bool, optional): If set to True, shows progressbar. Defaults to True.
 
     Returns:
         List: List of returned values from each instance of task_handler
     """
 
-    if len(tasks) == 0:
+    if len(task_args_list) == 0:
         return []
 
     if progress_bar:
-        # Progressbar Ray Actor
-        num_ticks = len(tasks)
+        num_ticks = len(task_args_list)
         pbar = ProgressBar(num_ticks)
         actor = pbar.actor
         actor_id = ray.put(actor)
@@ -183,13 +190,15 @@ def execute_with_ray(
     tasks_pre_launch = [
         aux.remote(
             task_handler,
-            task,
-            store={key: ray.put(store[key]) for key in store}
-            if store is not None
+            task_args,
+            store={
+                key: ray.put(task_obj_store_args[key]) for key in task_obj_store_args
+            }
+            if task_obj_store_args is not None
             else {},
             actor_id=actor_id if progress_bar else None,
         )
-        for task in tasks
+        for task_args in task_args_list
     ]
 
     # Opens progressbar until all tasks are completed

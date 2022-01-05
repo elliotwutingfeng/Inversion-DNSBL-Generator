@@ -19,6 +19,12 @@ logger = init_logger()
 def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
     """Generate Safe Browsing API-compliant hostname expressions
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
+
+    Args:
+        raw_urls (List[str]): [description]
+
+    Returns:
+        List[str]: [description]
     """
 
     hostname_expressions = set()
@@ -38,7 +44,11 @@ def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
 
 
 def get_top1m_url_list() -> Iterator[List[str]]:
-    """Downloads the Tranco TOP1M dataset and yields all listed URLs."""
+    """Downloads the Tranco TOP1M dataset and yields all listed URLs.
+
+    Yields:
+        Iterator[List[str]]: [description]
+    """
     logging.info("Downloading TOP1M list...")
     try:
         with BytesIO() as file:
@@ -67,7 +77,11 @@ def get_top1m_url_list() -> Iterator[List[str]]:
 
 
 def get_top10m_url_list() -> Iterator[List[str]]:
-    """Downloads the DomCop TOP10M dataset and yields all listed URLs."""
+    """Downloads the DomCop TOP10M dataset and yields all listed URLs.
+
+    Yields:
+        Iterator[List[str]]: [description]
+    """
     logging.info("Downloading TOP10M list...")
     try:
         with BytesIO() as file:
@@ -99,7 +113,14 @@ def get_top10m_url_list() -> Iterator[List[str]]:
 
 
 def get_local_file_url_list(filename: str) -> Iterator[List[str]]:
-    """Yields all listed URLs from local text file"""
+    """Yields all listed URLs from local text file.
+
+    Args:
+        filename (str): [description]
+
+    Yields:
+        Iterator[List[str]]: [description]
+    """
     try:
         with open(filename, "r") as file:
             for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):

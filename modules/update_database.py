@@ -32,14 +32,21 @@ from modules.url_utils import (
 def update_database(
     fetch: bool, identify: bool, retrieve: bool, sources: List[str], vendors: List[str]
 ) -> None:
-    """
-    Update Database
+    """Update Database
+
+    Args:
+        fetch (bool): [description]
+        identify (bool): [description]
+        retrieve (bool): [description]
+        sources (List[str]): [description]
+        vendors (List[str]): [description]
     """
     ray.shutdown()
     ray.init(include_dashboard=True)
     update_time = int(time.time())  # seconds since UNIX Epoch
 
     urls_filenames: List[str] = []
+    ips_filenames: List[str] = []
 
     if "domainsproject" in sources:
         # Scan Domains Project's "domains" directory for local urls_filenames
@@ -69,10 +76,10 @@ def update_database(
         urls_filenames.append("top10m_urls")
 
     if "ipv4" in sources:
-        add_ip_addresses_jobs = [
+        add_ip_addresses_jobs: List[Tuple] = [
             (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
         ]
-        ips_filenames: List[str] = [_[0] for _ in add_ip_addresses_jobs]
+        ips_filenames = [_[0] for _ in add_ip_addresses_jobs]
 
     # Create DB files
     initialise_database(urls_filenames, mode="domains")
@@ -143,7 +150,7 @@ def update_database(
                     (update_time, vendor, filename)
                     for filename in urls_filenames + ips_filenames
                 ],
-                store={"malicious_urls": malicious_urls[vendor]},
+                task_obj_store_args={"malicious_urls": malicious_urls[vendor]},
             )
 
     if retrieve:
