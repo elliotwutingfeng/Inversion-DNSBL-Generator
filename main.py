@@ -14,9 +14,7 @@ from modules.update_database import update_database
 class CustomFormatter(
     RawTextHelpFormatter, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
 ):
-    """
-    Custom
-    """
+    """Custom Help text formatter for argparse."""
 
 
 if __name__ == "__main__":
@@ -111,6 +109,6 @@ if __name__ == "__main__":
     identify: bool = args.identify
     retrieve: bool = args.retrieve
     sources: List[str] = args.sources
-    vendors: List[str] = args.vendor
+    vendors: List[str] = args.vendors
 
     update_database(fetch, identify, retrieve, sources, vendors)

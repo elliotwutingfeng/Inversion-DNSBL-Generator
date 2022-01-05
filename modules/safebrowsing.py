@@ -166,7 +166,7 @@ class SafeBrowsing:
                 *(res.json()["matches"] for res in results if "matches" in res.json())
             )
         )
-        # Remove http, https prefixes
+        # Removes http, https prefixes
         malicious_urls = list(
             set(
                 (
@@ -275,7 +275,6 @@ class SafeBrowsing:
             return set()
         list_update_responses = res_json["listUpdateResponses"]
 
-        # hash_prefixes = SafeBrowsing.get_malicious_hashes(list_update_responses)
         hash_prefixes = set()
 
         for list_update_response in tqdm(list_update_responses):
