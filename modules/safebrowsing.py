@@ -35,7 +35,7 @@ class SafeBrowsing:
             vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
         Raises:
-            ValueError: 'vendor must be "Google" or "Yandex"'
+            ValueError: `vendor` must be "Google" or "Yandex"
         """
         self.vendor = vendor
         if vendor == "Google":

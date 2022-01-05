@@ -21,10 +21,11 @@ def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
 
     Args:
-        raw_urls (List[str]): [description]
+        raw_urls (List[str]): URLs to generate Safe Browsing API-compliant
+        hostname expressions from.
 
     Returns:
-        List[str]: [description]
+        List[str]: `raw_urls` + Safe Browsing API-compliant hostname expressions of `raw_urls`
     """
 
     hostname_expressions = set()
@@ -44,10 +45,10 @@ def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
 
 
 def get_top1m_url_list() -> Iterator[List[str]]:
-    """Downloads the Tranco TOP1M dataset and yields all listed URLs.
+    """Downloads the Tranco TOP1M dataset and yields all listed URLs in batches.
 
     Yields:
-        Iterator[List[str]]: [description]
+        Iterator[List[str]]: Batch of URLs as a list
     """
     logging.info("Downloading TOP1M list...")
     try:
@@ -77,10 +78,10 @@ def get_top1m_url_list() -> Iterator[List[str]]:
 
 
 def get_top10m_url_list() -> Iterator[List[str]]:
-    """Downloads the DomCop TOP10M dataset and yields all listed URLs.
+    """Downloads the DomCop TOP10M dataset and yields all listed URLs in batches.
 
     Yields:
-        Iterator[List[str]]: [description]
+        Iterator[List[str]]: Batch of URLs as a list
     """
     logging.info("Downloading TOP10M list...")
     try:
@@ -112,24 +113,24 @@ def get_top10m_url_list() -> Iterator[List[str]]:
         yield []
 
 
-def get_local_file_url_list(filename: str) -> Iterator[List[str]]:
-    """Yields all listed URLs from local text file.
+def get_local_file_url_list(txt_filename: str) -> Iterator[List[str]]:
+    """Yields all listed URLs in batches from local text file.
 
     Args:
-        filename (str): [description]
+        txt_filename (str): Filename of local text file containing URLs
 
     Yields:
-        Iterator[List[str]]: [description]
+        Iterator[List[str]]: Batch of URLs as a list
     """
     try:
-        with open(filename, "r") as file:
+        with open(txt_filename, "r") as file:
             for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
 
         logging.warning(
             "Failed to retrieve local list (%s); yielding empty list: %s",
-            filename,
+            txt_filename,
             error,
         )
         yield []

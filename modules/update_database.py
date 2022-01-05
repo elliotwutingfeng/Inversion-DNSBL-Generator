@@ -16,7 +16,7 @@ from modules.db_utils import (
     initialise_database,
     add_urls,
     retrieve_malicious_urls,
-    retrieve_vendor_prefix_sizes,
+    retrieve_vendor_hash_prefix_sizes,
     update_malicious_urls,
 )
 from modules.filewriter import write_urls_to_txt_file
@@ -120,7 +120,7 @@ def update_database(
             add_malicious_hash_prefixes(hash_prefixes, vendor)
             del hash_prefixes  # "frees" memory
 
-            prefix_sizes = retrieve_vendor_prefix_sizes(vendor)
+            prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 
             # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
             suspected_urls = set(
