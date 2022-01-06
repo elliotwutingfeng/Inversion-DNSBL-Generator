@@ -84,7 +84,8 @@ class ProgressBar:
         """Initializes progressbar.
 
         Ray actors don't seem to play nice with mypy, generating
-        a spurious warning for the following line `self.progress_actor = ProgressBarActor.remote()`,
+        a spurious warning for the following line
+        `self.progress_actor = ProgressBarActor.remote()`,
         which we need to suppress. The code is fine.
 
         Args:

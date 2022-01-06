@@ -8,7 +8,7 @@ from argparse import (
     ArgumentDefaultsHelpFormatter,
 )
 from typing import List
-from modules.update_database import update_database
+from modules.process_flags import process_flags
 
 
 class CustomFormatter(
@@ -111,4 +111,4 @@ if __name__ == "__main__":
     sources: List[str] = args.sources
     vendors: List[str] = args.vendors
 
-    update_database(fetch, identify, retrieve, sources, vendors)
+    process_flags(fetch, identify, retrieve, sources, vendors)

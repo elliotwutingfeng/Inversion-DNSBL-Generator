@@ -29,7 +29,7 @@ class SafeBrowsing:
 
     def __init__(self, vendor: str) -> None:
         """Initializes Safe Browsing API helper class
-        for a given vendor (e.g. "Google", "Yandex" etc.)
+        for a given `vendor` (e.g. "Google", "Yandex" etc.)
 
         Args:
             vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
@@ -143,7 +143,7 @@ class SafeBrowsing:
         return res
 
     def get_malicious_urls(self, urls: Set[str]) -> List[str]:
-        """Identify all URLs in a given set of URLs deemed by Safe Browsing API to be malicious.
+        """Identify all URLs in a given set of `urls` deemed by Safe Browsing API to be malicious.
 
         Args:
             urls (Set[str]): URLs to be submitted to Safe Browsing API

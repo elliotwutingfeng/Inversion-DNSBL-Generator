@@ -1,5 +1,5 @@
 """
-Update Database
+Process flags
 """
 import time
 import os
@@ -29,12 +29,12 @@ from modules.url_utils import (
 )
 
 
-def update_database(
+def process_flags(
     fetch: bool, identify: bool, retrieve: bool, sources: List[str], vendors: List[str]
 ) -> None:
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-branches
-    """Update Database
+    """Run assorted DNSBL generator tasks in sequence based on flags set by user.
 
     Args:
         fetch (bool): If True, fetch URL datasets from local and/or remote sources,
