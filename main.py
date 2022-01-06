@@ -1,16 +1,20 @@
+"""
+Main
+"""
 from argparse import (
     ArgumentParser,
     RawDescriptionHelpFormatter,
     RawTextHelpFormatter,
     ArgumentDefaultsHelpFormatter,
 )
-from modules.update_database import update_database
+from typing import List
+from modules.process_flags import process_flags
 
 
 class CustomFormatter(
     RawTextHelpFormatter, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
 ):
-    pass
+    """Custom Help text formatter for argparse."""
 
 
 if __name__ == "__main__":
@@ -101,10 +105,10 @@ if __name__ == "__main__":
     if not (args.fetch or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
-    update_database(
-        fetch=args.fetch,
-        identify=args.identify,
-        retrieve=args.retrieve,
-        sources=args.sources,
-        vendors=args.vendors,
-    )
+    fetch: bool = args.fetch
+    identify: bool = args.identify
+    retrieve: bool = args.retrieve
+    sources: List[str] = args.sources
+    vendors: List[str] = args.vendors
+
+    process_flags(fetch, identify, retrieve, sources, vendors)
