@@ -10,7 +10,6 @@ import os
 import struct
 import apsw  # type: ignore
 from apsw import Error
-from more_itertools import chunked
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 
@@ -420,32 +419,39 @@ def update_malicious_urls(
     logging.info(
         "Updating %s database with verified %s malicious URLs", db_filename, vendor
     )
-    vendor_to_column = {
-        "Google": "lastGoogleMalicious",
-        "Yandex": "lastYandexMalicious",
+    vendor_to_update_query = {
+        "Google": """
+                    UPDATE urls
+                    SET lastGoogleMalicious = ?
+                    WHERE url IN malicious_urls
+                    """,
+        "Yandex": """
+                    UPDATE urls
+                    SET lastYandexMalicious = ?
+                    WHERE url IN malicious_urls
+                    """,
     }
-    if vendor not in vendor_to_column:
+    if vendor not in vendor_to_update_query:
         raise ValueError('vendor must be "Google" or "Yandex"')
     conn = create_connection(db_filename)
     if conn is not None:
         try:
-            batch_size = 30_000
-            malicious_url_batches = chunked(malicious_urls, batch_size)
-            for malicious_url_batch in malicious_url_batches:
-                malicious_url_batch_length = len(malicious_url_batch)
-                with conn:
-                    cur = conn.cursor()
-                    cur.execute(
-                        f"""
-                        UPDATE urls
-                        SET {vendor_to_column[vendor]} = ?
-                        WHERE url IN ({','.join('?'*malicious_url_batch_length)})
-                        """,
-                        (update_time, *malicious_url_batch),
-                    )
-            # TODO: Create temporary in memory database,
-            # dump malicious URLs inside and use it to update malicious url statuses
-            # e.g. where url in (select url from memory db)
+            with conn:
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    CREATE TEMPORARY TABLE malicious_urls(url text)
+                    """
+                )
+                cur.executemany(
+                    """
+                    INSERT INTO malicious_urls
+                    VALUES (?)
+                    """,
+                    ((url,) for url in malicious_urls),
+                )
+                cur.execute(vendor_to_update_query[vendor], (update_time,))
+                cur.execute("DROP TABLE malicious_urls")
             logging.info(
                 "Updating %s database with verified %s malicious URLs...[DONE]",
                 db_filename,
