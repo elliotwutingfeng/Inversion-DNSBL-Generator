@@ -50,7 +50,8 @@ def create_connection(db_filename: str) -> Optional[Type[apsw.Connection]]:
 
 
 def create_ips_table(db_filename: str) -> None:
-    """Create SQLite table for storing ipv4 addresses at `db_filename`.
+    """Create SQLite table for storing ipv4 addresses
+    at `db_filename` database.
 
     Args:
         db_filename (str): SQLite database filename
@@ -68,13 +69,16 @@ def create_ips_table(db_filename: str) -> None:
                             hash blob
                             )"""
                 )
+                # To avoid writing redundant SQL queries,
+                # we shall refer to ipv4 addresses as urls in SQL
         except Error as error:
             logging.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
 def create_urls_table(db_filename: str) -> None:
-    """Create SQLite table for storing URLs at `db_filename`.
+    """Create SQLite table for storing URLs (that are not ipv4 addresses)
+    at `db_filename` database.
 
     Args:
         db_filename (str): SQLite database filename
@@ -99,26 +103,26 @@ def create_urls_table(db_filename: str) -> None:
 
 
 def compute_url_hash(url: str) -> bytes:
-    """Computes sha256 hash of url as specified by Safe Browsing API.
+    """Computes sha256 hash of `url` as specified by Safe Browsing API.
 
     Args:
         url (str): URL to hash
 
     Returns:
-        bytes: sha256 hash of url as specified by Safe Browsing API.
+        bytes: sha256 hash of `url` as specified by Safe Browsing API.
     """
     return sha256(f"{url}/".encode()).digest()
 
 
 def int_addr_to_ip_and_hash(int_addr: int) -> Tuple[str, bytes]:
     """Convert integer representation of ipv4 address
-    to ip_address string and its Safe Browsing API sha256 hash
+    to `ip_address` string and its Safe Browsing API sha256 `ip_hash`
 
     Args:
         int_addr (int): integer representation of ipv4 address
 
     Returns:
-        Tuple[str, bytes]: ip_address string and its Safe Browsing API sha256 hash
+        Tuple[str, bytes]: `ip_address` string and its Safe Browsing API sha256 `ip_hash`
     """
     ip_address = socket.inet_ntoa(struct.pack("!I", int_addr))
     ip_hash = compute_url_hash(ip_address)
@@ -140,13 +144,13 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
     if conn is not None:
         ips_to_generate = 2 ** 24
         try:
-            # Check if there are 2 ** 24 ips in DB
+            # Check if there are 2 ** 24 ips in database
             with conn:
                 cur = conn.cursor()
                 cur.execute("SELECT MAX(_rowid_) FROM urls")
                 number_of_ipv4_addresses = cur.fetchall()[0][0]
             if number_of_ipv4_addresses != ips_to_generate:
-                # If DB does not have 2 ** 24 IPs,
+                # If database does not have 2 ** 24 IPs,
                 # delete all rows from ipv4_ urls table and regenerate IPs
                 logging.info(
                     "INSERT %d ipv4 addresses to urls table of %s...",
@@ -191,7 +195,7 @@ def add_urls(
     Args:
         url_list_fetcher (Callable[..., List[str]]): Fetches URL list
         from local or remote sources
-        update_time (int): Time in UNIX Epoch seconds
+        update_time (int): Time when URLs are added to database in UNIX Epoch seconds
         db_filename (str): SQLite database filename
         txt_filepath (Optional[str], optional): Filepath to URLs .txt file. Defaults to None.
     """
@@ -232,14 +236,15 @@ def add_urls(
         conn.close()
 
 
-def add_malicious_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
-    """Replace maliciousHashPrefixes table contents with list of hash prefixes
+def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
+    """Replace maliciousHashPrefixes table contents with latest malicious URL
+    hash prefixes from Safe Browsing API
 
     Args:
-        hash_prefixes (Set[bytes]): Malicious hash prefixes from Safe Browsing API
+        hash_prefixes (Set[bytes]): Malicious URL hash prefixes from Safe Browsing API
         vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
-    logging.info("Updating DB with %s malicious URL hashes", vendor)
+    logging.info("Updating database with %s malicious URL hashes", vendor)
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -266,8 +271,8 @@ def add_malicious_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
 def get_matching_hash_prefix_urls(
     db_filename: str, prefix_sizes: List[int], vendor: str
 ) -> List[str]:
-    """Identify URLs with sha256 hashes beginning with
-    any of the malicious hash prefixes in database
+    """Identify URLs from `db_filename` database with sha256 hashes beginning with
+    any of the malicious URL hash prefixes in `malicious.db` database.
 
     Args:
         db_filename (str): SQLite database filename
@@ -276,7 +281,7 @@ def get_matching_hash_prefix_urls(
 
     Returns:
         List[str]: URLs with sha256 hashes beginning with
-        any of the malicious hash prefixes in database
+        any of the malicious URL hash prefixes in `malicious.db` database
     """
     conn = create_connection(db_filename)
     urls = []
@@ -343,7 +348,9 @@ def retrieve_vendor_hash_prefix_sizes(vendor: str) -> List[int]:
 
 
 def create_malicious_url_hash_prefixes_table() -> None:
-    """Create SQLite table for storing malicious URL hash prefixes at malicious.db."""
+    """Create SQLite table for storing malicious URL hash prefixes
+    at `malicious.db` database.
+    """
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -361,29 +368,32 @@ def create_malicious_url_hash_prefixes_table() -> None:
         conn.close()
 
 
-def initialise_database(filenames: List[str], mode: str) -> None:
-    """Initialise database tables.
+def initialise_databases(db_filenames: List[str], mode: str) -> None:
+    """Create database for each db_filename in `db_filenames`, and
+    database `malicious.db` for storing malicious URL hash prefixes
+    if any of them do not exist yet.
 
     Args:
-        filenames (List[str]): SQLite database filenames
-        mode (str): If "domains", create tables for non-ipv4 URLs,
-        if "ips", create tables for ipv4 addresses
+        db_filenames (List[str]): SQLite database filenames
+        mode (str): If "domains", create databases for non-ipv4 URLs,
+        if "ips", create databases for ipv4 addresses
 
     Raises:
         ValueError: `mode` must be "domains" or "ips"
     """
     logging.info(
-        "Creating .db files if they do not exist yet for %d .txt files", len(filenames)
+        "Creating .db files if they do not exist yet for %d .txt files",
+        len(db_filenames),
     )
     if mode == "domains":
         execute_with_ray(
             create_urls_table,
-            [(filename,) for filename in filenames],
+            [(filename,) for filename in db_filenames],
         )
     elif mode == "ips":
         execute_with_ray(
             create_ips_table,
-            [(filename,) for filename in filenames],
+            [(filename,) for filename in db_filenames],
         )
     else:
         raise ValueError('mode must be "domains" or "ips"')
@@ -393,12 +403,13 @@ def initialise_database(filenames: List[str], mode: str) -> None:
 def update_malicious_urls(
     update_time: int, vendor: str, db_filename: str, malicious_urls: List[str]
 ) -> None:
-    """Updates malicious status of all urls currently in DB
-    i.e. for urls found in malicious_urls,
-    set lastGoogleMalicious or lastYandexMalicious value to update_time.
+    """Updates malicious status of all URLs currently in database
+    i.e. for urls found in `malicious_urls`,
+    set lastGoogleMalicious or lastYandexMalicious value to `update_time`.
 
     Args:
-        update_time (int): Time in UNIX Epoch seconds
+        update_time (int): Time when malicious URL statuses in database
+        are updated in UNIX Epoch seconds
         vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
         db_filename (str): SQLite database filename
         malicious_urls (List[str]): URLs deemed by Safe Browsing API to be malicious
@@ -406,7 +417,9 @@ def update_malicious_urls(
     Raises:
         ValueError: `vendor` must be "Google" or "Yandex"
     """
-    logging.info("Updating %s DB with verified %s malicious URLs", db_filename, vendor)
+    logging.info(
+        "Updating %s database with verified %s malicious URLs", db_filename, vendor
+    )
     vendor_to_column = {
         "Google": "lastGoogleMalicious",
         "Yandex": "lastYandexMalicious",
@@ -434,7 +447,7 @@ def update_malicious_urls(
             # dump malicious URLs inside and use it to update malicious url statuses
             # e.g. where url in (select url from memory db)
             logging.info(
-                "Updating %s DB with verified %s malicious URLs...[DONE]",
+                "Updating %s database with verified %s malicious URLs...[DONE]",
                 db_filename,
                 vendor,
             )
@@ -444,10 +457,11 @@ def update_malicious_urls(
 
 
 def retrieve_malicious_urls(urls_filenames: List[str]) -> List[str]:
-    """Retrieves URLs from DB most recently marked as malicious by Safe Browsing API.
+    """Retrieves URLs from database most recently marked as malicious by Safe Browsing API.
 
     Args:
-        urls_filenames (List[str]): Filenames of SQLite databases containing URLs
+        urls_filenames (List[str]): Filenames of SQLite databases
+        containing URLs and their malicious statuses
 
     Returns:
         List[str]: URLs deemed by Safe Browsing API to be malicious

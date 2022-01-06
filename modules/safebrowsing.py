@@ -259,15 +259,15 @@ class SafeBrowsing:
         logging.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
         return res_json
 
-    def get_malicious_hash_prefixes(self) -> Set[bytes]:
-        """Download latest malicious hash prefixes from Safe Browsing API.
+    def get_malicious_url_hash_prefixes(self) -> Set[bytes]:
+        """Download latest malicious URL hash prefixes from Safe Browsing API.
 
         The uncompressed threat entries in hash format of a particular prefix length.
         Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes,
         but some hashes are lengthened if they collide with the hash of a popular URL.
 
         Returns:
-            Set[bytes]: Malicious hash prefixes from Safe Browsing API
+            Set[bytes]: Malicious URL hash prefixes from Safe Browsing API
         """
         logging.info("Downloading %s malicious URL hashes", self.vendor)
         res_json = self._retrieve_threat_list_updates()

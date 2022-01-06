@@ -11,9 +11,9 @@ import ray
 
 from modules.db_utils import (
     add_ip_addresses,
-    add_malicious_hash_prefixes,
+    replace_malicious_url_hash_prefixes,
     get_matching_hash_prefix_urls,
-    initialise_database,
+    initialise_databases,
     add_urls,
     retrieve_malicious_urls,
     retrieve_vendor_hash_prefix_sizes,
@@ -86,28 +86,28 @@ def update_database(
         ]
         ips_filenames = [_[0] for _ in add_ip_addresses_jobs]
 
-    # Create DB files
-    initialise_database(urls_filenames, mode="domains")
-    initialise_database(ips_filenames, mode="ips")
+    # Create database files
+    initialise_databases(urls_filenames, mode="domains")
+    initialise_databases(ips_filenames, mode="ips")
 
     if fetch:
         add_urls_jobs: List[Tuple[Any, ...]] = []
         if "domainsproject" in sources:
-            # Extract and Add local URLs to DB
+            # Extract and Add local URLs to database
             add_urls_jobs += [
                 (get_local_file_url_list, update_time, filename, filepath)
                 for filepath, filename in zip(local_domains_filepaths, urls_filenames)
             ]
         if "top1m" in sources:
-            # Download and Add TOP1M URLs to DB
+            # Download and Add TOP1M URLs to database
             add_urls_jobs.append((get_top1m_url_list, update_time, "top1m_urls"))
         if "top10m" in sources:
-            # Download and Add TOP10M URLs to DB
+            # Download and Add TOP10M URLs to database
             add_urls_jobs.append((get_top10m_url_list, update_time, "top10m_urls"))
         execute_with_ray(add_urls, add_urls_jobs)
 
         if "ipv4" in sources:
-            # Generate and Add ipv4 addresses to DB
+            # Generate and Add ipv4 addresses to database
             execute_with_ray(add_ip_addresses, add_ip_addresses_jobs)
 
     if identify:
@@ -115,14 +115,14 @@ def update_database(
         for vendor in vendors:
             safebrowsing = SafeBrowsing(vendor)
 
-            # Download and Update Safe Browsing API Malicious Hash Prefixes to DB
-            hash_prefixes = safebrowsing.get_malicious_hash_prefixes()
-            add_malicious_hash_prefixes(hash_prefixes, vendor)
+            # Download and Update Safe Browsing API Malicious URL hash prefixes to database
+            hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes()
+            replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
             del hash_prefixes  # "frees" memory
 
             prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 
-            # Identify URLs in DB whose full Hashes match with Malicious Hash Prefixes
+            # Identify URLs in database whose full Hashes match with Malicious URL hash prefixes
             suspected_urls = set(
                 flatten(
                     execute_with_ray(
@@ -147,7 +147,7 @@ def update_database(
 
         # TODO push blocklist to GitHub
 
-        # Update malicious URL statuses in DB
+        # Update malicious URL statuses in database
         for vendor in vendors:
             execute_with_ray(
                 update_malicious_urls,
