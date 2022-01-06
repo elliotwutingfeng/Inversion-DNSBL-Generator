@@ -30,10 +30,15 @@ from modules.url_utils import (
 
 
 def process_flags(
-    fetch: bool, identify: bool, retrieve: bool, sources: List[str], vendors: List[str]
+    fetch: bool,
+    identify: bool,
+    use_existing_hashes: bool,
+    retrieve: bool,
+    sources: List[str],
+    vendors: List[str],
 ) -> None:
-    # pylint: disable=too-many-locals
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals,too-many-branches,too-many-arguments,too-many-statements
+
     """Run assorted DNSBL generator tasks in sequence based on flags set by user.
 
     Args:
@@ -41,6 +46,8 @@ def process_flags(
         and update them to database
         identify (bool): If True, use Safe Browsing API to identify malicious URLs in database,
         write the URLs to a .txt file blocklist, and update database with these malicious URLs
+        use_existing_hashes (bool): If True, use existing malicious URL hashes when
+        identifying malicious URLs in database
         retrieve (bool): If True, retrieve URLs in database that have been flagged
         as malicious from past scans, then create a .txt file blocklist
         sources (List[str]): URL sources (e.g. top1m, top10m etc.)
@@ -115,10 +122,11 @@ def process_flags(
         for vendor in vendors:
             safebrowsing = SafeBrowsing(vendor)
 
-            # Download and Update Safe Browsing API Malicious URL hash prefixes to database
-            hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes()
-            replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
-            del hash_prefixes  # "frees" memory
+            if not use_existing_hashes:
+                # Download and Update Safe Browsing API Malicious URL hash prefixes to database
+                hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes()
+                replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
+                del hash_prefixes  # "frees" memory
 
             prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 

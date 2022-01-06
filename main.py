@@ -66,6 +66,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-u",
+        "--use-existing-hashes",
+        dest="use_existing_hashes",
+        action="store_true",
+        help="""
+        Use existing malicious URL hashes when identifying malicious URLs in database.
+        If '--identify-malicious-urls' is not enabled, this flag will be silently ignored.
+        """,
+    )
+    parser.add_argument(
         "-s",
         "--sources",
         nargs="+",
@@ -107,8 +117,9 @@ if __name__ == "__main__":
 
     fetch: bool = args.fetch
     identify: bool = args.identify
+    use_existing_hashes: bool = args.use_existing_hashes
     retrieve: bool = args.retrieve
     sources: List[str] = args.sources
     vendors: List[str] = args.vendors
 
-    process_flags(fetch, identify, retrieve, sources, vendors)
+    process_flags(fetch, identify, use_existing_hashes, retrieve, sources, vendors)
