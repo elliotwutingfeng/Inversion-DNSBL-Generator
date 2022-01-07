@@ -39,10 +39,10 @@ def create_connection(db_filename: str) -> Optional[Type[apsw.Connection]]:
             else f"{databases_folder}{os.sep}{db_filename}.db"
         )
         cur = conn.cursor()
-        cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
         cur.execute(
             "PRAGMA auto_vacuum = 1"
         )  # https://www.sqlite.org/pragma.html#pragma_auto_vacuum
+        cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
     except Error as error:
         logging.error("filename:%s %s", db_filename, error)
     return conn

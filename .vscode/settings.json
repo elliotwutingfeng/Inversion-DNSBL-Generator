@@ -51,5 +51,10 @@
     "python.linting.mypyEnabled": true,
     "python.linting.pylintEnabled": true,
     "python.linting.banditEnabled": true,
-    "python.linting.pylintArgs": ["--extension-pkg-whitelist=apsw"]
+    "python.linting.pylintArgs": [
+        "--extension-pkg-whitelist=apsw"
+    ],
+    "cSpell.words": [
+        "rusqlite"
+    ]
 }
