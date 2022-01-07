@@ -40,8 +40,11 @@ def create_connection(db_filename: str) -> Optional[Type[apsw.Connection]]:
         )
         cur = conn.cursor()
         cur.execute(
-            "PRAGMA auto_vacuum = 1"
+            "PRAGMA auto_vacuum = FULL"
         )  # https://www.sqlite.org/pragma.html#pragma_auto_vacuum
+        cur.execute(
+            "PRAGMA temp_store = MEMORY"
+        )  # https://www.sqlite.org/pragma.html#pragma_temp_store
         cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
     except Error as error:
         logging.error("filename:%s %s", db_filename, error)
@@ -294,15 +297,22 @@ def get_matching_hash_prefix_urls(
                 cur = cur.execute(
                     f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
                 )
+                cur = cur.execute(
+                    """
+                    CREATE TEMPORARY TABLE IF NOT EXISTS vendorHashPrefixes
+                    AS SELECT hashPrefix FROM malicious.maliciousHashPrefixes
+                    WHERE vendor = ?
+                    """,
+                    (vendor,),
+                )
                 for prefix_size in prefix_sizes:
                     cur = cur.execute(
                         """
                         SELECT url FROM urls
                         WHERE substring(urls.hash,1,?)
-                        IN (SELECT hashPrefix FROM malicious.maliciousHashPrefixes
-                        WHERE vendor = ?)
+                        IN vendorHashPrefixes
                         """,
-                        (prefix_size, vendor),
+                        (prefix_size,),
                     )
                     urls += [x[0] for x in cur.fetchall()]
             with conn:
@@ -443,7 +453,8 @@ def update_malicious_urls(
                 cur = conn.cursor()
                 cur.execute(
                     """
-                    CREATE TEMPORARY TABLE malicious_urls(url text)
+                    CREATE TEMPORARY TABLE
+                    IF NOT EXISTS malicious_urls(url text)
                     """
                 )
                 cur.executemany(
