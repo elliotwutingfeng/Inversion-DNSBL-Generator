@@ -315,12 +315,10 @@ def get_matching_hash_prefix_urls(
                         (prefix_size,),
                     )
                     urls += [x[0] for x in cur.fetchall()]
-            with conn:
-                cur = conn.cursor()
-                cur = cur.execute("DETACH database malicious")
+                cur.execute("DROP TABLE vendorHashPrefixes")
         except Error as error:
             logging.error(
-                "filename:%s prefix_size:%s vendor:%s %s",
+                "filename:%s prefix_sizes:%s vendor:%s %s",
                 db_filename,
                 prefix_sizes,
                 vendor,
