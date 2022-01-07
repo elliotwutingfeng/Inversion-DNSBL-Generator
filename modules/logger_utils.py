@@ -5,24 +5,24 @@ import os
 import logging
 
 
-LOGS_FOLDER: str = "logs"
-
-
-def init_logger() -> logging.Logger:
+def init_logger(logs_folder: str = "logs") -> logging.Logger:
     """Returns a logger with custom format settings.
 
-    `LOGS_FOLDER` is created beforehand if it does not exist yet.
+    `logs_folder` is created beforehand if it does not exist yet.
+
+    Args:
+        logs_folder (str, optional): Logs folder location. Defaults to "logs".
 
     Returns:
-        logging.Logger: logger that logs to `progress.log` in `LOGS_FOLDER`
+        logging.Logger: logger that logs to `progress.log` in `logs_folder`
     """
-    if not os.path.exists(LOGS_FOLDER):
-        os.mkdir(LOGS_FOLDER)
+    if not os.path.exists(logs_folder):
+        os.mkdir(logs_folder)
 
     # Add information like timestamp, filename, and line number to logging messages
     logging.basicConfig(
         handlers=[
-            logging.FileHandler(f"{LOGS_FOLDER}{os.sep}progress.log", mode="a"),
+            logging.FileHandler(f"{logs_folder}{os.sep}progress.log", mode="a"),
             logging.StreamHandler(),
         ],
         format="""

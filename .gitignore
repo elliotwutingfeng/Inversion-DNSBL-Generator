@@ -1,6 +1,7 @@
 .env
 .ipynb_checkpoints/
 .mypy_cache/
+.pytest_cache/
 logs/
 blocklists/
 __pycache__/
