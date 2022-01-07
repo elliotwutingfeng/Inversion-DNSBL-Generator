@@ -292,5 +292,5 @@ class SafeBrowsing:
                     ]
                 )
                 hash_prefixes.update(hashes_list)
-
+        logging.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
         return hash_prefixes

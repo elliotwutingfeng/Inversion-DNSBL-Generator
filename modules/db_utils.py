@@ -262,6 +262,9 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) 
                         for hashPrefix in hash_prefixes
                     ),
                 )
+            logging.info(
+                "Updating database with %s malicious URL hashes...[DONE]", vendor
+            )
         except Error as error:
             logging.error("vendor:%s %s", vendor, error)
         conn.close()
@@ -472,6 +475,9 @@ def retrieve_malicious_urls(urls_filenames: List[str]) -> List[str]:
     Returns:
         List[str]: URLs deemed by Safe Browsing API to be malicious
     """
+    logging.info(
+        "Retrieving URLs from database most recently marked as malicious by Safe Browsing API"
+    )
 
     def retrieve_malicious_urls_(filename: str) -> Set[str]:
         malicious_urls: Set[str] = set()
@@ -505,5 +511,8 @@ def retrieve_malicious_urls(urls_filenames: List[str]) -> List[str]:
             retrieve_malicious_urls_, [(filename,) for filename in urls_filenames]
         )
     )
-
+    logging.info(
+        "Retrieving URLs from database most recently"
+        " marked as malicious by Safe Browsing API...[DONE]"
+    )
     return list(malicious_urls)
