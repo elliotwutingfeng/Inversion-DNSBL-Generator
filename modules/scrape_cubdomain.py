@@ -37,6 +37,8 @@ class TimeoutHTTPAdapter(HTTPAdapter):
 
 
 def main():
+    """main"""
+    # pylint: disable=too-many-locals
     retry_strategy = Retry(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
@@ -49,7 +51,8 @@ def main():
     http.hooks["response"] = [assert_status_hook]
     http.headers.update(
         {
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; "
+            "Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"
         }
     )
     http.mount("", TimeoutHTTPAdapter(max_retries=retry_strategy))
@@ -71,20 +74,23 @@ def main():
         # For each root_url with date YYYY-MM-DD in root_urls, go to page 1
         try:
             first_page_response = http.get(root_url + "1")
+
+            soup = BeautifulSoup(first_page_response.content, "html.parser")
+            # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
+            res = soup.find_all(
+                "a",
+                class_="page-link",
+                href=lambda x: "/domains-registered-by-date/" in x,
+            )
+            # Get the highest possible value of
+            # {page_number}; the total number of pages for date YYYY-MM-DD
+            last_page = max([1] + [int(x.string) for x in res if x.string.isnumeric()])
+            root_urls_to_last_page_and_date[root_url] = {
+                "num_pages": last_page,
+                "date": date,
+            }
         except requests.exceptions.RequestException as error:
             logging.error(error)
-
-        soup = BeautifulSoup(first_page_response.content, "html.parser")
-        # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
-        res = soup.find_all(
-            "a", class_="page-link", href=lambda x: "/domains-registered-by-date/" in x
-        )
-        # Get the highest possible value of {page_number}; the total number of pages for date YYYY-MM-DD
-        lastPage = max([int(x.string) for x in res if x.string.isnumeric()])
-        root_urls_to_last_page_and_date[root_url] = {
-            "num_pages": lastPage,
-            "date": date,
-        }
 
     # Create list of all domain pages for all dates
     pages_by_date_str: Dict = dict()
@@ -96,12 +102,12 @@ def main():
         for page_number in range(1, details["num_pages"] + 1):
             pages_by_date_str[date_str].append(f"{root_url}{page_number}")
 
-    DATASET_FOLDER = "cubdomain_dataset"
-    if not os.path.exists(DATASET_FOLDER):
-        os.mkdir(DATASET_FOLDER)
+    dataset_folder = "cubdomain_dataset"
+    if not os.path.exists(dataset_folder):
+        os.mkdir(dataset_folder)
 
     for date_str, pages in tqdm(pages_by_date_str.items()):
-        with open(f"{DATASET_FOLDER}{os.sep}cubdomain_{date_str}.txt", "w") as file:
+        with open(f"{dataset_folder}{os.sep}cubdomain_{date_str}.txt", "w") as file:
             urls = set()
             for page in pages:
                 try:
