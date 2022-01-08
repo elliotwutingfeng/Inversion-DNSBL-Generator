@@ -6,3 +6,4 @@ logs/
 blocklists/
 __pycache__/
 databases/
+cubdomain_dataset
