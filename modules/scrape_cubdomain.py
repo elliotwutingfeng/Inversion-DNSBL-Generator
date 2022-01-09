@@ -179,13 +179,13 @@ def download_domains(
         for page_url in page_urls:
             try:
                 page_response = http.get(page_url)
+                soup = BeautifulSoup(page_response.content, "html.parser")
+                # Each listed domain is encapsulated in this
+                # tag '<a href="https://www.cubdomain.com/site/ ...'
+                res = soup.find_all("a", href=lambda x: "cubdomain.com/site/" in x)
+                urls.update([line.string for line in res])
             except requests.exceptions.RequestException as error:
                 logger.error(error)
-            soup = BeautifulSoup(page_response.content, "html.parser")
-            # Each listed domain is encapsulated in this
-            # tag '<a href="https://www.cubdomain.com/site/ ...'
-            res = soup.find_all("a", href=lambda x: "cubdomain.com/site/" in x)
-            urls.update([line.string for line in res])
         file.write("\n".join(urls))
 
 
