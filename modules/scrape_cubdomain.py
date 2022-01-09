@@ -1,14 +1,14 @@
 """Scrapes domains from cubdomain.com
 """
 from datetime import datetime, timedelta
-import os
 from collections import ChainMap
-from typing import Dict, List, Tuple
+from typing import Dict, Iterator, List, Tuple
 from bs4 import BeautifulSoup, SoupStrainer
 import cchardet  # pylint: disable=unused-import
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import EnhancedSession
+from modules.url_utils import generate_hostname_expressions
 
 
 logger = init_logger()
@@ -76,16 +76,16 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
     return root_url_to_last_page_and_date
 
 
-def get_page_urls_by_date_str(root_urls_to_last_page_and_date: Dict) -> Dict:
+def get_page_urls_by_date_str() -> Dict:
     """Create list of all domain pages for all dates
-
-    Args:
-        root_urls_to_last_page_and_date (Dict): Mapping of root URL
-        to its total number of pages and its date
 
     Returns:
         Dict: Mapping of date string to its page URLs
     """
+    dates, root_urls = generate_dates_and_root_urls()
+    root_urls_to_last_page_and_date = dict(
+        ChainMap(*execute_with_ray(create_root_url_map, list(zip(dates, root_urls))))
+    )  # Mapping of each root URL to its total number of pages and its date
     page_urls_by_date_str: Dict = dict()
     for root_url, details in root_urls_to_last_page_and_date.items():
         date_str = "{dt:%Y}-{dt:%m}-{dt:%d}".format(  # pylint: disable=invalid-name
@@ -97,61 +97,30 @@ def get_page_urls_by_date_str(root_urls_to_last_page_and_date: Dict) -> Dict:
     return page_urls_by_date_str
 
 
-def download_domains(
-    date_str: str,
-    page_urls: List[str],
-    dataset_folder: str = "cubdomain_dataset",
-) -> None:
-    """Download the domains to .txt files in `dataset_folder`; one .txt file
-    for each day.
+def download_domains(page_urls: List[str]) -> Iterator[List[str]]:
+    """Download cubdomain.com domains and yields all listed URLs in batches.
 
     Args:
-        date_str (str): Date when domains were registered
         page_urls (List[str]): Page URLs containing domains registered on date `date_str`
-        dataset_folder (str, optional): Folder to store domain .txt file in.
-        Defaults to "cubdomain_dataset".
     """
     # pylint: disable=broad-except
-    if not os.path.exists(dataset_folder):
-        os.mkdir(dataset_folder)
 
-    with open(f"{dataset_folder}{os.sep}cubdomain_{date_str}.txt", "w") as file:
-        urls = set()
-        # Each listed domain is encapsulated in this
-        # tag '<a href="https://www.cubdomain.com/site/ ...'
-        only_a_tag_with_cubdomain_site = SoupStrainer(
-            "a", href=lambda x: "cubdomain.com/site/" in x
-        )
-        for page_url in page_urls:
-            try:
-                http = EnhancedSession().get_session()
-                page_response = http.get(page_url)
-                soup = BeautifulSoup(
-                    page_response.content,
-                    "lxml",
-                    parse_only=only_a_tag_with_cubdomain_site,
-                )
-                res = soup.find_all()
-                urls.update([line.string for line in res])
-            except Exception as error:
-                logger.error("%s %s", page_url, error)
-        file.write("\n".join(urls))
-
-
-def scrape_cubdomain():
-    """Scrapes domains from cubdomain.com"""
-
-    dates, root_urls = generate_dates_and_root_urls()
-    root_urls_to_last_page_and_date = dict(
-        ChainMap(*execute_with_ray(create_root_url_map, list(zip(dates, root_urls))))
+    # Each listed domain is encapsulated in this
+    # tag '<a href="https://www.cubdomain.com/site/ ...'
+    only_a_tag_with_cubdomain_site = SoupStrainer(
+        "a", href=lambda x: "cubdomain.com/site/" in x
     )
-
-    page_urls_by_date_str = get_page_urls_by_date_str(root_urls_to_last_page_and_date)
-
-    execute_with_ray(
-        download_domains,
-        [
-            (date_str, page_urls, "cubdomain_dataset")
-            for date_str, page_urls in page_urls_by_date_str.items()
-        ],
-    )
+    for page_url in page_urls:
+        try:
+            http = EnhancedSession().get_session()
+            page_response = http.get(page_url)
+            soup = BeautifulSoup(
+                page_response.content,
+                "lxml",
+                parse_only=only_a_tag_with_cubdomain_site,
+            )
+            res = soup.find_all()
+            yield generate_hostname_expressions([line.string for line in res])
+        except Exception as error:
+            logger.error("%s %s", page_url, error)
+            yield []

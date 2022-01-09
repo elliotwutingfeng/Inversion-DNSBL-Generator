@@ -39,17 +39,6 @@ if __name__ == "__main__":
         and update them to database
         """,
     )
-
-    parser.add_argument(
-        "-c",
-        "--fetch-cubdomain",
-        dest="cubdomain",
-        action="store_true",
-        help="""
-        (EXPERIMENTAL) Download domains from cubdomain.com to .txt files.
-        """,
-    )
-
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-i",
@@ -90,17 +79,18 @@ if __name__ == "__main__":
         "--sources",
         nargs="+",
         required=False,
-        choices=["top1m", "top10m", "domainsproject", "ipv4"],
+        choices=["top1m", "top10m", "cubdomain", "domainsproject", "ipv4"],
         help="""
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
         ----------------------------
         top1m -> Tranco TOP1M
         top10m -> DomCop TOP10M
+        cubdomain -> CubDomain.com
         domainsproject -> domainsproject.org
         ipv4 -> ipv4 addresses
         """,
-        default=["top1m", "top10m", "domainsproject", "ipv4"],
+        default=["top1m", "top10m", "cubdomain", "domainsproject", "ipv4"],
         type=str,
     )
     parser.add_argument(
@@ -122,17 +112,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.vendors = sorted([x.capitalize() for x in args.vendors])
-    if not (args.fetch or args.cubdomain or args.identify or args.retrieve):
+    if not (args.fetch or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
     fetch: bool = args.fetch
-    cubdomain: bool = args.cubdomain
     identify: bool = args.identify
     use_existing_hashes: bool = args.use_existing_hashes
     retrieve: bool = args.retrieve
     sources: List[str] = args.sources
     vendors: List[str] = args.vendors
 
-    process_flags(
-        fetch, cubdomain, identify, use_existing_hashes, retrieve, sources, vendors
-    )
+    process_flags(fetch, identify, use_existing_hashes, retrieve, sources, vendors)
