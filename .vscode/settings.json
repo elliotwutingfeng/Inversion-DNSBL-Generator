@@ -53,7 +53,10 @@
     "python.linting.banditEnabled": true,
     "python.linting.banditArgs": ["--configfile bandit.yaml"],
     "python.linting.pylintArgs": ["--extension-pkg-whitelist=apsw"],
-    "cSpell.words": ["rusqlite"],
+    "cSpell.words": [
+        "lxml",
+        "rusqlite"
+    ],
     "python.testing.pytestArgs": [
         "tests"
     ],

@@ -52,7 +52,7 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
         http = EnhancedSession().get_session()
         first_page_response = http.get(first_page_url)
 
-        soup = BeautifulSoup(first_page_response.content, "html.parser")
+        soup = BeautifulSoup(first_page_response.content, "lxml")
         # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
         res = soup.find_all(
             "a",
@@ -118,7 +118,7 @@ def download_domains(
             try:
                 http = EnhancedSession().get_session()
                 page_response = http.get(page_url)
-                soup = BeautifulSoup(page_response.content, "html.parser")
+                soup = BeautifulSoup(page_response.content, "lxml")
                 # Each listed domain is encapsulated in this
                 # tag '<a href="https://www.cubdomain.com/site/ ...'
                 res = soup.find_all("a", href=lambda x: "cubdomain.com/site/" in x)
