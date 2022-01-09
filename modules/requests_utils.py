@@ -10,6 +10,8 @@ import json
 from typing import Mapping, Text, Union
 import requests
 from requests.models import Response
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from modules.logger_utils import init_logger
 
@@ -43,7 +45,7 @@ def get_with_retries(url: Union[Text, bytes], stream: bool = False) -> Response:
         try:
             if stream:
                 return requests.get(url, stream=True, headers=headers, timeout=180)
-            resp = requests.get(url, headers=headers, timeout=15)
+            resp = requests.get(url, headers=headers, timeout=60)
             if resp.status_code != 200:
                 raise requests.exceptions.RequestException(
                     f"Status Code not 200. Actual Code is {resp.status_code}"
@@ -84,3 +86,69 @@ def post_with_retries(url: Union[Text, bytes], payload: Mapping) -> Response:
             logging.warning("Attempt %d failed -> %s", attempt, error)
         attempt += 1
         time.sleep(1)
+
+
+DEFAULT_TIMEOUT = 60  # seconds
+
+
+class TimeoutHTTPAdapter(HTTPAdapter):
+    """HTTP Adapter with connection timeout
+
+    Args:
+        HTTPAdapter: The built-in HTTP Adapter for urllib3
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.timeout = DEFAULT_TIMEOUT
+        if "timeout" in kwargs:
+            self.timeout = kwargs["timeout"]
+            del kwargs["timeout"]
+        super().__init__(*args, **kwargs)
+
+    def send(self, request, **kwargs):
+        # pylint: disable=arguments-differ
+        timeout = kwargs.get("timeout")
+        if timeout is None:
+            kwargs["timeout"] = self.timeout
+        return super().send(request, **kwargs)
+
+
+class EnhancedSession:
+    # pylint: disable=too-few-public-methods
+    """requests.Session() with connection timeout
+    + connection retries with backoff"""
+
+    def __init__(self):
+        retry_strategy = Retry(
+            read=10,  # How many times to retry on read errors.
+            status=10,  # How many times to retry on bad status codes.
+            other=10,  # How many times to retry on other errors.
+            status_forcelist=[
+                429,
+                500,
+                502,
+                503,
+                504,
+                520,
+                524,
+                525,
+            ],  # bad status codes
+            allowed_methods=["GET"],
+            backoff_factor=1,
+        )
+        self.http = requests.Session()
+        assert_status_hook = (
+            lambda response, *args, **kwargs: response.raise_for_status()
+        )
+        self.http.hooks["response"] = [assert_status_hook]
+        self.http.headers.update(headers)
+        self.http.mount("", TimeoutHTTPAdapter(max_retries=retry_strategy))
+
+    def get_session(self) -> requests.Session:
+        """getter
+
+        Returns:
+            requests.Session: requests.Session with
+            connection timeout + connection retries with backoff
+        """
+        return self.http

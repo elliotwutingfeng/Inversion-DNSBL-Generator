@@ -27,10 +27,12 @@ from modules.url_utils import (
     get_top10m_url_list,
     get_top1m_url_list,
 )
+from modules.scrape_cubdomain import scrape_cubdomain
 
 
 def process_flags(
     fetch: bool,
+    cubdomain: bool,
     identify: bool,
     use_existing_hashes: bool,
     retrieve: bool,
@@ -44,6 +46,7 @@ def process_flags(
     Args:
         fetch (bool): If True, fetch URL datasets from local and/or remote sources,
         and update them to database
+        cubdomain (bool): If True, Download domains from cubdomain.com to .txt files.
         identify (bool): If True, use Safe Browsing API to identify malicious URLs in database,
         write the URLs to a .txt file blocklist, and update database with these malicious URLs
         use_existing_hashes (bool): If True, use existing malicious URL hashes when
@@ -116,6 +119,9 @@ def process_flags(
         if "ipv4" in sources:
             # Generate and Add ipv4 addresses to database
             execute_with_ray(add_ip_addresses, add_ip_addresses_jobs)
+
+    if cubdomain:
+        scrape_cubdomain()
 
     if identify:
         malicious_urls = dict()
