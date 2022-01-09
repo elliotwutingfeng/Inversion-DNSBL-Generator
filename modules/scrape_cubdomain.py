@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import os
 from collections import ChainMap
 from typing import Dict, List, Tuple
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
+import cchardet  # pylint: disable=unused-import
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import EnhancedSession
@@ -51,14 +52,16 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
     try:
         http = EnhancedSession().get_session()
         first_page_response = http.get(first_page_url)
-
-        soup = BeautifulSoup(first_page_response.content, "lxml")
         # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
-        res = soup.find_all(
+        only_a_tag_with_page_link = SoupStrainer(
             "a",
             class_="page-link",
             href=lambda x: "/domains-registered-by-date/" in x,
         )
+        soup = BeautifulSoup(
+            first_page_response.content, "lxml", parse_only=only_a_tag_with_page_link
+        )
+        res = soup.find_all()
         # Get the highest possible value of
         # {page_number}; the total number of pages for date YYYY-MM-DD
         last_page = max(
@@ -114,14 +117,21 @@ def download_domains(
 
     with open(f"{dataset_folder}{os.sep}cubdomain_{date_str}.txt", "w") as file:
         urls = set()
+        # Each listed domain is encapsulated in this
+        # tag '<a href="https://www.cubdomain.com/site/ ...'
+        only_a_tag_with_cubdomain_site = SoupStrainer(
+            "a", href=lambda x: "cubdomain.com/site/" in x
+        )
         for page_url in page_urls:
             try:
                 http = EnhancedSession().get_session()
                 page_response = http.get(page_url)
-                soup = BeautifulSoup(page_response.content, "lxml")
-                # Each listed domain is encapsulated in this
-                # tag '<a href="https://www.cubdomain.com/site/ ...'
-                res = soup.find_all("a", href=lambda x: "cubdomain.com/site/" in x)
+                soup = BeautifulSoup(
+                    page_response.content,
+                    "lxml",
+                    parse_only=only_a_tag_with_cubdomain_site,
+                )
+                res = soup.find_all()
                 urls.update([line.string for line in res])
             except Exception as error:
                 logger.error("%s %s", page_url, error)
