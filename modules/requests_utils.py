@@ -88,7 +88,7 @@ def post_with_retries(url: Union[Text, bytes], payload: Mapping) -> Response:
         time.sleep(1)
 
 
-DEFAULT_TIMEOUT = 60  # seconds
+DEFAULT_TIMEOUT = 120  # seconds
 
 
 class TimeoutHTTPAdapter(HTTPAdapter):
@@ -120,9 +120,9 @@ class EnhancedSession:
 
     def __init__(self):
         retry_strategy = Retry(
-            read=10,  # How many times to retry on read errors.
-            status=10,  # How many times to retry on bad status codes.
-            other=10,  # How many times to retry on other errors.
+            read=20,  # How many times to retry on read errors.
+            status=20,  # How many times to retry on bad status codes.
+            other=20,  # How many times to retry on other errors.
             status_forcelist=[
                 429,
                 500,

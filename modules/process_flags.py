@@ -4,7 +4,7 @@ Process flags
 import time
 import os
 import pathlib
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 from more_itertools import flatten
 from more_itertools.more import sort_together
 import ray
@@ -28,6 +28,43 @@ from modules.url_utils import (
     get_top10m_url_list,
     get_top1m_url_list,
 )
+
+
+def retrieve_domainsproject_filepaths_and_db_filenames():
+    """[summary]
+
+    Returns:
+        [type]: [description]
+    """
+    # Scan Domains Project's "domains" directory for local urls_filenames
+    domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
+    domainsproject_filepaths: List[str] = []
+    domainsproject_urls_db_filenames: List[str] = []
+    for root, _, files in os.walk(domainsproject_dir):
+        for file in files:
+            if file.lower().endswith(".txt"):
+                domainsproject_urls_db_filenames.append(f"{file[:-4]}")
+                domainsproject_filepaths.append(os.path.join(root, file))
+
+    # Sort domainsproject_filepaths and domainsproject_urls_db_filenames by ascending filesize
+    domainsproject_filesizes: List[int] = [
+        os.path.getsize(path) for path in domainsproject_filepaths
+    ]
+    [
+        domainsproject_filesizes,
+        domainsproject_filepaths,
+        domainsproject_urls_db_filenames,
+    ] = [
+        list(_)
+        for _ in sort_together(
+            (
+                domainsproject_filesizes,
+                domainsproject_filepaths,
+                domainsproject_urls_db_filenames,
+            )
+        )
+    ]
+    return domainsproject_filepaths, domainsproject_urls_db_filenames
 
 
 def process_flags(
@@ -58,50 +95,37 @@ def process_flags(
     ray.init(include_dashboard=True)
     update_time = int(time.time())  # seconds since UNIX Epoch
 
-    urls_filenames: List[str] = []
-    ips_filenames: List[str] = []
-
-    if "top1m" in sources:
-        urls_filenames.append("top1m_urls")
-
-    if "top10m" in sources:
-        urls_filenames.append("top10m_urls")
-
+    top1m_urls_db_filename = ["top1m_urls"] if "top1m" in sources else []
+    top10m_urls_db_filename = ["top10m_urls"] if "top1m" in sources else []
     if "cubdomain" in sources:
-        page_urls_by_date_str = get_page_urls_by_date_str()
-        cubdomain_urls_filenames = [
-            f"cubdomain_{date_str}" for date_str in page_urls_by_date_str
+        cubdomain_page_urls_by_date_str = get_page_urls_by_date_str()
+        cubdomain_urls_db_filenames = [
+            f"cubdomain_{date_str}" for date_str in cubdomain_page_urls_by_date_str
         ]
-        urls_filenames += cubdomain_urls_filenames
-
+    else:
+        cubdomain_urls_db_filenames = []
     if "domainsproject" in sources:
-        # Scan Domains Project's "domains" directory for local urls_filenames
-        local_domains_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
-        local_domains_filepaths: List[str] = []
-        local_urls_filenames: List[str] = []
-        for root, _, files in os.walk(local_domains_dir):
-            for file in files:
-                if file.lower().endswith(".txt"):
-                    local_urls_filenames.append(f"{file[:-4]}")
-                    local_domains_filepaths.append(os.path.join(root, file))
-
-        # Sort local_domains_filepaths and local_urls_filenames by ascending filesize
-        local_domains_filesizes: List[int] = [
-            os.path.getsize(path) for path in local_domains_filepaths
-        ]
-        [local_domains_filesizes, local_domains_filepaths, local_urls_filenames] = [
-            list(_)
-            for _ in sort_together(
-                (local_domains_filesizes, local_domains_filepaths, local_urls_filenames)
-            )
-        ]
-        urls_filenames += local_urls_filenames
+        (
+            domainsproject_filepaths,
+            domainsproject_urls_db_filenames,
+        ) = retrieve_domainsproject_filepaths_and_db_filenames()
+    else:
+        domainsproject_urls_db_filenames = []
 
     if "ipv4" in sources:
         add_ip_addresses_jobs: List[Tuple] = [
             (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
         ]
         ips_filenames = [_[0] for _ in add_ip_addresses_jobs]
+    else:
+        ips_filenames = []
+
+    urls_filenames = (
+        top1m_urls_db_filename
+        + top10m_urls_db_filename
+        + cubdomain_urls_db_filenames
+        + domainsproject_urls_db_filenames
+    )
 
     # Create database files
     initialise_databases(urls_filenames, mode="domains")
@@ -119,7 +143,7 @@ def process_flags(
             # Extract and Add local URLs to database
             add_urls_jobs += [
                 (get_local_file_url_list, update_time, filename, filepath)
-                for filepath, filename in zip(local_domains_filepaths, urls_filenames)
+                for filepath, filename in zip(domainsproject_filepaths, urls_filenames)
             ]
         execute_with_ray(add_urls, add_urls_jobs)
 

@@ -49,30 +49,33 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
     root_url_to_last_page_and_date = dict()
     first_page_url = root_url + "1"
     # Go to page 1
-    try:
-        http = EnhancedSession().get_session()
-        first_page_response = http.get(first_page_url)
-        # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
-        only_a_tag_with_page_link = SoupStrainer(
-            "a",
-            class_="page-link",
-            href=lambda x: "/domains-registered-by-date/" in x,
-        )
-        soup = BeautifulSoup(
-            first_page_response.content, "lxml", parse_only=only_a_tag_with_page_link
-        )
-        res = soup.find_all()
-        # Get the highest possible value of
-        # {page_number}; the total number of pages for date YYYY-MM-DD
-        last_page = max(
-            [1] + [int(x.string.strip()) for x in res if x.string.strip().isnumeric()]
-        )
-        root_url_to_last_page_and_date[root_url] = {
-            "num_pages": last_page,
-            "date": date,
-        }
-    except Exception as error:
-        logger.error("%s %s", first_page_url, error)
+    with EnhancedSession().get_session() as http:
+        try:
+            first_page_response = http.get(first_page_url)
+            # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
+            only_a_tag_with_page_link = SoupStrainer(
+                "a",
+                class_="page-link",
+                href=lambda x: "/domains-registered-by-date/" in x,
+            )
+            soup = BeautifulSoup(
+                first_page_response.content,
+                "lxml",
+                parse_only=only_a_tag_with_page_link,
+            )
+            res = soup.find_all()
+            # Get the highest possible value of
+            # {page_number}; the total number of pages for date YYYY-MM-DD
+            last_page = max(
+                [1]
+                + [int(x.string.strip()) for x in res if x.string.strip().isnumeric()]
+            )
+            root_url_to_last_page_and_date[root_url] = {
+                "num_pages": last_page,
+                "date": date,
+            }
+        except Exception as error:
+            logger.error("%s %s", first_page_url, error)
     return root_url_to_last_page_and_date
 
 
@@ -111,16 +114,16 @@ def download_domains(page_urls: List[str]) -> Iterator[List[str]]:
         "a", href=lambda x: "cubdomain.com/site/" in x
     )
     for page_url in page_urls:
-        try:
-            http = EnhancedSession().get_session()
-            page_response = http.get(page_url)
-            soup = BeautifulSoup(
-                page_response.content,
-                "lxml",
-                parse_only=only_a_tag_with_cubdomain_site,
-            )
-            res = soup.find_all()
-            yield generate_hostname_expressions([line.string for line in res])
-        except Exception as error:
-            logger.error("%s %s", page_url, error)
-            yield []
+        with EnhancedSession().get_session() as http:
+            try:
+                page_response = http.get(page_url)
+                soup = BeautifulSoup(
+                    page_response.content,
+                    "lxml",
+                    parse_only=only_a_tag_with_cubdomain_site,
+                )
+                res = soup.find_all()
+                yield generate_hostname_expressions([line.string for line in res])
+            except Exception as error:
+                logger.error("%s %s", page_url, error)
+                yield []
