@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from collections import ChainMap
 from typing import Dict, Iterator, List, Tuple
 from bs4 import BeautifulSoup, SoupStrainer
-import cchardet
-import requests  # pylint: disable=unused-import
+import cchardet  # pylint: disable=unused-import
+import requests
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import EnhancedSession
@@ -101,7 +101,7 @@ def get_page_urls_by_date_str() -> Dict:
     return page_urls_by_date_str
 
 
-def download_domains(page_urls: List[str]) -> Iterator[List[str]]:
+def download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
     """Download cubdomain.com domains and yields
     all listed URLs from each page_url in `page_urls`.
 

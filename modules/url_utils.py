@@ -3,13 +3,16 @@ URL Utilities
 """
 from __future__ import annotations
 from io import BytesIO
-from typing import Iterator, List
+import os
+import pathlib
+from typing import Iterator, List, Tuple
 from zipfile import ZipFile
 import logging
 import requests
 import tldextract  # type: ignore
 from tqdm import tqdm  # type: ignore
 from more_itertools import chunked
+from more_itertools.more import sort_together
 from modules.logger_utils import init_logger
 from modules.requests_utils import get_with_retries
 
@@ -134,3 +137,44 @@ def get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
             error,
         )
         yield []
+
+
+def retrieve_domainsproject_txt_filepaths_and_db_filenames() -> Tuple[
+    List[str], List[str]
+]:
+    """Scans for Domains Project .txt source files and generates filepaths
+    to .txt source files, and database filenames for each .txt source file.
+
+    Returns:
+        Tuple[List[str], List[str]]: (Filepaths to .txt source files,
+        Database filenames for each .txt source file)
+    """
+    # Scan Domains Project's "domains" directory for domainsproject_urls_db_filenames
+    domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
+    domainsproject_txt_filepaths: List[str] = []
+    domainsproject_urls_db_filenames: List[str] = []
+    for root, _, files in os.walk(domainsproject_dir):
+        for file in files:
+            if file.lower().endswith(".txt"):
+                domainsproject_urls_db_filenames.append(f"{file[:-4]}")
+                domainsproject_txt_filepaths.append(os.path.join(root, file))
+
+    # Sort domainsproject_txt_filepaths and domainsproject_urls_db_filenames by ascending filesize
+    domainsproject_filesizes: List[int] = [
+        os.path.getsize(path) for path in domainsproject_txt_filepaths
+    ]
+    [
+        domainsproject_filesizes,
+        domainsproject_txt_filepaths,
+        domainsproject_urls_db_filenames,
+    ] = [
+        list(_)
+        for _ in sort_together(
+            (
+                domainsproject_filesizes,
+                domainsproject_txt_filepaths,
+                domainsproject_urls_db_filenames,
+            )
+        )
+    ]
+    return domainsproject_txt_filepaths, domainsproject_urls_db_filenames

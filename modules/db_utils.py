@@ -2,7 +2,7 @@
 Database Utilities
 """
 from __future__ import annotations
-from typing import Callable, List, Optional, Set, Tuple, Type
+from typing import Callable, List, Mapping, Optional, Set, Tuple, Type, Iterator
 import logging
 from hashlib import sha256
 import socket
@@ -186,10 +186,10 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
 
 
 def add_urls(
-    url_list_fetcher: Callable[..., List[str]],
+    url_list_fetcher: Callable[..., Iterator[List[str]]],
     update_time: int,
     db_filename: str,
-    txt_filepath: Optional[str] = None,
+    url_list_fetcher_args: Optional[Mapping] = None,
 ) -> None:
     """Retrieves a list of URLs and UPSERT URLs into
     urls table of SQLite database at `db_filename`.db.
@@ -197,16 +197,17 @@ def add_urls(
     update its lastListed timestamp field to `update_time`.
 
     Args:
-        url_list_fetcher (Callable[..., List[str]]): Fetches URL list
+        url_list_fetcher (Callable[..., Iterator[List[str]]]): Fetches URL list
         from local or remote sources
         update_time (int): Time when URLs are added to database in UNIX Epoch seconds
         db_filename (str): SQLite database filename
-        txt_filepath (Optional[str], optional): Filepath to URLs .txt file. Defaults to None.
+        url_list_fetcher_args (Optional[Mapping], optional): Arguments for `url_list_fetcher`.
+        Defaults to None.
     """
-
-    urls = (
-        url_list_fetcher() if txt_filepath is None else url_list_fetcher(txt_filepath)
+    urls = url_list_fetcher(
+        **(url_list_fetcher_args if url_list_fetcher_args is not None else {})
     )
+
     last_listed = update_time
     conn = create_connection(db_filename)
     if conn is not None:
