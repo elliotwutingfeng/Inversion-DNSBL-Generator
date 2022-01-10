@@ -1,4 +1,5 @@
-"""Scrapes domains from cubdomain.com
+"""
+Utilities for gathering URLs from cubdomain.com
 """
 from datetime import datetime, timedelta
 from collections import ChainMap

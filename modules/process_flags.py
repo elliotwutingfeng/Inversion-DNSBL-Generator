@@ -19,7 +19,7 @@ from modules.db_utils import (
 from modules.filewriter import write_urls_to_txt_file
 from modules.ray_utils import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
-from modules.scrape_cubdomain import get_page_urls_by_date_str, download_cubdomain
+from modules.cubdomain_url_utils import get_page_urls_by_date_str, download_cubdomain
 from modules.url_utils import (
     get_local_file_url_list,
     get_top10m_url_list,
