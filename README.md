@@ -137,6 +137,7 @@ This project is not sponsored, endorsed, or otherwise affiliated with Google and
 -   [APSW](https://rogerbinns.github.io/apsw)
 -   [Ray](https://www.ray.io)
 -   [TLDExtract](https://github.com/john-kurkowski/tldextract)
+-   [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io)
 
 ## References
 
@@ -145,4 +146,5 @@ This project is not sponsored, endorsed, or otherwise affiliated with Google and
 -   <https://tranco-list.eu>
 -   <https://www.domcop.com/top-10-million-domains>
 -   <https://domainsproject.org>
+-   <https://cubdomain.com>
 -   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>

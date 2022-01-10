@@ -18,7 +18,7 @@ logger = init_logger()
 
 def generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
     """Generate list of dates ranging
-    from 25th June 2017 to yesterday inclusive
+    from 25th June 2017 to today inclusive
 
     Returns:
         Tuple[List[datetime], List[str]]: (Dates,Root URLs for each date)
@@ -26,7 +26,7 @@ def generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
     #
     now = datetime.now()
     num_days = (now - datetime.strptime("25 June 2017", "%d %B %Y")).days
-    dates = [now - timedelta(days=x + 1) for x in range(num_days)]
+    dates = [now - timedelta(days=x) for x in range(num_days)]
     root_urls = [
         "https://www.cubdomain.com/domains-registered-by-date/{dt:%Y}-{dt:%m}-{dt:%d}/".format(
             dt=date

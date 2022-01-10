@@ -7,7 +7,6 @@ from argparse import (
     RawTextHelpFormatter,
     ArgumentDefaultsHelpFormatter,
 )
-from typing import List
 from modules.process_flags import process_flags
 
 
@@ -67,7 +66,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-u",
         "--use-existing-hashes",
-        dest="use_existing_hashes",
         action="store_true",
         help="""
         Use existing malicious URL hashes when identifying malicious URLs in database.
@@ -109,17 +107,22 @@ if __name__ == "__main__":
         default=["google", "yandex"],
         type=str,
     )
+    parser.add_argument(
+        "-n",
+        "--num-cpus",
+        required=False,
+        help="""
+        (OPTIONAL: Omit this flag to use all available CPUs)
+        Number of CPUs to use for parallel processes. By default
+        all available CPUs will be used.
+        """,
+        default=None,
+        type=int,
+    )
 
     args = parser.parse_args()
     args.vendors = sorted([x.capitalize() for x in args.vendors])
     if not (args.fetch or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
-    fetch: bool = args.fetch
-    identify: bool = args.identify
-    use_existing_hashes: bool = args.use_existing_hashes
-    retrieve: bool = args.retrieve
-    sources: List[str] = args.sources
-    vendors: List[str] = args.vendors
-
-    process_flags(fetch, identify, use_existing_hashes, retrieve, sources, vendors)
+    process_flags(parser_args=vars(args))
