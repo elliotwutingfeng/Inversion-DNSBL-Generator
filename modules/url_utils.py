@@ -113,24 +113,24 @@ def get_top10m_url_list() -> Iterator[List[str]]:
         yield []
 
 
-def get_local_file_url_list(txt_filename: str) -> Iterator[List[str]]:
+def get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
     """Yields all listed URLs in batches from local text file.
 
     Args:
-        txt_filename (str): Filename of local text file containing URLs
+        txt_filepath (str): Filepath of local text file containing URLs
 
     Yields:
         Iterator[List[str]]: Batch of URLs as a list
     """
     try:
-        with open(txt_filename, "r") as file:
+        with open(txt_filepath, "r") as file:
             for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
 
         logging.warning(
             "Failed to retrieve local list (%s); yielding empty list: %s",
-            txt_filename,
+            txt_filepath,
             error,
         )
         yield []

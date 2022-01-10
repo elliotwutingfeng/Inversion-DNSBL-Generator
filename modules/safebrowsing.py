@@ -202,8 +202,6 @@ class SafeBrowsing:
         threatlist_combinations = get_with_retries(self.threatListsEndpoint).json()[
             "threatLists"
         ]
-        # TODO: Check if "IP_RANGE" is useful,
-        # currently Google has only one hashPrefix entry.
         if self.vendor == "Google":
             url_threatlist_combinations = [
                 x
@@ -282,7 +280,7 @@ class SafeBrowsing:
                 raw_hash_prefixes_ = addition["rawHashes"]
                 prefix_size = raw_hash_prefixes_["prefixSize"]
                 raw_hash_prefixes = base64.b64decode(
-                    raw_hash_prefixes_["rawHashes"].encode("ascii")
+                    raw_hash_prefixes_["rawHashes"].encode()
                 )
 
                 hashes_list = sorted(

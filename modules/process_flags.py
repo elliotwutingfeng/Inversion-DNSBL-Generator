@@ -4,7 +4,7 @@ Process flags
 import time
 import os
 import pathlib
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 from more_itertools import flatten
 from more_itertools.more import sort_together
 import ray
@@ -30,41 +30,45 @@ from modules.url_utils import (
 )
 
 
-def retrieve_domainsproject_filepaths_and_db_filenames():
-    """[summary]
+def retrieve_domainsproject_txt_filepaths_and_db_filenames() -> Tuple[
+    List[str], List[str]
+]:
+    """Scans for Domains Project .txt source files and generates filepaths
+    to .txt source files, and database filenames for each .txt source file.
 
     Returns:
-        [type]: [description]
+        Tuple[List[str], List[str]]: (Filepaths to .txt source files,
+        Database filenames for each .txt source file)
     """
-    # Scan Domains Project's "domains" directory for local urls_filenames
+    # Scan Domains Project's "domains" directory for domainsproject_urls_db_filenames
     domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
-    domainsproject_filepaths: List[str] = []
+    domainsproject_txt_filepaths: List[str] = []
     domainsproject_urls_db_filenames: List[str] = []
     for root, _, files in os.walk(domainsproject_dir):
         for file in files:
             if file.lower().endswith(".txt"):
                 domainsproject_urls_db_filenames.append(f"{file[:-4]}")
-                domainsproject_filepaths.append(os.path.join(root, file))
+                domainsproject_txt_filepaths.append(os.path.join(root, file))
 
-    # Sort domainsproject_filepaths and domainsproject_urls_db_filenames by ascending filesize
+    # Sort domainsproject_txt_filepaths and domainsproject_urls_db_filenames by ascending filesize
     domainsproject_filesizes: List[int] = [
-        os.path.getsize(path) for path in domainsproject_filepaths
+        os.path.getsize(path) for path in domainsproject_txt_filepaths
     ]
     [
         domainsproject_filesizes,
-        domainsproject_filepaths,
+        domainsproject_txt_filepaths,
         domainsproject_urls_db_filenames,
     ] = [
         list(_)
         for _ in sort_together(
             (
                 domainsproject_filesizes,
-                domainsproject_filepaths,
+                domainsproject_txt_filepaths,
                 domainsproject_urls_db_filenames,
             )
         )
     ]
-    return domainsproject_filepaths, domainsproject_urls_db_filenames
+    return domainsproject_txt_filepaths, domainsproject_urls_db_filenames
 
 
 def process_flags(
@@ -106,11 +110,18 @@ def process_flags(
         cubdomain_urls_db_filenames = []
     if "domainsproject" in sources:
         (
-            domainsproject_filepaths,
+            domainsproject_txt_filepaths,
             domainsproject_urls_db_filenames,
-        ) = retrieve_domainsproject_filepaths_and_db_filenames()
+        ) = retrieve_domainsproject_txt_filepaths_and_db_filenames()
     else:
         domainsproject_urls_db_filenames = []
+
+    domains_db_filenames = (
+        top1m_urls_db_filename
+        + top10m_urls_db_filename
+        + cubdomain_urls_db_filenames
+        + domainsproject_urls_db_filenames
+    )
 
     if "ipv4" in sources:
         add_ip_addresses_jobs: List[Tuple] = [
@@ -120,15 +131,8 @@ def process_flags(
     else:
         ips_filenames = []
 
-    urls_filenames = (
-        top1m_urls_db_filename
-        + top10m_urls_db_filename
-        + cubdomain_urls_db_filenames
-        + domainsproject_urls_db_filenames
-    )
-
     # Create database files
-    initialise_databases(urls_filenames, mode="domains")
+    initialise_databases(domains_db_filenames, mode="domains")
     initialise_databases(ips_filenames, mode="ips")
 
     if fetch:
@@ -143,7 +147,9 @@ def process_flags(
             # Extract and Add local URLs to database
             add_urls_jobs += [
                 (get_local_file_url_list, update_time, filename, filepath)
-                for filepath, filename in zip(domainsproject_filepaths, urls_filenames)
+                for filepath, filename in zip(
+                    domainsproject_txt_filepaths, domains_db_filenames
+                )
             ]
         execute_with_ray(add_urls, add_urls_jobs)
 
@@ -171,7 +177,7 @@ def process_flags(
                         get_matching_hash_prefix_urls,
                         [
                             (filename, prefix_sizes, vendor)
-                            for filename in urls_filenames + ips_filenames
+                            for filename in domains_db_filenames + ips_filenames
                         ],
                     ),
                 )
@@ -195,11 +201,11 @@ def process_flags(
                 update_malicious_urls,
                 [
                     (update_time, vendor, filename)
-                    for filename in urls_filenames + ips_filenames
+                    for filename in domains_db_filenames + ips_filenames
                 ],
                 task_obj_store_args={"malicious_urls": malicious_urls[vendor]},
             )
 
     if retrieve:
-        write_urls_to_txt_file(retrieve_malicious_urls(urls_filenames))
+        write_urls_to_txt_file(retrieve_malicious_urls(domains_db_filenames))
     ray.shutdown()

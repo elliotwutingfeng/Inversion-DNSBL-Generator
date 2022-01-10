@@ -28,7 +28,8 @@ def current_datetime_str() -> str:
 
 
 def write_urls_to_txt_file(urls: List[str]) -> None:
-    """Writes list of URLs to .txt file with timestamping and stores it in `BLOCKLISTS_FOLDER`.
+    """Writes list of URLs to .txt file with timestamp
+    in filename and stores it in `BLOCKLISTS_FOLDER`.
 
     `BLOCKLISTS_FOLDER` is created beforehand if it does not exist yet.
 

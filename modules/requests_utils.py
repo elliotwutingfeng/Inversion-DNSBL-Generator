@@ -1,8 +1,5 @@
 """
 Requests Utilities
-
-Enables unlimited retries for GET and POST requests.
-
 """
 import logging
 import time
@@ -21,6 +18,8 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15",
 }
+
+DEFAULT_TIMEOUT = 120  # in seconds
 
 logger = init_logger()
 
@@ -86,9 +85,6 @@ def post_with_retries(url: Union[Text, bytes], payload: Mapping) -> Response:
             logging.warning("Attempt %d failed -> %s", attempt, error)
         attempt += 1
         time.sleep(1)
-
-
-DEFAULT_TIMEOUT = 120  # seconds
 
 
 class TimeoutHTTPAdapter(HTTPAdapter):

@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from collections import ChainMap
 from typing import Dict, Iterator, List, Tuple
 from bs4 import BeautifulSoup, SoupStrainer
-import cchardet  # pylint: disable=unused-import
+import cchardet
+import requests  # pylint: disable=unused-import
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import EnhancedSession
@@ -101,15 +102,18 @@ def get_page_urls_by_date_str() -> Dict:
 
 
 def download_domains(page_urls: List[str]) -> Iterator[List[str]]:
-    """Download cubdomain.com domains and yields all listed URLs in batches.
+    """Download cubdomain.com domains and yields
+    all listed URLs from each page_url in `page_urls`.
+
+    Each listed domain is encapsulated in this tag
+    '<a href="https://www.cubdomain.com/site/ ...'
 
     Args:
         page_urls (List[str]): Page URLs containing domains registered on date `date_str`
-    """
-    # pylint: disable=broad-except
 
-    # Each listed domain is encapsulated in this
-    # tag '<a href="https://www.cubdomain.com/site/ ...'
+    Yields:
+        Iterator[List[str]]: Batch of URLs as a list
+    """
     only_a_tag_with_cubdomain_site = SoupStrainer(
         "a", href=lambda x: "cubdomain.com/site/" in x
     )
@@ -124,6 +128,6 @@ def download_domains(page_urls: List[str]) -> Iterator[List[str]]:
                 )
                 res = soup.find_all()
                 yield generate_hostname_expressions([line.string for line in res])
-            except Exception as error:
+            except requests.exceptions.RequestException as error:
                 logger.error("%s %s", page_url, error)
                 yield []
