@@ -1,5 +1,5 @@
 """
-URL Utilities
+Utilities for gathering URLs from various sources
 """
 from __future__ import annotations
 from io import BytesIO

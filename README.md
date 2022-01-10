@@ -18,6 +18,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Tranco TOP1M (~1 million URLs): <https://tranco-list.eu>
 -   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
+-   CubDomain.com (~200 million URLs): <https://cubdomain.com>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
 
 ## Safe Browsing API vendors
@@ -33,7 +34,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Tested on Python 3.8.12
 -   Multi-core x86-64 CPU; for Python Ray support
 -   Recommended: At least 8GB RAM
--   At least 5GB SSD free storage space; **at least 600GB required to process Domains Project URLs and IPv4 Addresses**
+-   At least 25GB SSD free storage space; **at least 600GB required to process all URL sources**
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -92,7 +93,7 @@ Fetch URLs from all sources, insert their contents to local database, and genera
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Domains Project**, **IPv4 Addresses**
+-   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Domains Project**, **CubDomain.com**, **IPv4 Addresses**
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash
