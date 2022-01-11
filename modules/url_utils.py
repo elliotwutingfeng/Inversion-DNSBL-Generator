@@ -53,7 +53,7 @@ def get_top1m_url_list() -> Iterator[List[str]]:
     Yields:
         Iterator[List[str]]: Batch of URLs as a list
     """
-    logging.info("Downloading TOP1M list...")
+    logger.info("Downloading TOP1M list...")
     try:
         with BytesIO() as file:
             resp = get_with_retries(
@@ -70,13 +70,13 @@ def get_top1m_url_list() -> Iterator[List[str]]:
                 x.strip().decode().split(",")[1]
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()
             )
-            logging.info("Downloading TOP1M list... [DONE]")
+            logger.info("Downloading TOP1M list... [DONE]")
 
             for batch in chunked(raw_urls, 40_000):
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as error:
-        logging.warning("Failed to retrieve TOP1M list; yielding empty list: %s", error)
+        logger.warning("Failed to retrieve TOP1M list; yielding empty list: %s", error)
         yield []
 
 
@@ -86,7 +86,7 @@ def get_top10m_url_list() -> Iterator[List[str]]:
     Yields:
         Iterator[List[str]]: Batch of URLs as a list
     """
-    logging.info("Downloading TOP10M list...")
+    logger.info("Downloading TOP10M list...")
     try:
         with BytesIO() as file:
             resp = get_with_retries(
@@ -104,15 +104,13 @@ def get_top10m_url_list() -> Iterator[List[str]]:
                 x.strip().decode().split(",")[1].replace('"', "")
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             )
-            logging.info("Downloading TOP10M list... [DONE]")
+            logger.info("Downloading TOP10M list... [DONE]")
 
             for batch in chunked(raw_urls, 40_000):
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as error:
-        logging.warning(
-            "Failed to retrieve TOP10M list; yielding empty list: %s", error
-        )
+        logger.warning("Failed to retrieve TOP10M list; yielding empty list: %s", error)
         yield []
 
 
@@ -131,7 +129,7 @@ def get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
 
-        logging.warning(
+        logger.warning(
             "Failed to retrieve local list (%s); yielding empty list: %s",
             txt_filepath,
             error,

@@ -151,10 +151,10 @@ class SafeBrowsing:
         Returns:
             List[str]: URLs deemed by Safe Browsing API to be malicious
         """
-        logging.info("Verifying suspected %s malicious URLs", self.vendor)
+        logger.info("Verifying suspected %s malicious URLs", self.vendor)
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = chunked(urls, self.maximum_url_batch_size)
-        logging.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
+        logger.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
         results = execute_with_ray(
             self._threat_matches_lookup,
             [(url_batch,) for url_batch in url_batches],
@@ -176,7 +176,7 @@ class SafeBrowsing:
             )
         )
 
-        logging.info(
+        logger.info(
             "%d URLs confirmed to be marked malicious by %s Safe Browsing API.",
             len(malicious_urls),
             self.vendor,
@@ -254,7 +254,7 @@ class SafeBrowsing:
         )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
         if "listUpdateResponses" not in res_json:
             return {}
-        logging.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
+        logger.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
         return res_json
 
     def get_malicious_url_hash_prefixes(self) -> Set[bytes]:
@@ -267,7 +267,7 @@ class SafeBrowsing:
         Returns:
             Set[bytes]: Malicious URL hash prefixes from Safe Browsing API
         """
-        logging.info("Downloading %s malicious URL hashes", self.vendor)
+        logger.info("Downloading %s malicious URL hashes", self.vendor)
         res_json = self._retrieve_threat_list_updates()
         if res_json == {}:
             return set()
@@ -290,5 +290,5 @@ class SafeBrowsing:
                     ]
                 )
                 hash_prefixes.update(hashes_list)
-        logging.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
+        logger.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
         return hash_prefixes

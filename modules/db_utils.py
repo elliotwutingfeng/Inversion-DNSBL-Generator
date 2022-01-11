@@ -47,7 +47,7 @@ def create_connection(db_filename: str) -> Optional[Type[apsw.Connection]]:
         )  # https://www.sqlite.org/pragma.html#pragma_temp_store
         cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
     except Error as error:
-        logging.error("filename:%s %s", db_filename, error)
+        logger.error("filename:%s %s", db_filename, error)
     return conn
 
 
@@ -74,7 +74,7 @@ def create_ips_table(db_filename: str) -> None:
                 # To avoid writing redundant SQL queries,
                 # we shall refer to ipv4 addresses as urls in SQL
         except Error as error:
-            logging.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
@@ -100,7 +100,7 @@ def create_urls_table(db_filename: str) -> None:
                             )"""
                 )
         except Error as error:
-            logging.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
@@ -154,7 +154,7 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
             if number_of_ipv4_addresses != ips_to_generate:
                 # If database does not have 2 ** 24 IPs,
                 # delete all rows from ipv4_ urls table and regenerate IPs
-                logging.info(
+                logger.info(
                     "INSERT %d ipv4 addresses to urls table of %s...",
                     ips_to_generate,
                     db_filename,
@@ -175,13 +175,13 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                         ),
                     )
 
-                    logging.info(
+                    logger.info(
                         "INSERT %d ipv4 addresses to urls table of %s...[DONE]",
                         ips_to_generate,
                         db_filename,
                     )
         except Error as error:
-            logging.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
@@ -214,7 +214,7 @@ def add_urls(
         try:
             with conn:
                 cur = conn.cursor()
-                logging.info(
+                logger.info(
                     "Performing INSERT-UPDATE URLs to urls table of %s...", db_filename
                 )
 
@@ -232,12 +232,12 @@ def add_urls(
                         ),
                     )
 
-                logging.info(
+                logger.info(
                     "Performing INSERT-UPDATE URLs to urls table of %s...[DONE]",
                     db_filename,
                 )
         except Error as error:
-            logging.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error)
         conn.close()
 
 
@@ -249,7 +249,7 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) 
         hash_prefixes (Set[bytes]): Malicious URL hash prefixes from Safe Browsing API
         vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
-    logging.info("Updating database with %s malicious URL hashes", vendor)
+    logger.info("Updating database with %s malicious URL hashes", vendor)
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -268,11 +268,11 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) 
                         for hashPrefix in hash_prefixes
                     ),
                 )
-            logging.info(
+            logger.info(
                 "Updating database with %s malicious URL hashes...[DONE]", vendor
             )
         except Error as error:
-            logging.error("vendor:%s %s", vendor, error)
+            logger.error("vendor:%s %s", vendor, error)
         conn.close()
 
 
@@ -320,7 +320,7 @@ def get_matching_hash_prefix_urls(
                     urls += [x[0] for x in cur.fetchall()]
                 cur.execute("DROP TABLE vendorHashPrefixes")
         except Error as error:
-            logging.error(
+            logger.error(
                 "filename:%s prefix_sizes:%s vendor:%s %s",
                 db_filename,
                 prefix_sizes,
@@ -355,7 +355,7 @@ def retrieve_vendor_hash_prefix_sizes(vendor: str) -> List[int]:
                 )
                 prefix_sizes = [x[0] for x in cur.fetchall()]
         except Error as error:
-            logging.error("vendor:%s %s", vendor, error)
+            logger.error("vendor:%s %s", vendor, error)
         conn.close()
     return prefix_sizes
 
@@ -377,7 +377,7 @@ def create_malicious_url_hash_prefixes_table() -> None:
                                                 )"""
                 )
         except Error as error:
-            logging.error("%s", error)
+            logger.error("%s", error)
         conn.close()
 
 
@@ -394,7 +394,7 @@ def initialise_databases(db_filenames: List[str], mode: str) -> None:
     Raises:
         ValueError: `mode` must be "domains" or "ips"
     """
-    logging.info(
+    logger.info(
         "Creating .db files if they do not exist yet for %d %s .txt files",
         len(db_filenames),
         mode,
@@ -431,7 +431,7 @@ def update_malicious_urls(
     Raises:
         ValueError: `vendor` must be "Google" or "Yandex"
     """
-    logging.info(
+    logger.info(
         "Updating %s database with verified %s malicious URLs", db_filename, vendor
     )
     vendor_to_update_query = {
@@ -468,13 +468,13 @@ def update_malicious_urls(
                 )
                 cur.execute(vendor_to_update_query[vendor], (update_time,))
                 cur.execute("DROP TABLE malicious_urls")
-            logging.info(
+            logger.info(
                 "Updating %s database with verified %s malicious URLs...[DONE]",
                 db_filename,
                 vendor,
             )
         except Error as error:
-            logging.error("vendor:%s filename:%s %s", vendor, db_filename, error)
+            logger.error("vendor:%s filename:%s %s", vendor, db_filename, error)
         conn.close()
 
 
@@ -488,7 +488,7 @@ def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
     Returns:
         List[str]: URLs deemed by Safe Browsing API to be malicious
     """
-    logging.info(
+    logger.info(
         "Retrieving URLs from database most recently marked as malicious by Safe Browsing API"
     )
 
@@ -514,7 +514,7 @@ def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
                     )
                     malicious_urls.update((x[0] for x in cur.fetchall()))
             except Error as error:
-                logging.error("filename:%s %s", urls_db_filename, error)
+                logger.error("filename:%s %s", urls_db_filename, error)
             conn.close()
 
         return malicious_urls
@@ -524,7 +524,7 @@ def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
             retrieve_malicious_urls_, [(filename,) for filename in urls_db_filenames]
         )
     )
-    logging.info(
+    logger.info(
         "Retrieving URLs from database most recently"
         " marked as malicious by Safe Browsing API...[DONE]"
     )

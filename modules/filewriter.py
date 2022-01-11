@@ -42,4 +42,4 @@ def write_urls_to_txt_file(urls: List[str]) -> None:
     txt_filename = f"{BLOCKLIST_FILENAME}_{current_datetime_str()}.txt"
     with open(f"{BLOCKLISTS_FOLDER}{os.sep}{txt_filename}", "a") as outfile:
         outfile.writelines("\n".join(urls))
-        logging.info("%d URLs written to file: %s", len(urls), txt_filename)
+        logger.info("%d URLs written to file: %s", len(urls), txt_filename)

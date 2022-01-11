@@ -51,7 +51,7 @@ def get_with_retries(url: Union[Text, bytes], stream: bool = False) -> Response:
                 )
             return resp
         except requests.exceptions.RequestException as error:
-            logging.warning("Attempt %d failed -> %s", attempt, error)
+            logger.warning("Attempt %d failed -> %s", attempt, error)
         attempt += 1
         time.sleep(1)
 
@@ -82,7 +82,7 @@ def post_with_retries(url: Union[Text, bytes], payload: Mapping) -> Response:
                 )
             return resp
         except requests.exceptions.RequestException as error:
-            logging.warning("Attempt %d failed -> %s", attempt, error)
+            logger.warning("Attempt %d failed -> %s", attempt, error)
         attempt += 1
         time.sleep(1)
 
