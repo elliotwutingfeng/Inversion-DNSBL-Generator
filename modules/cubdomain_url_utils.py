@@ -6,7 +6,6 @@ from collections import ChainMap
 from typing import Dict, Iterator, List, Tuple
 from bs4 import BeautifulSoup, SoupStrainer
 import cchardet  # pylint: disable=unused-import
-import requests
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import EnhancedSession
@@ -33,6 +32,7 @@ def generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
         )
         for date in dates
     ]
+
     return dates, root_urls
 
 
@@ -65,7 +65,9 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
                 "lxml",
                 parse_only=only_a_tag_with_page_link,
             )
-            res = soup.find_all()
+            res = soup.find_all(
+                lambda tag: tag.string is not None
+            )  # Filter out empty tags
             # Get the highest possible value of
             # {page_number}; the total number of pages for date YYYY-MM-DD
             last_page = max(
@@ -77,7 +79,7 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
                 "date": date,
             }
         except Exception as error:
-            logger.error("%s %s", first_page_url, error)
+            logger.error("%s %s", first_page_url, error, exc_info=True)
     return root_url_to_last_page_and_date
 
 
@@ -115,6 +117,7 @@ def download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
     Yields:
         Iterator[List[str]]: Batch of URLs as a list
     """
+    # pylint: disable=broad-except
     only_a_tag_with_cubdomain_site = SoupStrainer(
         "a", href=lambda x: "cubdomain.com/site/" in x
     )
@@ -127,8 +130,10 @@ def download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
                     "lxml",
                     parse_only=only_a_tag_with_cubdomain_site,
                 )
-                res = soup.find_all()
-                yield generate_hostname_expressions([line.string for line in res])
-            except requests.exceptions.RequestException as error:
-                logger.error("%s %s", page_url, error)
+                res = soup.find_all(
+                    lambda tag: tag.string is not None
+                )  # Filter out empty tags
+                yield generate_hostname_expressions([tag.string.strip() for tag in res])
+            except Exception as error:
+                logger.error("%s %s", page_url, error, exc_info=True)
                 yield []

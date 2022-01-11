@@ -30,20 +30,24 @@ def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
     Returns:
         List[str]: `raw_urls` + Safe Browsing API-compliant hostname expressions of `raw_urls`
     """
+    # pylint: disable=broad-except
 
     hostname_expressions = set()
     for raw_url in raw_urls:
-        ext = tldextract.extract(raw_url)
-        if ext.subdomain == "":
-            parts = [ext.registered_domain]
-        else:
-            parts = ext.subdomain.split(".") + [ext.registered_domain]
-        hostname_expressions.update(
-            [
-                f"{'.'.join(parts[-i:])}"
-                for i in range(len(parts) if len(parts) < 5 else 5)
-            ]
-        )
+        try:
+            ext = tldextract.extract(raw_url)
+            if ext.subdomain == "":
+                parts = [ext.registered_domain]
+            else:
+                parts = ext.subdomain.split(".") + [ext.registered_domain]
+            hostname_expressions.update(
+                [
+                    f"{'.'.join(parts[-i:])}"
+                    for i in range(len(parts) if len(parts) < 5 else 5)
+                ]
+            )
+        except Exception as error:
+            logger.error("%s %s", raw_url, error, exc_info=True)
     return list(hostname_expressions)
 
 

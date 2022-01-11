@@ -1,7 +1,6 @@
 """
 Requests Utilities
 """
-import logging
 import time
 import json
 from typing import Mapping, Text, Union
@@ -116,9 +115,9 @@ class EnhancedSession:
 
     def __init__(self):
         retry_strategy = Retry(
-            read=20,  # How many times to retry on read errors.
-            status=20,  # How many times to retry on bad status codes.
-            other=20,  # How many times to retry on other errors.
+            read=4,  # How many times to retry on read errors.
+            status=4,  # How many times to retry on bad status codes.
+            other=4,  # How many times to retry on other errors.
             status_forcelist=[
                 429,
                 500,

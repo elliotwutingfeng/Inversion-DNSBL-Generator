@@ -3,7 +3,6 @@ Database Utilities
 """
 from __future__ import annotations
 from typing import Callable, List, Mapping, Optional, Set, Tuple, Type, Iterator
-import logging
 from hashlib import sha256
 import socket
 import os
@@ -47,7 +46,7 @@ def create_connection(db_filename: str) -> Optional[Type[apsw.Connection]]:
         )  # https://www.sqlite.org/pragma.html#pragma_temp_store
         cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
     except Error as error:
-        logger.error("filename:%s %s", db_filename, error)
+        logger.error("filename:%s %s", db_filename, error, exc_info=True)
     return conn
 
 
@@ -74,7 +73,7 @@ def create_ips_table(db_filename: str) -> None:
                 # To avoid writing redundant SQL queries,
                 # we shall refer to ipv4 addresses as urls in SQL
         except Error as error:
-            logger.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error, exc_info=True)
         conn.close()
 
 
@@ -100,7 +99,7 @@ def create_urls_table(db_filename: str) -> None:
                             )"""
                 )
         except Error as error:
-            logger.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error, exc_info=True)
         conn.close()
 
 
@@ -181,7 +180,7 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                         db_filename,
                     )
         except Error as error:
-            logger.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error, exc_info=True)
         conn.close()
 
 
@@ -237,7 +236,7 @@ def add_urls(
                     db_filename,
                 )
         except Error as error:
-            logger.error("filename:%s %s", db_filename, error)
+            logger.error("filename:%s %s", db_filename, error, exc_info=True)
         conn.close()
 
 
@@ -272,7 +271,7 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) 
                 "Updating database with %s malicious URL hashes...[DONE]", vendor
             )
         except Error as error:
-            logger.error("vendor:%s %s", vendor, error)
+            logger.error("vendor:%s %s", vendor, error, exc_info=True)
         conn.close()
 
 
@@ -326,6 +325,7 @@ def get_matching_hash_prefix_urls(
                 prefix_sizes,
                 vendor,
                 error,
+                exc_info=True,
             )
         conn.close()
 
@@ -355,7 +355,7 @@ def retrieve_vendor_hash_prefix_sizes(vendor: str) -> List[int]:
                 )
                 prefix_sizes = [x[0] for x in cur.fetchall()]
         except Error as error:
-            logger.error("vendor:%s %s", vendor, error)
+            logger.error("vendor:%s %s", vendor, error, exc_info=True)
         conn.close()
     return prefix_sizes
 
@@ -377,7 +377,7 @@ def create_malicious_url_hash_prefixes_table() -> None:
                                                 )"""
                 )
         except Error as error:
-            logger.error("%s", error)
+            logger.error("%s", error, exc_info=True)
         conn.close()
 
 
@@ -474,7 +474,9 @@ def update_malicious_urls(
                 vendor,
             )
         except Error as error:
-            logger.error("vendor:%s filename:%s %s", vendor, db_filename, error)
+            logger.error(
+                "vendor:%s filename:%s %s", vendor, db_filename, error, exc_info=True
+            )
         conn.close()
 
 
@@ -514,7 +516,7 @@ def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
                     )
                     malicious_urls.update((x[0] for x in cur.fetchall()))
             except Error as error:
-                logger.error("filename:%s %s", urls_db_filename, error)
+                logger.error("filename:%s %s", urls_db_filename, error, exc_info=True)
             conn.close()
 
         return malicious_urls
