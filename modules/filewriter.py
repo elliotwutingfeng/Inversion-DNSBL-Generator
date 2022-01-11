@@ -5,7 +5,6 @@ For writing URLs to .txt file with timestamping
 """
 
 from __future__ import annotations
-import logging
 import os
 from datetime import datetime
 from typing import List
@@ -15,7 +14,7 @@ from modules.logger_utils import init_logger
 BLOCKLISTS_FOLDER: str = "blocklists"
 BLOCKLIST_FILENAME: str = "URLs_marked_malicious_by_Safe_Browsing"
 
-logger: logging.Logger = init_logger()
+logger = init_logger()
 
 
 def current_datetime_str() -> str:

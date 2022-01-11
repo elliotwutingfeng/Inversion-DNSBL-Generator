@@ -143,9 +143,6 @@ def process_flags(parser_args: Dict) -> None:
                 )
             )
 
-            # To Improve: Store suspected_urls into malicious.db under
-            # suspected_urls table columns: [url,Google,Yandex]
-
             # Among these URLs, identify those with full Hashes
             # found on Safe Browsing API Server
             vendor_malicious_urls = safebrowsing.get_malicious_urls(suspected_urls)

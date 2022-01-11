@@ -5,7 +5,6 @@ from __future__ import annotations
 import time
 from typing import Dict, List, Set
 import itertools
-import logging
 import base64
 from dotenv import dotenv_values
 from more_itertools.more import chunked

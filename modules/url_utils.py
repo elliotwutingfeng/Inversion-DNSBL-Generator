@@ -7,7 +7,6 @@ import os
 import pathlib
 from typing import Iterator, List, Tuple
 from zipfile import ZipFile
-import logging
 import requests
 import tldextract  # type: ignore
 from tqdm import tqdm  # type: ignore
@@ -132,11 +131,11 @@ def get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
             for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
-
-        logger.warning(
+        logger.error(
             "Failed to retrieve local list (%s); yielding empty list: %s",
             txt_filepath,
             error,
+            exc_info=True,
         )
         yield []
 
