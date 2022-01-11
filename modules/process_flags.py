@@ -36,7 +36,7 @@ def process_flags(parser_args: Dict) -> None:
         parser_args (Dict): Flags set by user; see `main.py` for more details
     """
     ray.shutdown()
-    ray.init(include_dashboard=False, num_cpus=parser_args["num_cpus"])
+    ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])
     update_time = int(time.time())  # seconds since UNIX Epoch
 
     top1m_urls_db_filename = ["top1m_urls"] if "top1m" in parser_args["sources"] else []
