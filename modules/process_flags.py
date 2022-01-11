@@ -41,7 +41,7 @@ def process_flags(parser_args: Dict) -> None:
 
     top1m_urls_db_filename = ["top1m_urls"] if "top1m" in parser_args["sources"] else []
     top10m_urls_db_filename = (
-        ["top10m_urls"] if "top1m" in parser_args["sources"] else []
+        ["top10m_urls"] if "top10m" in parser_args["sources"] else []
     )
     if "cubdomain" in parser_args["sources"]:
         cubdomain_page_urls_by_date_str = get_page_urls_by_date_str()
