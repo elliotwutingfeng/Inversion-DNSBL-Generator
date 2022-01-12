@@ -15,7 +15,7 @@ from modules.url_utils import generate_hostname_expressions
 logger = init_logger()
 
 
-def generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
+def _generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
     """Generate list of dates ranging
     from 25th June 2017 to today inclusive
 
@@ -36,7 +36,7 @@ def generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
     return dates, root_urls
 
 
-def create_root_url_map(date: datetime, root_url: str) -> Dict:
+def _create_root_url_map(date: datetime, root_url: str) -> Dict:
     """Determine number of available pages for
     `date` YYYY-MM-DD represented by`root_url`.
 
@@ -83,15 +83,15 @@ def create_root_url_map(date: datetime, root_url: str) -> Dict:
     return root_url_to_last_page_and_date
 
 
-def get_page_urls_by_date_str() -> Dict:
+def _get_page_urls_by_date_str() -> Dict:
     """Create list of all domain pages for all dates
 
     Returns:
         Dict: Mapping of date string to its page URLs
     """
-    dates, root_urls = generate_dates_and_root_urls()
+    dates, root_urls = _generate_dates_and_root_urls()
     root_urls_to_last_page_and_date = dict(
-        ChainMap(*execute_with_ray(create_root_url_map, list(zip(dates, root_urls))))
+        ChainMap(*execute_with_ray(_create_root_url_map, list(zip(dates, root_urls))))
     )  # Mapping of each root URL to its total number of pages and its date
     page_urls_by_date_str: Dict = dict()
     for root_url, details in root_urls_to_last_page_and_date.items():
@@ -104,7 +104,21 @@ def get_page_urls_by_date_str() -> Dict:
     return page_urls_by_date_str
 
 
-def download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
+def _get_cubdomain_page_urls_by_db_filename() -> Dict:
+    """Create list of all domain pages for all db_filenames
+
+    Returns:
+        Dict: Mapping of db_filename to page_urls
+    """
+    cubdomain_page_urls_by_date_str = _get_page_urls_by_date_str()
+    cubdomain_page_urls_by_db_filename = {
+            f"cubdomain_{date_str}": page_urls
+            for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
+        }
+    return cubdomain_page_urls_by_db_filename
+
+
+def _download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
     """Download cubdomain.com domains and yields
     all listed URLs from each page_url in `page_urls`.
 
@@ -137,3 +151,26 @@ def download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
             except Exception as error:
                 logger.error("%s %s", page_url, error, exc_info=True)
                 yield []
+
+class CubDomain:
+    """[summary]
+    """
+    # pylint: disable=too-few-public-methods
+    def __init__(self,parser_args:Dict,update_time:int):
+        self.db_filenames: List[str] = []
+        self.jobs: List[Tuple] = []
+        self.page_urls_by_db_filename = dict()
+        if "cubdomain" in parser_args["sources"]:
+            self.page_urls_by_db_filename = _get_cubdomain_page_urls_by_db_filename()
+            self.db_filenames = list(self.page_urls_by_db_filename)
+            if parser_args["fetch"]:
+                self.jobs = [
+                (
+                    _download_cubdomain,
+                    update_time,
+                    db_filename,
+                    {"page_urls": page_urls},
+                )
+                for db_filename, page_urls in self.page_urls_by_db_filename.items()
+                ]
+                

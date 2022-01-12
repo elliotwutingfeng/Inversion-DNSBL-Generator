@@ -9,8 +9,10 @@ more-itertools==8.12.0
 mypy==0.930
 pylint==2.12.2
 pytest==7.0.0rc1
+pytest-cov==3.0.0
+pytest-mock==3.6.1
 python-dotenv==0.19.2
-ray[default]==1.9.1
+ray[default]==1.9.2
 requests==2.27.1
 tldextract==3.1.2
 tqdm==4.62.3
