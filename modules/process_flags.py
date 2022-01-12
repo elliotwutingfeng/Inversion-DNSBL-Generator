@@ -19,7 +19,7 @@ from modules.database.insert import (
 )
 from modules.database.update import update_malicious_urls
 
-from modules.filewriter import write_urls_to_txt_file
+from modules.filewriter import write_blocklist_txt
 from modules.utils.parallel_compute import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
 
@@ -94,7 +94,7 @@ def process_flags(parser_args: Dict) -> None:
             del suspected_urls  # "frees" memory
             malicious_urls[vendor] = vendor_malicious_urls
 
-        write_urls_to_txt_file(list(set(flatten(malicious_urls.values()))))
+            write_blocklist_txt(malicious_urls[vendor],vendor)
 
         # TODO push blocklist to GitHub
 
@@ -109,6 +109,8 @@ def process_flags(parser_args: Dict) -> None:
                 task_obj_store_args={"malicious_urls": malicious_urls[vendor]},
             )
 
+    # Retrieve malicious URLs from database and write to blocklists
     if parser_args["retrieve"]:
-        write_urls_to_txt_file(retrieve_malicious_urls(domains_db_filenames))
+        for vendor in parser_args["vendors"]:
+            write_blocklist_txt(retrieve_malicious_urls(domains_db_filenames, vendor), vendor)
     ray.shutdown()

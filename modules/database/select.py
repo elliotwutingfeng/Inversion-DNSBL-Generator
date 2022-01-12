@@ -97,21 +97,24 @@ def retrieve_vendor_hash_prefix_sizes(vendor: str) -> List[int]:
     return prefix_sizes
 
 
-def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
-    """Retrieves URLs from database most recently marked as malicious by Safe Browsing API.
+def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: str) -> List[str]:
+    """Retrieves URLs from database most recently marked as malicious by Safe Browsing API
+    of `vendor`.
 
     Args:
         urls_db_filenames (List[str]): Filenames of SQLite databases
         containing URLs and their malicious statuses
+        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
     Returns:
-        List[str]: URLs deemed by Safe Browsing API to be malicious
+        List[str]: URLs deemed by Safe Browsing API of `vendor` to be malicious
     """
     logger.info(
-        "Retrieving URLs from database most recently marked as malicious by Safe Browsing API"
+        "Retrieving URLs from database most recently "
+        "marked as malicious by %s Safe Browsing API",vendor
     )
 
-    def retrieve_malicious_urls_(urls_db_filename: str) -> Set[str]:
+    def retrieve_malicious_urls_(urls_db_filename: str, vendor: str) -> Set[str]:
         malicious_urls: Set[str] = set()
         conn = create_connection(urls_db_filename)
         if conn is not None:
@@ -124,13 +127,22 @@ def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
                     # Most recent lastYandexMalicious timestamp
                     cur.execute("SELECT MAX(lastYandexMalicious) FROM urls")
                     last_yandex_malicious = [x[0] for x in cur.fetchall()][0]
-                    cur.execute(
+                    if vendor == "Google":
+                        cur.execute(
+                            """
+                        SELECT url FROM urls
+                        WHERE lastGoogleMalicious = ?
+                        """,
+                            (last_google_malicious,),
+                        )
+                    elif vendor == "Yandex":
+                        cur.execute(
                         """
-            SELECT url FROM urls
-            WHERE lastGoogleMalicious = ? OR lastYandexMalicious = ?
-            """,
-                        (last_google_malicious, last_yandex_malicious),
-                    )
+                        SELECT url FROM urls
+                        WHERE lastYandexMalicious = ?
+                        """,
+                            ( last_yandex_malicious,),
+                        )
                     malicious_urls.update((x[0] for x in cur.fetchall()))
             except Error as error:
                 logger.error("filename:%s %s", urls_db_filename, error, exc_info=True)
@@ -140,11 +152,11 @@ def retrieve_malicious_urls(urls_db_filenames: List[str]) -> List[str]:
 
     malicious_urls = set().union(
         *execute_with_ray(
-            retrieve_malicious_urls_, [(filename,) for filename in urls_db_filenames]
+            retrieve_malicious_urls_, [(filename,vendor) for filename in urls_db_filenames]
         )
     )
     logger.info(
         "Retrieving URLs from database most recently"
-        " marked as malicious by Safe Browsing API...[DONE]"
+        " marked as malicious by %s Safe Browsing API...[DONE]",vendor
     )
     return list(malicious_urls)
