@@ -1,4 +1,5 @@
-"""[summary]
+"""
+For fetching and scanning URLs from Domains Project
 """
 import os
 import pathlib
@@ -75,7 +76,8 @@ List[str], List[str]
     return domainsproject_txt_filepaths, domainsproject_urls_db_filenames
 
 class DomainsProject:
-    """[summary]
+    """
+    For fetching and scanning URLs from Domains Project
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):

@@ -1,4 +1,5 @@
-"""[summary]
+"""
+URL and IP Address hashing utilities
 """
 from __future__ import annotations
 from typing import Tuple

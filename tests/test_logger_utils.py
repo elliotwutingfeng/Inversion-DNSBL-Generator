@@ -27,7 +27,7 @@ class MockMkdir:
 
 
 def test_init_logger():
-    """[summary]"""
+    """Test `init_logger`"""
 
     orig_mkdir = os.mkdir
     orig_os_path_exists = os.path.exists

@@ -58,6 +58,7 @@ def process_flags(parser_args: Dict) -> None:
     initialise_databases(domains_db_filenames, mode="domains")
     initialise_databases(ipv4.db_filenames, mode="ips")
 
+    # Insert-Update URLs to database
     execute_with_ray(add_urls, top1m.jobs + top10m.jobs + cubdomain.jobs + domainsproject.jobs)
     execute_with_ray(add_ip_addresses, ipv4.jobs)
 

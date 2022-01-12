@@ -1,4 +1,5 @@
-"""[summary]
+"""
+SQLite utilities for making INSERT queries
 """
 from __future__ import annotations
 from typing import Callable, List, Mapping, Optional, Set, Iterator

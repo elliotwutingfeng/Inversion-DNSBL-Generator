@@ -1,4 +1,5 @@
-"""[summary]
+"""
+For fetching and scanning URLs from Tranco TOP1M
 """
 from __future__ import annotations
 from typing import Dict,List,Tuple,Iterator
@@ -48,7 +49,8 @@ def _get_top1m_url_list() -> Iterator[List[str]]:
 
 
 class Top1M:
-    """[summary]
+    """
+    For fetching and scanning URLs from Tranco TOP1M
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):

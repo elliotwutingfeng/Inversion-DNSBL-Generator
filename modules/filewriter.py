@@ -1,7 +1,7 @@
 """
 File Writer
 
-For writing URLs to .txt file with timestamping
+For writing URLs to .txt file with with timestamp in filename
 """
 
 from __future__ import annotations

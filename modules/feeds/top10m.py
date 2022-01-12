@@ -1,4 +1,5 @@
-"""[summary]
+"""
+For fetching and scanning URLs from DomCop TOP10M
 """
 from __future__ import annotations
 from typing import Dict,List,Tuple,Iterator
@@ -47,7 +48,8 @@ def _get_top10m_url_list() -> Iterator[List[str]]:
         yield []
 
 class Top10M:
-    """[summary]
+    """
+    For fetching and scanning URLs from DomCop TOP10M
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):

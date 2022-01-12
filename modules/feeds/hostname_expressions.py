@@ -1,5 +1,5 @@
 """
-Utilities for gathering URLs from various sources
+For generating Safe Browsing API-compliant hostname expressions
 """
 from __future__ import annotations
 from typing import List

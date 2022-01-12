@@ -1,4 +1,5 @@
-"""[summary]
+"""
+SQLite utilities for making CREATE TABLE queries
 """
 from __future__ import annotations
 from typing import List

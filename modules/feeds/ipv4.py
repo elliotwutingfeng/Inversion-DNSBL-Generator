@@ -1,4 +1,5 @@
-"""[summary]
+"""
+For generating and scanning IPv4 addresses
 """
 from typing import Dict, List, Tuple
 
@@ -8,7 +9,8 @@ from modules.utils.log import init_logger
 logger = init_logger()
 
 class Ipv4:
-    """[summary]
+    """
+    For generating and scanning IPv4 addresses
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict):

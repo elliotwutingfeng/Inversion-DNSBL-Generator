@@ -1,5 +1,5 @@
 """
-Utilities for gathering URLs from cubdomain.com
+For fetching and scanning URLs from cubdomain.com
 """
 from datetime import datetime, timedelta
 from collections import ChainMap
@@ -153,7 +153,8 @@ def _download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
                 yield []
 
 class CubDomain:
-    """[summary]
+    """
+    For fetching and scanning URLs from cubdomain.com
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):

@@ -1,5 +1,5 @@
 """
-Database Utilities
+SQLite utilities for connecting to databases
 """
 from __future__ import annotations
 from typing import Optional, Type
