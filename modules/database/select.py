@@ -121,13 +121,10 @@ def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: str) -> List[s
             try:
                 with conn:
                     cur = conn.cursor()
-                    # Most recent lastGoogleMalicious timestamp
-                    cur.execute("SELECT MAX(lastGoogleMalicious) FROM urls")
-                    last_google_malicious = [x[0] for x in cur.fetchall()][0]
-                    # Most recent lastYandexMalicious timestamp
-                    cur.execute("SELECT MAX(lastYandexMalicious) FROM urls")
-                    last_yandex_malicious = [x[0] for x in cur.fetchall()][0]
                     if vendor == "Google":
+                        # Most recent lastGoogleMalicious timestamp
+                        cur.execute("SELECT MAX(lastGoogleMalicious) FROM urls")
+                        last_google_malicious = [x[0] for x in cur.fetchall()][0]
                         cur.execute(
                             """
                         SELECT url FROM urls
@@ -136,6 +133,9 @@ def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: str) -> List[s
                             (last_google_malicious,),
                         )
                     elif vendor == "Yandex":
+                        # Most recent lastYandexMalicious timestamp
+                        cur.execute("SELECT MAX(lastYandexMalicious) FROM urls")
+                        last_yandex_malicious = [x[0] for x in cur.fetchall()][0]
                         cur.execute(
                         """
                         SELECT url FROM urls
@@ -143,6 +143,8 @@ def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: str) -> List[s
                         """,
                             ( last_yandex_malicious,),
                         )
+                    else:
+                        raise ValueError('vendor must be "Google" or "Yandex"')
                     malicious_urls.update((x[0] for x in cur.fetchall()))
             except Error as error:
                 logger.error("filename:%s %s", urls_db_filename, error, exc_info=True)
