@@ -56,4 +56,5 @@ class Top1M:
         if "top1m" in parser_args["sources"]:
             self.db_filename = ["top1m_urls"]
             if parser_args["fetch"]:
+                # Download and Add TOP1M URLs to database
                 self.jobs = [(_get_top1m_url_list, update_time, "top1m_urls")]

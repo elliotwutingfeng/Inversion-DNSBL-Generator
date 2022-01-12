@@ -2,7 +2,7 @@
 Process flags
 """
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict
 from more_itertools import flatten
 import ray
 
@@ -56,14 +56,8 @@ def process_flags(parser_args: Dict) -> None:
     initialise_databases(domains_db_filenames, mode="domains")
     initialise_databases(ipv4.db_filenames, mode="ips")
 
-    add_urls_jobs: List[Tuple[Any, ...]] = []
-    add_urls_jobs += top1m.jobs # Download and Add TOP1M URLs to database
-    add_urls_jobs += top10m.jobs # Download and Add TOP10M URLs to database
-    add_urls_jobs += domainsproject.jobs # Extract and Add Domains Project URLs to database
-    add_urls_jobs += cubdomain.jobs # Download and Add CubDomain.com URLs to database
-
-    execute_with_ray(add_urls, add_urls_jobs)
-    execute_with_ray(add_ip_addresses, ipv4.jobs) # Generate and Add ipv4 addresses to database
+    execute_with_ray(add_urls, top1m.jobs + top10m.jobs + cubdomain.jobs + domainsproject.jobs)
+    execute_with_ray(add_ip_addresses, ipv4.jobs)
 
     if parser_args["identify"]:
         malicious_urls = dict()

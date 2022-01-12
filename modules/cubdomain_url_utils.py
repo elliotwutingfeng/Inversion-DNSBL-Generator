@@ -164,6 +164,7 @@ class CubDomain:
             self.page_urls_by_db_filename = _get_cubdomain_page_urls_by_db_filename()
             self.db_filenames = list(self.page_urls_by_db_filename)
             if parser_args["fetch"]:
+                # Download and Add CubDomain.com URLs to database
                 self.jobs = [
                 (
                     _download_cubdomain,

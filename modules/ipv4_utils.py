@@ -17,6 +17,7 @@ class Ipv4:
         if "ipv4" in parser_args["sources"]:
             self.db_filenames = [_[0] for _ in self.jobs]
             if parser_args["fetch"]:
+                # Generate and Add ipv4 addresses to database
                 self.jobs = [
                 (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
             ]

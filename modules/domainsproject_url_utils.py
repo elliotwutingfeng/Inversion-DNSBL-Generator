@@ -86,6 +86,7 @@ class DomainsProject:
             (self.txt_filepaths, self.db_filenames) \
             = _retrieve_domainsproject_txt_filepaths_and_db_filenames()
             if parser_args["fetch"]:
+                # Extract and Add Domains Project URLs to database
                 self.jobs = [
                     (
                         _get_local_file_url_list,
