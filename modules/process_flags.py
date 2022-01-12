@@ -25,6 +25,7 @@ from modules.safebrowsing import SafeBrowsing
 
 from modules.feeds.top1m import Top1M
 from modules.feeds.top10m import Top10M
+from modules.feeds.registrar_r01 import RegistrarR01
 from modules.feeds.cubdomain import CubDomain
 from modules.feeds.domainsproject import DomainsProject
 from modules.feeds.ipv4 import Ipv4
@@ -42,12 +43,14 @@ def process_flags(parser_args: Dict) -> None:
 
     top1m = Top1M(parser_args,update_time)
     top10m = Top10M(parser_args,update_time)
+    r01 = RegistrarR01(parser_args,update_time)
     cubdomain = CubDomain(parser_args,update_time)
     domainsproject = DomainsProject(parser_args,update_time)
 
     domains_db_filenames = (
         top1m.db_filename
         + top10m.db_filename
+        + r01.db_filename
         + cubdomain.db_filenames
         + domainsproject.db_filenames
     )
@@ -58,8 +61,15 @@ def process_flags(parser_args: Dict) -> None:
     initialise_databases(domains_db_filenames, mode="domains")
     initialise_databases(ipv4.db_filenames, mode="ips")
 
+    domains_jobs = (
+        top1m.jobs
+        + top10m.jobs
+        + r01.jobs
+        + cubdomain.jobs
+        + domainsproject.jobs
+    )
     # Insert-Update URLs to database
-    execute_with_ray(add_urls, top1m.jobs + top10m.jobs + cubdomain.jobs + domainsproject.jobs)
+    execute_with_ray(add_urls, domains_jobs)
     execute_with_ray(add_ip_addresses, ipv4.jobs)
 
     if parser_args["identify"]:

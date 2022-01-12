@@ -77,18 +77,19 @@ if __name__ == "__main__":
         "--sources",
         nargs="+",
         required=False,
-        choices=["top1m", "top10m", "cubdomain", "domainsproject", "ipv4"],
+        choices=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ipv4"],
         help="""
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
         ----------------------------
         top1m -> Tranco TOP1M
         top10m -> DomCop TOP10M
+        r01 -> Registrar R01 (.ru, .su, .rf)
         cubdomain -> CubDomain.com
         domainsproject -> domainsproject.org
         ipv4 -> ipv4 addresses
         """,
-        default=["top1m", "top10m", "cubdomain", "domainsproject", "ipv4"],
+        default=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ipv4"],
         type=str,
     )
     parser.add_argument(
