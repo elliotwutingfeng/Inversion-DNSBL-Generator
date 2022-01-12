@@ -28,6 +28,7 @@ from modules.feeds.top10m import Top10M
 from modules.feeds.registrar_r01 import RegistrarR01
 from modules.feeds.cubdomain import CubDomain
 from modules.feeds.domainsproject import DomainsProject
+from modules.feeds.aws_ec2 import AmazonWebServicesEC2
 from modules.feeds.ipv4 import Ipv4
 
 def process_flags(parser_args: Dict) -> None:
@@ -46,13 +47,15 @@ def process_flags(parser_args: Dict) -> None:
     r01 = RegistrarR01(parser_args,update_time)
     cubdomain = CubDomain(parser_args,update_time)
     domainsproject = DomainsProject(parser_args,update_time)
+    ec2 = AmazonWebServicesEC2(parser_args,update_time)
 
     domains_db_filenames = (
-        top1m.db_filename
-        + top10m.db_filename
-        + r01.db_filename
+        top1m.db_filenames
+        + top10m.db_filenames
+        + r01.db_filenames
         + cubdomain.db_filenames
         + domainsproject.db_filenames
+        + ec2.db_filenames
     )
 
     ipv4 = Ipv4(parser_args)
@@ -67,6 +70,7 @@ def process_flags(parser_args: Dict) -> None:
         + r01.jobs
         + cubdomain.jobs
         + domainsproject.jobs
+        + ec2.jobs
     )
     # Insert-Update URLs to database
     execute_with_ray(add_urls, domains_jobs)

@@ -42,10 +42,10 @@ class RegistrarR01:
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):
-        self.db_filename: List[str] = []
+        self.db_filenames: List[str] = []
         self.jobs: List[Tuple] = []
         if "r01" in parser_args["sources"]:
-            self.db_filename = ["r01_urls"]
+            self.db_filenames = ["r01_urls"]
             if parser_args["fetch"]:
                 # Download and Add Registrar R01 URLs to database
                 self.jobs = [(_get_r01_domains, update_time, "r01_urls")]

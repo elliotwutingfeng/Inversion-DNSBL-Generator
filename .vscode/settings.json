@@ -55,6 +55,7 @@
     "python.linting.pylintArgs": ["--extension-pkg-whitelist=apsw"],
     "cSpell.words": [
         "cchardet",
+        "hostnames",
         "lxml",
         "rusqlite"
     ],

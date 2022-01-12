@@ -54,10 +54,10 @@ class Top1M:
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):
-        self.db_filename: List[str] = []
+        self.db_filenames: List[str] = []
         self.jobs: List[Tuple] = []
         if "top1m" in parser_args["sources"]:
-            self.db_filename = ["top1m_urls"]
+            self.db_filenames = ["top1m_urls"]
             if parser_args["fetch"]:
                 # Download and Add TOP1M URLs to database
                 self.jobs = [(_get_top1m_url_list, update_time, "top1m_urls")]
