@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Callable, List, Mapping, Optional, Set, Iterator
 
 from apsw import Error
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 from modules.database.connect import create_connection
 from modules.database.hash import compute_url_hash,int_addr_to_ip_and_hash
 

@@ -6,8 +6,8 @@ from typing import  List, Set
 import os
 from apsw import Error
 from modules.database.connect import create_connection
-from modules.logger_utils import init_logger
-from modules.ray_utils import execute_with_ray
+from modules.utils.log import init_logger
+from modules.utils.parallel_compute import execute_with_ray
 
 logger = init_logger()
 

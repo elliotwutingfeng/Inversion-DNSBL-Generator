@@ -11,9 +11,9 @@ from more_itertools.more import chunked
 import requests
 from requests.models import Response
 from tqdm import tqdm  # type: ignore
-from modules.logger_utils import init_logger
-from modules.ray_utils import execute_with_ray
-from modules.requests_utils import get_with_retries, post_with_retries
+from modules.utils.log import init_logger
+from modules.utils.parallel_compute import execute_with_ray
+from modules.utils.http import get_with_retries, post_with_retries
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]

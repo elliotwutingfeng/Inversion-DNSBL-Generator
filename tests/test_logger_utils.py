@@ -5,7 +5,7 @@
 import logging
 import os
 from typing import Any
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 
 
 class MockMkdir:

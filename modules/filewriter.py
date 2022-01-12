@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 from typing import List
 
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 
 BLOCKLISTS_FOLDER: str = "blocklists"
 BLOCKLIST_FILENAME: str = "URLs_marked_malicious_by_Safe_Browsing"

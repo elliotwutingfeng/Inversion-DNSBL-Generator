@@ -7,8 +7,8 @@ from zipfile import ZipFile
 import requests
 from tqdm import tqdm  # type: ignore
 from more_itertools import chunked
-from modules.logger_utils import init_logger
-from modules.requests_utils import get_with_retries
+from modules.utils.log import init_logger
+from modules.utils.http import get_with_retries
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 

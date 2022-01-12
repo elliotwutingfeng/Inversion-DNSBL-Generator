@@ -4,7 +4,7 @@ Utilities for gathering URLs from various sources
 from __future__ import annotations
 from typing import List
 import tldextract  # type: ignore
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 
 logger = init_logger()
 

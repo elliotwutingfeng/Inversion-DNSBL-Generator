@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import List
 from apsw import Error
 
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 from modules.database.connect import create_connection
-from modules.ray_utils import execute_with_ray
+from modules.utils.parallel_compute import execute_with_ray
 
 logger = init_logger()
 

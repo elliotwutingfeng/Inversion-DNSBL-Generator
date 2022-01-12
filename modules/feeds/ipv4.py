@@ -2,7 +2,7 @@
 """
 from typing import Dict, List, Tuple
 
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 
 
 logger = init_logger()

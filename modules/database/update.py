@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import  List
 from apsw import Error
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 from modules.database.connect import create_connection
 
 logger = init_logger()

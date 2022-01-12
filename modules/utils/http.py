@@ -9,7 +9,7 @@ from requests.models import Response
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from modules.logger_utils import init_logger
+from modules.utils.log import init_logger
 
 
 headers = {

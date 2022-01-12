@@ -20,14 +20,14 @@ from modules.database.insert import (
 from modules.database.update import update_malicious_urls
 
 from modules.filewriter import write_urls_to_txt_file
-from modules.ray_utils import execute_with_ray
+from modules.utils.parallel_compute import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
 
-from modules.feeds.top1m_url_utils import Top1M
-from modules.feeds.top10m_url_utils import Top10M
-from modules.feeds.cubdomain_url_utils import CubDomain
-from modules.feeds.domainsproject_url_utils import DomainsProject
-from modules.feeds.ipv4_utils import Ipv4
+from modules.feeds.top1m import Top1M
+from modules.feeds.top10m import Top10M
+from modules.feeds.cubdomain import CubDomain
+from modules.feeds.domainsproject import DomainsProject
+from modules.feeds.ipv4 import Ipv4
 
 def process_flags(parser_args: Dict) -> None:
     # pylint: disable=too-many-locals

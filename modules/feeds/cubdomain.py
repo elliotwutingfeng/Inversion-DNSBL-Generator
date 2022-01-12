@@ -6,9 +6,9 @@ from collections import ChainMap
 from typing import Dict, Iterator, List, Tuple
 from bs4 import BeautifulSoup, SoupStrainer
 import cchardet  # pylint: disable=unused-import
-from modules.logger_utils import init_logger
-from modules.ray_utils import execute_with_ray
-from modules.requests_utils import EnhancedSession
+from modules.utils.log import init_logger
+from modules.utils.parallel_compute import execute_with_ray
+from modules.utils.http import EnhancedSession
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
