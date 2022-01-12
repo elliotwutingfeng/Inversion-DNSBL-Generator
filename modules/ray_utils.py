@@ -127,7 +127,7 @@ class ProgressBar:
 
 
 @ray.remote
-def run_task_handler(
+def _run_task_handler(
     task_handler: Callable,
     task_args: Tuple,
     task_obj_store_args: Mapping,
@@ -189,7 +189,7 @@ def execute_with_ray(
         actor_id = ray.put(actor)
 
     tasks_pre_launch = [
-        run_task_handler.remote(
+        _run_task_handler.remote(
             task_handler,
             task_args,
             task_obj_store_args={

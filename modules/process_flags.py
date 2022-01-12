@@ -6,16 +6,18 @@ from typing import Dict
 from more_itertools import flatten
 import ray
 
-from modules.db_utils import (
-    add_ip_addresses,
-    replace_malicious_url_hash_prefixes,
-    get_matching_hash_prefix_urls,
-    initialise_databases,
-    add_urls,
+from modules.database.select import (
+    retrieve_matching_hash_prefix_urls,
     retrieve_malicious_urls,
     retrieve_vendor_hash_prefix_sizes,
-    update_malicious_urls,
 )
+from modules.database.create_table import initialise_databases
+from modules.database.insert import (
+    add_urls,
+    add_ip_addresses,
+    replace_malicious_url_hash_prefixes,
+)
+from modules.database.update import update_malicious_urls
 
 from modules.filewriter import write_urls_to_txt_file
 from modules.ray_utils import execute_with_ray
@@ -29,7 +31,7 @@ from modules.feeds.ipv4_utils import Ipv4
 
 def process_flags(parser_args: Dict) -> None:
     # pylint: disable=too-many-locals
-    """Run assorted DNSBL generator tasks in sequence based on `parser_args` flags set by user.
+    """Run DNSBL generator tasks in sequence based on `parser_args` flags set by user.
 
     Args:
         parser_args (Dict): Flags set by user; see `main.py` for more details
@@ -76,7 +78,7 @@ def process_flags(parser_args: Dict) -> None:
             suspected_urls = set(
                 flatten(
                     execute_with_ray(
-                        get_matching_hash_prefix_urls,
+                        retrieve_matching_hash_prefix_urls,
                         [
                             (filename, prefix_sizes, vendor)
                             for filename in domains_db_filenames + ipv4.db_filenames
