@@ -9,7 +9,7 @@ import cchardet  # pylint: disable=unused-import
 from modules.logger_utils import init_logger
 from modules.ray_utils import execute_with_ray
 from modules.requests_utils import EnhancedSession
-from modules.url_utils import generate_hostname_expressions
+from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
 logger = init_logger()

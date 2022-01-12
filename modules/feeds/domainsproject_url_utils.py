@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple, Iterator
 
 from more_itertools.more import chunked, sort_together
 
-from modules.url_utils import generate_hostname_expressions
+from modules.feeds.hostname_expressions import generate_hostname_expressions
 from modules.logger_utils import init_logger
 
 logger = init_logger()

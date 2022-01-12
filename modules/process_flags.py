@@ -21,11 +21,11 @@ from modules.filewriter import write_urls_to_txt_file
 from modules.ray_utils import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
 
-from modules.top1m_url_utils import Top1M
-from modules.top10m_url_utils import Top10M
-from modules.cubdomain_url_utils import CubDomain
-from modules.domainsproject_url_utils import DomainsProject
-from modules.ipv4_utils import Ipv4
+from modules.feeds.top1m_url_utils import Top1M
+from modules.feeds.top10m_url_utils import Top10M
+from modules.feeds.cubdomain_url_utils import CubDomain
+from modules.feeds.domainsproject_url_utils import DomainsProject
+from modules.feeds.ipv4_utils import Ipv4
 
 def process_flags(parser_args: Dict) -> None:
     # pylint: disable=too-many-locals
@@ -66,9 +66,9 @@ def process_flags(parser_args: Dict) -> None:
 
             if not parser_args["use_existing_hashes"]:
                 # Download and Update Safe Browsing API Malicious URL hash prefixes to database
-                hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes()
-                replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
-                del hash_prefixes  # "frees" memory
+                replace_malicious_url_hash_prefixes(
+                    safebrowsing.get_malicious_url_hash_prefixes(), vendor
+                    )
 
             prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 

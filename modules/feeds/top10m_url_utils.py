@@ -9,21 +9,22 @@ from tqdm import tqdm  # type: ignore
 from more_itertools import chunked
 from modules.logger_utils import init_logger
 from modules.requests_utils import get_with_retries
-from modules.url_utils import generate_hostname_expressions
+from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 logger = init_logger()
 
-def _get_top1m_url_list() -> Iterator[List[str]]:
-    """Downloads the Tranco TOP1M dataset and yields all listed URLs in batches.
+def _get_top10m_url_list() -> Iterator[List[str]]:
+    """Downloads the DomCop TOP10M dataset and yields all listed URLs in batches.
 
     Yields:
         Iterator[List[str]]: Batch of URLs as a list
     """
-    logger.info("Downloading TOP1M list...")
+    logger.info("Downloading TOP10M list...")
     try:
         with BytesIO() as file:
             resp = get_with_retries(
-                "https://tranco-list.eu/top-1m.csv.zip", stream=True
+                "https://www.domcop.com/files/top/top10milliondomains.csv.zip",
+                stream=True,
             )
             chunk_size = 4096
             for data in tqdm(
@@ -33,28 +34,27 @@ def _get_top1m_url_list() -> Iterator[List[str]]:
                 file.write(data)
             zipfile = ZipFile(file)
             raw_urls = (
-                x.strip().decode().split(",")[1]
-                for x in zipfile.open(zipfile.namelist()[0]).readlines()
+                x.strip().decode().split(",")[1].replace('"', "")
+                for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             )
-            logger.info("Downloading TOP1M list... [DONE]")
+            logger.info("Downloading TOP10M list... [DONE]")
 
             for batch in chunked(raw_urls, 40_000):
                 yield generate_hostname_expressions(batch)
 
     except requests.exceptions.RequestException as error:
-        logger.warning("Failed to retrieve TOP1M list; yielding empty list: %s", error)
+        logger.warning("Failed to retrieve TOP10M list; yielding empty list: %s", error)
         yield []
 
-
-class Top1M:
+class Top10M:
     """[summary]
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args:Dict,update_time:int):
         self.db_filename: List[str] = []
         self.jobs: List[Tuple] = []
-        if "top1m" in parser_args["sources"]:
-            self.db_filename = ["top1m_urls"]
+        if "top10m" in parser_args["sources"]:
+            self.db_filename = ["top10m_urls"]
             if parser_args["fetch"]:
-                # Download and Add TOP1M URLs to database
-                self.jobs = [(_get_top1m_url_list, update_time, "top1m_urls")]
+                # Download and Add TOP10M URLs to database
+                self.jobs = [(_get_top10m_url_list, update_time, "top10m_urls")]
