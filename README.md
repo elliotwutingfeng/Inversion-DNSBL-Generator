@@ -20,7 +20,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Registrar R01 (~5.8 million URLs): <https://r01.ru>
 -   CubDomain.com (~200 million URLs): <https://cubdomain.com>
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
--   Amazon Web Services EC2 (~2.6 billion URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
+-   Amazon Web Services EC2 (~56 million URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
 
 ## Safe Browsing API vendors
