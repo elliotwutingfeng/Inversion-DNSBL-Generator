@@ -7,7 +7,7 @@ from io import BytesIO
 from zipfile import ZipFile
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_get
+from modules.utils.http import curl_req
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -21,7 +21,7 @@ def _get_top1m_url_list() -> Iterator[List[str]]:
     """
     logger.info("Downloading TOP1M list...")
     with BytesIO() as file:
-        resp = curl_get("https://tranco-list.eu/top-1m.csv.zip")
+        resp = curl_req("https://tranco-list.eu/top-1m.csv.zip")
         if resp:
             file.write(resp)
             zipfile = ZipFile(file)

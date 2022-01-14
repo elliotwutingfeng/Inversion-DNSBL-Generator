@@ -6,7 +6,7 @@ from typing import Dict,List,Tuple,Iterator
 import gzip
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_get
+from modules.utils.http import curl_req
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -24,7 +24,7 @@ def _get_r01_domains() -> Iterator[List[str]]:
                 "https://partner.r01.ru/zones/rf_domains.gz"]
     raw_urls: List[str] = []
     for endpoint in endpoints:
-        resp = curl_get(endpoint)
+        resp = curl_req(endpoint)
         if resp:
             decompressed_lines = gzip.decompress(resp).decode().split("\n")
             raw_urls += [line.split('\t')[0].lower() for line in decompressed_lines]

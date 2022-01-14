@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import cchardet  # pylint: disable=unused-import
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import curl_get
+from modules.utils.http import curl_req
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -51,7 +51,7 @@ def _create_root_url_map(date: datetime, root_url: str) -> Dict:
     root_url_to_last_page_and_date = dict()
     first_page_url = root_url + "1"
     # Go to page 1
-    first_page_response: str = curl_get(first_page_url).decode()
+    first_page_response: str = curl_req(first_page_url).decode()
     if first_page_response:
         try:
             # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
@@ -136,7 +136,7 @@ def _download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
         "a", href=lambda x: "cubdomain.com/site/" in x
     )
     for page_url in page_urls:
-        page_response: str = curl_get(page_url).decode()
+        page_response: str = curl_req(page_url).decode()
         if page_response:
             try:
                 soup = BeautifulSoup(

@@ -8,7 +8,7 @@ import json
 from collections import defaultdict
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_get
+from modules.utils.http import curl_req
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -34,7 +34,7 @@ def _get_region_to_ip_ranges_per_region_map() -> Dict:
     Returns:
         Dict: Map each AWS region to a list of EC2 IPv4 ranges associated with that region
     """
-    resp = curl_get("https://ip-ranges.amazonaws.com/ip-ranges.json")
+    resp = curl_req("https://ip-ranges.amazonaws.com/ip-ranges.json")
     if resp == b'':
         logger.warning("Failed to retrieve Amazon Web "
         "Services IP ranges; returning empty list")

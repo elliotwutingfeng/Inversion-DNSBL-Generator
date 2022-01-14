@@ -14,8 +14,6 @@ pytest-cov==3.0.0
 pytest-mock==3.6.1
 python-dotenv==0.19.2
 ray[default]==1.9.2
-requests==2.27.1
 tldextract==3.1.2
 tqdm==4.62.3
-types-requests==2.26.3
 types-pycurl==7.44.6

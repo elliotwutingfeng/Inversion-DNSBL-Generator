@@ -9,12 +9,10 @@ import base64
 import json
 from dotenv import dotenv_values
 from more_itertools.more import chunked
-import requests
-from requests.models import Response
 from tqdm import tqdm  # type: ignore
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import curl_get, post_with_retries
+from modules.utils.http import curl_req
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
@@ -120,24 +118,22 @@ class SafeBrowsing:
         }
         return data
 
-    def _threat_matches_lookup(self, url_batch: List[str]) -> Response:
+    def _threat_matches_lookup(self, url_batch: List[str]) -> Dict:
         """Submits list of URLs to Safe Browsing API threatMatches endpoint
-        and returns the API `Response`
+        and returns the API response.
 
         Args:
             url_batch (List[str]): URLs to submit to Safe Browsing API
             threatMatches endpoint for inspection
 
         Returns:
-            Response: Safe Browsing API threatMatches `Response`
+            Dict: Safe Browsing API threatMatches response
         """
 
         data = SafeBrowsing._threat_matches_payload(url_batch)
-        try:
-            # Make POST request for each sublist of URLs
-            res = post_with_retries(self.threatMatchesEndpoint, data)
-        except requests.exceptions.RequestException:
-            res = requests.Response()
+
+        # Make POST request for each sublist of URLs
+        res = json.loads(curl_req(self.threatMatchesEndpoint, payload=data, request_type="POST"))
 
         time.sleep(2)  # To prevent rate limiting
         return res
@@ -163,7 +159,7 @@ class SafeBrowsing:
 
         malicious = list(
             itertools.chain(
-                *(res.json()["matches"] for res in results if "matches" in res.json())
+                *(res["matches"] for res in results if "matches" in res)
             )
         )
         # Removes http, https prefixes
@@ -199,7 +195,7 @@ class SafeBrowsing:
             Dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
             https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
         """
-        threat_lists_endpoint_resp = curl_get(self.threatListsEndpoint)
+        threat_lists_endpoint_resp = curl_req(self.threatListsEndpoint)
         if threat_lists_endpoint_resp:
             threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
                 "threatLists"
@@ -249,10 +245,10 @@ class SafeBrowsing:
                 "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
                 "listUpdateRequests": url_threatlist_combinations,
             }
-            res = post_with_retries(self.threatListUpdatesEndpoint, req_body)
+            res = curl_req(self.threatListUpdatesEndpoint, payload=req_body, request_type="POST")
 
             res_json = (
-                res.json()
+                json.loads(res)
             )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
             if "listUpdateResponses" not in res_json:
                 return {}

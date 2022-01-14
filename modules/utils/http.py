@@ -4,16 +4,15 @@ Requests Utilities
 from io import BytesIO
 import time
 import json
-from typing import Mapping, Text, Union
-import requests
+from typing import Mapping, Optional, Text, Union
 import pycurl
-from requests.models import Response
 
 from modules.utils.log import init_logger
 
 
 headers = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8",
+    "Content-Type":"application/json",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8,application/json",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15",
 }
@@ -21,37 +20,6 @@ headers = {
 DEFAULT_TIMEOUT = 120  # in seconds
 
 logger = init_logger()
-
-
-def post_with_retries(url: Union[Text, bytes], payload: Mapping) -> Response:
-    """POST request with unlimited retries.
-
-    Args:
-        url (Union[Text, bytes]): URL for the new `Request` object
-        payload (Mapping): Dictionary to send in the body of the `Request`.
-
-    Raises:
-        requests.exceptions.RequestException: There was an
-        ambiguous exception that occurred while handling your request
-
-    Returns:
-        Response: Contains a server's response to an HTTP request
-    """
-    attempt = 1
-    while True:
-        try:
-            resp = requests.post(
-                url, data=json.dumps(payload), headers=headers, timeout=180
-            )
-            if resp.status_code != 200:
-                raise requests.exceptions.RequestException(
-                    f"Status Code not 200. Actual Code is {resp.status_code}"
-                )
-            return resp
-        except requests.exceptions.RequestException as error:
-            logger.warning("Attempt %d failed -> %s", attempt, error)
-        attempt += 1
-        time.sleep(1)
 
 
 def backoff_delay(backoff_factor: float,number_of__retries_made: int) -> None:
@@ -64,15 +32,18 @@ def backoff_delay(backoff_factor: float,number_of__retries_made: int) -> None:
     time.sleep(backoff_factor * (2 ** (number_of__retries_made - 1)))
 
 
-def curl_get(url: Union[Text, bytes]) -> bytes:
-    """CURL GET request with retry attempts and backoff delay between
-    attempts.
+def curl_req(url: Union[Text, bytes], payload: Optional[Mapping] = None
+, request_type: str = "GET") -> bytes:
+    """HTTP GET or POST request with retry attempts and backoff delay between
+    attempts, using CURL.
 
     Args:
-        url (Union[Text, bytes]): URL endpoint for GET request
+        url (Union[Text, bytes]): URL endpoint for HTTP request
+        payload (Optional[Mapping], optional): Payload for POST request. Defaults to None.
+        request_type (str, optional): GET or POST. Defaults to "GET".
 
     Returns:
-        bytes: GET response content
+        bytes: HTTP response content
     """
     # pylint: disable=no-member
     max_retries: int = 5
@@ -86,6 +57,11 @@ def curl_get(url: Union[Text, bytes]) -> bytes:
 
             # Set HTTP headers
             crl.setopt(pycurl.HTTPHEADER, [f"{key}: {val}" for key,val in headers.items()])
+
+            # Payload if this is a POST request
+            if request_type == "POST" and payload is not None:
+                crl.setopt(pycurl.POST, 1)
+                crl.setopt(crl.POSTFIELDS, json.dumps(payload)) # type: ignore
 
             # Follow redirects (maximum: 5 times)
             crl.setopt(pycurl.FOLLOWLOCATION, 1) # type: ignore
