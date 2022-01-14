@@ -92,7 +92,7 @@ def curl_req(url: Union[Text, bytes], payload: Optional[Mapping] = None
                 logger.error(error)
         else:
             if crl.getinfo(pycurl.RESPONSE_CODE) != 200: # type: ignore
-                logger.error("HTTP Status Code: %d", crl.getinfo(pycurl.RESPONSE_CODE))
+                logger.error("URL: %s HTTP Status Code: %d", url, crl.getinfo(pycurl.RESPONSE_CODE))
             else:
                 # Get the content stored in the BytesIO object (in byte characters)
                 get_body = b_obj.getvalue()
