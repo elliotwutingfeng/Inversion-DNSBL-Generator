@@ -8,12 +8,13 @@ from apsw import Error
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
+from modules.utils.types import Vendors
 
 logger = init_logger()
 
 
 def retrieve_matching_hash_prefix_urls(
-    db_filename: str, prefix_sizes: List[int], vendor: str
+    db_filename: str, prefix_sizes: List[int], vendor: Vendors
 ) -> List[str]:
     """Identify URLs from `db_filename`.db database with sha256 hashes beginning with
     any of the malicious URL hash prefixes in `malicious`.db database.
@@ -21,7 +22,7 @@ def retrieve_matching_hash_prefix_urls(
     Args:
         db_filename (str): SQLite database filename
         prefix_sizes (List[int]): Hash prefix sizes for a given `vendor`
-        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
     Returns:
         List[str]: URLs with sha256 hashes beginning with
@@ -69,11 +70,11 @@ def retrieve_matching_hash_prefix_urls(
     return urls
 
 
-def retrieve_vendor_hash_prefix_sizes(vendor: str) -> List[int]:
+def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> List[int]:
     """Retrieve from database hash prefix sizes for a given `vendor`.
 
     Args:
-        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
     Returns:
         List[int]: Hash prefix sizes for a given `vendor`
@@ -97,14 +98,14 @@ def retrieve_vendor_hash_prefix_sizes(vendor: str) -> List[int]:
     return prefix_sizes
 
 
-def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: str) -> List[str]:
+def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: Vendors) -> List[str]:
     """Retrieves URLs from database most recently marked as malicious by Safe Browsing API
     of `vendor`.
 
     Args:
         urls_db_filenames (List[str]): Filenames of SQLite databases
         containing URLs and their malicious statuses
-        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
     Returns:
         List[str]: URLs deemed by Safe Browsing API of `vendor` to be malicious
@@ -114,7 +115,7 @@ def retrieve_malicious_urls(urls_db_filenames: List[str], vendor: str) -> List[s
         "marked as malicious by %s Safe Browsing API",vendor
     )
 
-    def retrieve_malicious_urls_(urls_db_filename: str, vendor: str) -> Set[str]:
+    def retrieve_malicious_urls_(urls_db_filename: str, vendor: Vendors) -> Set[str]:
         malicious_urls: Set[str] = set()
         conn = create_connection(urls_db_filename)
         if conn is not None:

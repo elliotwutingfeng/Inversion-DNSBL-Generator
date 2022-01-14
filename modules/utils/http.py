@@ -1,5 +1,5 @@
 """
-Requests Utilities
+HTTP Request Utilities
 """
 from io import BytesIO
 import time
@@ -8,6 +8,7 @@ from typing import Mapping, Optional, Text, Union
 import pycurl
 
 from modules.utils.log import init_logger
+from modules.utils.types import RequestTypes
 
 
 headers = {
@@ -33,14 +34,14 @@ def backoff_delay(backoff_factor: float,number_of__retries_made: int) -> None:
 
 
 def curl_req(url: Union[Text, bytes], payload: Optional[Mapping] = None
-, request_type: str = "GET") -> bytes:
+, request_type: RequestTypes = "GET") -> bytes:
     """HTTP GET or POST request with retry attempts and backoff delay between
     attempts, using CURL.
 
     Args:
         url (Union[Text, bytes]): URL endpoint for HTTP request
         payload (Optional[Mapping], optional): Payload for POST request. Defaults to None.
-        request_type (str, optional): GET or POST. Defaults to "GET".
+        request_type (RequestTypes, optional): HTTP request type. Defaults to "GET".
 
     Returns:
         bytes: HTTP response content

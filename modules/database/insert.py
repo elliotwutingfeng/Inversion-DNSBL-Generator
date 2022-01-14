@@ -8,6 +8,7 @@ from apsw import Error
 from modules.utils.log import init_logger
 from modules.database.connect import create_connection
 from modules.database.hash import compute_url_hash,int_addr_to_ip_and_hash
+from modules.utils.types import Vendors
 
 logger = init_logger()
 
@@ -121,13 +122,13 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         conn.close()
 
 
-def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: str) -> None:
+def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: Vendors) -> None:
     """Replace maliciousHashPrefixes table contents with latest malicious URL
     hash prefixes from Safe Browsing API
 
     Args:
         hash_prefixes (Set[bytes]): Malicious URL hash prefixes from Safe Browsing API
-        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
     logger.info("Updating database with %s malicious URL hashes", vendor)
     conn = create_connection("malicious")

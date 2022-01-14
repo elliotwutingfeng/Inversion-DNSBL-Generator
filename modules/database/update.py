@@ -6,11 +6,12 @@ from typing import  List
 from apsw import Error
 from modules.utils.log import init_logger
 from modules.database.connect import create_connection
+from modules.utils.types import Vendors
 
 logger = init_logger()
 
 def update_malicious_urls(
-    update_time: int, vendor: str, db_filename: str, malicious_urls: List[str]
+    update_time: int, vendor: Vendors, db_filename: str, malicious_urls: List[str]
 ) -> None:
     """Updates malicious status of all URLs currently in database
     i.e. for URLs found in `malicious_urls`,
@@ -19,7 +20,7 @@ def update_malicious_urls(
     Args:
         update_time (int): Time when malicious URL statuses in database
         are updated in UNIX Epoch seconds
-        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
         db_filename (str): SQLite database filename
         malicious_urls (List[str]): URLs deemed by Safe Browsing API to be malicious
 

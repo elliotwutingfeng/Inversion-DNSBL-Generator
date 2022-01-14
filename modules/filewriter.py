@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import List
 
 from modules.utils.log import init_logger
+from modules.utils.types import Vendors
 
 BLOCKLISTS_FOLDER: str = "blocklists"
 
@@ -26,7 +27,7 @@ def current_datetime_str() -> str:
     return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
-def write_blocklist_txt(urls: List[str], vendor: str) -> None:
+def write_blocklist_txt(urls: List[str], vendor: Vendors) -> None:
     """Split list of urls into hostnames and ip addresses, then write
     hostnames and ip addresses to separate .txt files with timestamp
     in filename and store them in `BLOCKLISTS_FOLDER`.
@@ -35,7 +36,7 @@ def write_blocklist_txt(urls: List[str], vendor: str) -> None:
 
     Args:
         urls (List[str]): List of URLs
-        vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
     if not os.path.exists(BLOCKLISTS_FOLDER):
         os.mkdir(BLOCKLISTS_FOLDER)

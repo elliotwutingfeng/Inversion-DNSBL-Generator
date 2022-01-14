@@ -8,6 +8,7 @@ from apsw import Error
 from modules.utils.log import init_logger
 from modules.database.connect import create_connection
 from modules.utils.parallel_compute import execute_with_ray
+from modules.utils.types import DatabaseTableModes
 
 logger = init_logger()
 
@@ -85,14 +86,14 @@ def _create_malicious_url_hash_prefixes_table() -> None:
         conn.close()
 
 
-def initialise_databases(db_filenames: List[str], mode: str) -> None:
+def initialise_databases(db_filenames: List[str], mode: DatabaseTableModes) -> None:
     """Create database for each db_filename in `db_filenames` list, and
     database `malicious`.db for storing malicious URL hash prefixes
     if any of them do not exist yet.
 
     Args:
         db_filenames (List[str]): SQLite database filenames
-        mode (str): If "domains", create databases for non-ipv4 URLs,
+        mode (DatabaseTableModes): If "domains", create databases for non-ipv4 URLs,
         if "ips", create databases for ipv4 addresses
 
     Raises:

@@ -13,6 +13,7 @@ from tqdm import tqdm  # type: ignore
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
 from modules.utils.http import curl_req
+from modules.utils.types import Vendors
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
@@ -25,12 +26,12 @@ class SafeBrowsing:
     Safe Browsing API helper class
     """
 
-    def __init__(self, vendor: str) -> None:
+    def __init__(self, vendor: Vendors) -> None:
         """Initializes Safe Browsing API helper class
         for a given `vendor` (e.g. "Google", "Yandex" etc.)
 
         Args:
-            vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+            vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
         Raises:
             ValueError: `vendor` must be "Google" or "Yandex"
