@@ -42,8 +42,8 @@ def test_init_logger():
     ), "Attempt to create 'logs' folder should be made"
 
     assert (
-        logging.getLevelName(logger.getEffectiveLevel()) == "WARNING"
-    ), "Logging level should be 'WARNING'"
+        logging.getLevelName(logger.getEffectiveLevel()) == "INFO"
+    ), "Logging level should be 'INFO'"
 
     os.mkdir = orig_mkdir
     os.path.exists = orig_os_path_exists

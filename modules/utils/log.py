@@ -36,5 +36,6 @@ def init_logger(logs_folder: str = "logs") -> logging.Logger:
     logging.getLogger("filelock").setLevel(logging.WARNING)
 
     logger = logging.getLogger()
+    logger.setLevel("INFO")
 
     return logger
