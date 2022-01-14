@@ -7,6 +7,7 @@ cchardet==2.1.7
 lxml==4.7.1
 more-itertools==8.12.0
 mypy==0.930
+pycurl==7.44.1
 pylint==2.12.2
 pytest==7.0.0rc1
 pytest-cov==3.0.0
@@ -17,4 +18,4 @@ requests==2.27.1
 tldextract==3.1.2
 tqdm==4.62.3
 types-requests==2.26.3
-urllib3==1.26.8
+types-pycurl==7.44.6

@@ -52,11 +52,14 @@
     "python.linting.pylintEnabled": true,
     "python.linting.banditEnabled": true,
     "python.linting.banditArgs": ["--configfile bandit.yaml"],
-    "python.linting.pylintArgs": ["--extension-pkg-whitelist=apsw"],
+    "python.linting.pylintArgs": ["--extension-pkg-whitelist=apsw","--extension-pkg-whitelist=pycurl"],
     "cSpell.words": [
         "cchardet",
+        "COULDNT",
         "hostnames",
         "lxml",
+        "NOSIGNAL",
+        "pycurl",
         "rusqlite"
     ],
     "python.testing.pytestArgs": [

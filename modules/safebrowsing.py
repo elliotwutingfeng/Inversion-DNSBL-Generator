@@ -6,6 +6,7 @@ import time
 from typing import Dict, List, Set
 import itertools
 import base64
+import json
 from dotenv import dotenv_values
 from more_itertools.more import chunked
 import requests
@@ -13,7 +14,7 @@ from requests.models import Response
 from tqdm import tqdm  # type: ignore
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import get_with_retries, post_with_retries
+from modules.utils.http import curl_get, post_with_retries
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
@@ -198,63 +199,67 @@ class SafeBrowsing:
             Dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
             https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
         """
-        threatlist_combinations = get_with_retries(self.threatListsEndpoint).json()[
-            "threatLists"
-        ]
-        if self.vendor == "Google":
-            url_threatlist_combinations = [
-                x
-                for x in threatlist_combinations
-                if "threatEntryType" in x
-                and x["threatEntryType"]
-                in (
-                    "URL",
-                    "IP_RANGE",
-                )
+        threat_lists_endpoint_resp = curl_get(self.threatListsEndpoint)
+        if threat_lists_endpoint_resp:
+            threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
+                "threatLists"
             ]
-        else:
-            # Yandex API returns status code 204 with no content
-            # if url_threatlist_combinations is too large
-            url_threatlist_combinations = [
-                {
-                    "threatType": "ANY",
-                    "platformType": "ANY_PLATFORM",
-                    "threatEntryType": "URL",
-                    "state": "",
-                },
-                {
-                    "threatType": "UNWANTED_SOFTWARE",
-                    "threatEntryType": "URL",
-                    "platformType": "PLATFORM_TYPE_UNSPECIFIED",
-                    "state": "",
-                },
-                {
-                    "threatType": "MALWARE",
-                    "threatEntryType": "URL",
-                    "platformType": "PLATFORM_TYPE_UNSPECIFIED",
-                    "state": "",
-                },
-                {
-                    "threatType": "SOCIAL_ENGINEERING",
-                    "threatEntryType": "URL",
-                    "platformType": "PLATFORM_TYPE_UNSPECIFIED",
-                    "state": "",
-                },
-            ]
+            if self.vendor == "Google":
+                url_threatlist_combinations = [
+                    x
+                    for x in threatlist_combinations
+                    if "threatEntryType" in x
+                    and x["threatEntryType"]
+                    in (
+                        "URL",
+                        "IP_RANGE",
+                    )
+                ]
+            else:
+                # Yandex API returns status code 204 with no content
+                # if url_threatlist_combinations is too large
+                url_threatlist_combinations = [
+                    {
+                        "threatType": "ANY",
+                        "platformType": "ANY_PLATFORM",
+                        "threatEntryType": "URL",
+                        "state": "",
+                    },
+                    {
+                        "threatType": "UNWANTED_SOFTWARE",
+                        "threatEntryType": "URL",
+                        "platformType": "PLATFORM_TYPE_UNSPECIFIED",
+                        "state": "",
+                    },
+                    {
+                        "threatType": "MALWARE",
+                        "threatEntryType": "URL",
+                        "platformType": "PLATFORM_TYPE_UNSPECIFIED",
+                        "state": "",
+                    },
+                    {
+                        "threatType": "SOCIAL_ENGINEERING",
+                        "threatEntryType": "URL",
+                        "platformType": "PLATFORM_TYPE_UNSPECIFIED",
+                        "state": "",
+                    },
+                ]
 
-        req_body = {
-            "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
-            "listUpdateRequests": url_threatlist_combinations,
-        }
-        res = post_with_retries(self.threatListUpdatesEndpoint, req_body)
+            req_body = {
+                "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
+                "listUpdateRequests": url_threatlist_combinations,
+            }
+            res = post_with_retries(self.threatListUpdatesEndpoint, req_body)
 
-        res_json = (
-            res.json()
-        )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
-        if "listUpdateResponses" not in res_json:
-            return {}
-        logger.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
-        return res_json
+            res_json = (
+                res.json()
+            )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
+            if "listUpdateResponses" not in res_json:
+                return {}
+            logger.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
+            return res_json
+
+        return {} # Empty dict() if self.threatListsEndpoint is unreachable
 
     def get_malicious_url_hash_prefixes(self) -> Set[bytes]:
         """Download latest malicious URL hash prefixes from Safe Browsing API.

@@ -5,11 +5,9 @@ from __future__ import annotations
 from typing import Dict,List,Tuple,Iterator
 from io import BytesIO
 from zipfile import ZipFile
-import requests
-from tqdm import tqdm  # type: ignore
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import get_with_retries
+from modules.utils.http import curl_get
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -22,17 +20,10 @@ def _get_top1m_url_list() -> Iterator[List[str]]:
         Iterator[List[str]]: Batch of URLs as a list
     """
     logger.info("Downloading TOP1M list...")
-    try:
-        with BytesIO() as file:
-            resp = get_with_retries(
-                "https://tranco-list.eu/top-1m.csv.zip", stream=True
-            )
-            chunk_size = 4096
-            for data in tqdm(
-                resp.iter_content(chunk_size=chunk_size),
-                total=-(-int(resp.headers["Content-Length"]) // chunk_size),
-            ):
-                file.write(data)
+    with BytesIO() as file:
+        resp = curl_get("https://tranco-list.eu/top-1m.csv.zip")
+        if resp:
+            file.write(resp)
             zipfile = ZipFile(file)
             raw_urls = (
                 x.strip().decode().split(",")[1]
@@ -42,10 +33,10 @@ def _get_top1m_url_list() -> Iterator[List[str]]:
 
             for batch in chunked(raw_urls, 40_000):
                 yield generate_hostname_expressions(batch)
+        else:
+            logger.warning("Failed to retrieve TOP1M list; yielding empty list")
+            yield []
 
-    except requests.exceptions.RequestException as error:
-        logger.warning("Failed to retrieve TOP1M list; yielding empty list: %s", error)
-        yield []
 
 
 class Top1M:

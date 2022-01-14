@@ -2,13 +2,13 @@
 For generating and scanning Amazon Web Services EC2 URLs
 """
 from __future__ import annotations
-from typing import Dict,List,Tuple,Iterator
+from typing import Dict,List,Iterator, Tuple
 import ipaddress
+import json
 from collections import defaultdict
-import requests
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import get_with_retries
+from modules.utils.http import curl_get
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -34,18 +34,19 @@ def _get_region_to_ip_ranges_per_region_map() -> Dict:
     Returns:
         Dict: Map each AWS region to a list of EC2 IPv4 ranges associated with that region
     """
-    try:
-        resp_json = get_with_retries("https://ip-ranges.amazonaws.com/ip-ranges.json").json()
-        ip_prefixes_and_regions = [(x['ip_prefix'],x['region'])
-        for x in resp_json["prefixes"] if x['service'].upper() == 'EC2']
-        region_to_ip_ranges_map = defaultdict(list)
-        for ip_prefix,region in ip_prefixes_and_regions:
-            region_to_ip_ranges_map[region].append(ip_prefix)
-        return region_to_ip_ranges_map
-    except requests.exceptions.RequestException as error:
+    resp = curl_get("https://ip-ranges.amazonaws.com/ip-ranges.json")
+    if resp == b'':
         logger.warning("Failed to retrieve Amazon Web "
-        "Services IP ranges; returning empty list: %s", error)
+        "Services IP ranges; returning empty list")
         return defaultdict(list)
+
+    resp_json = json.loads(resp)
+    ip_prefixes_and_regions = [(x['ip_prefix'],x['region'])
+    for x in resp_json["prefixes"] if x['service'].upper() == 'EC2']
+    region_to_ip_ranges_map = defaultdict(list)
+    for ip_prefix,region in ip_prefixes_and_regions:
+        region_to_ip_ranges_map[region].append(ip_prefix)
+    return region_to_ip_ranges_map
 
 def _get_ec2_url_list(region: str, ip_ranges: List[str]) -> Iterator[List[str]]:
     """Generates Amazon Web Services EC2 URLs located at
@@ -61,7 +62,7 @@ def _get_ec2_url_list(region: str, ip_ranges: List[str]) -> Iterator[List[str]]:
     def _generate_ec2_urls(region: str,ip_ranges: List[str]):
         suffix = f'''.{'compute-1' if region == 'us-east-1'
         else region+'.compute'}.amazonaws.com'''
-        collapsed_ip_ranges = _collapse_cidrs(ip_ranges) # Remove overlapping ip ranges
+        collapsed_ip_ranges = _collapse_cidrs(ip_ranges) # Removes overlapping ip ranges
         for ip_range in collapsed_ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):
                 yield f'''ec2-{'-'.join(str(ip_address).split('.'))}{suffix}'''
@@ -84,7 +85,11 @@ class AmazonWebServicesEC2:
         if "ec2" in parser_args["sources"]:
             map_region_to_ip_ranges_per_region = _get_region_to_ip_ranges_per_region_map()
 
-            regions,ip_ranges_per_region = zip(*map_region_to_ip_ranges_per_region.items())
+            if map_region_to_ip_ranges_per_region:
+                regions,ip_ranges_per_region = zip(*map_region_to_ip_ranges_per_region.items())
+            else:
+                regions,ip_ranges_per_region = tuple(),tuple()
+
 
             self.db_filenames = [f"ec2_{region}_urls" for region in regions]
 

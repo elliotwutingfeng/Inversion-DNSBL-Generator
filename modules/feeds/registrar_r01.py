@@ -4,10 +4,9 @@ For fetching and scanning URLs from Registrar R01
 from __future__ import annotations
 from typing import Dict,List,Tuple,Iterator
 import gzip
-import requests
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import get_with_retries
+from modules.utils.http import curl_get
 from modules.feeds.hostname_expressions import generate_hostname_expressions
 
 
@@ -25,12 +24,12 @@ def _get_r01_domains() -> Iterator[List[str]]:
                 "https://partner.r01.ru/zones/rf_domains.gz"]
     raw_urls: List[str] = []
     for endpoint in endpoints:
-        try:
-            resp = get_with_retries(endpoint)
-            decompressed_lines = gzip.decompress(resp.content).decode().split("\n")
+        resp = curl_get(endpoint)
+        if resp:
+            decompressed_lines = gzip.decompress(resp).decode().split("\n")
             raw_urls += [line.split('\t')[0].lower() for line in decompressed_lines]
-        except requests.exceptions.RequestException as error:
-            logger.warning("Failed to retrieve Registrar R01 list %s; %s",endpoint, error)
+        else:
+            logger.warning("Failed to retrieve Registrar R01 list %s",endpoint)
 
     logger.info("Downloading Registrar R01 lists... [DONE]")
     for batch in chunked(raw_urls, 40_000):
