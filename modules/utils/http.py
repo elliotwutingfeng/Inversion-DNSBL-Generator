@@ -75,7 +75,7 @@ def curl_req(url: Union[Text, bytes], payload: Optional[Mapping] = None
             crl.setopt(pycurl.CONNECTTIMEOUT, DEFAULT_TIMEOUT)
 
             # Transfer timeout
-            crl.setopt(pycurl.TIMEOUT, 300)
+            crl.setopt(pycurl.TIMEOUT, 900)
 
             crl.exception = None  # type: ignore
 
