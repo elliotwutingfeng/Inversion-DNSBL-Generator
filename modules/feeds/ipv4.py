@@ -17,10 +17,11 @@ class Ipv4:
         self.db_filenames: List[str] = []
         self.jobs: List[Tuple] = []
         if "ipv4" in parser_args["sources"]:
-            self.db_filenames = [_[0] for _ in self.jobs]
+            jobs = (
+                    (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
+            )
+            self.db_filenames = [_[0] for _ in jobs]
             if parser_args["fetch"]:
                 # Generate and Add ipv4 addresses to database
-                self.jobs = [
-                (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
-            ]
+                self.jobs = list(jobs)
         
