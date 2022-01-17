@@ -88,9 +88,9 @@ def curl_req(url: Union[Text, bytes], payload: Optional[Mapping] = None
 
         except pycurl.error as error:
             if error.args[0] == pycurl.E_COULDNT_CONNECT and crl.exception: # type: ignore
-                logger.warning(crl.exception) # type: ignore
+                logger.warning("URL: %s PycURL Exception: %s", url, crl.exception) # type: ignore
             else:
-                logger.warning(error)
+                logger.warning("URL: %s PycURL Error: %s", url, error)
         else:
             if crl.getinfo(pycurl.RESPONSE_CODE) != 200: # type: ignore
                 logger.warning("URL: %s HTTP Status Code: %d",
@@ -104,5 +104,5 @@ def curl_req(url: Union[Text, bytes], payload: Optional[Mapping] = None
         if number_of__retries_made != max_retries - 1: # No delay if final attempt fails
             backoff_delay(1,number_of__retries_made)
     if not get_body:
-        logger.error("URL: %s failed!", url)
+        logger.error("URL: %s %s request failed!", url, request_type)
     return get_body
