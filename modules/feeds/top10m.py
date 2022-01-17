@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.http import curl_req
-from modules.feeds.hostname_expressions import generate_hostname_expressions
+from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 logger = init_logger()
 
@@ -30,7 +30,7 @@ def _get_top10m_url_list() -> Iterator[List[str]]:
             )
             logger.info("Downloading TOP10M list... [DONE]")
 
-            for batch in chunked(raw_urls, 40_000):
+            for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
         else:
             logger.warning("Failed to retrieve TOP10M list; yielding empty list")

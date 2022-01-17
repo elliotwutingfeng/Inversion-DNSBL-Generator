@@ -7,7 +7,7 @@ import gzip
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.http import curl_req
-from modules.feeds.hostname_expressions import generate_hostname_expressions
+from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
 logger = init_logger()
@@ -32,7 +32,7 @@ def _get_r01_domains() -> Iterator[List[str]]:
             logger.warning("Failed to retrieve Registrar R01 list %s",endpoint)
 
     logger.info("Downloading Registrar R01 lists... [DONE]")
-    for batch in chunked(raw_urls, 40_000):
+    for batch in chunked(raw_urls, hostname_expression_batch_size):
         yield generate_hostname_expressions(batch)
 
 class RegistrarR01:

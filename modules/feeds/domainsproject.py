@@ -3,11 +3,11 @@ For fetching and scanning URLs from Domains Project
 """
 import os
 import pathlib
-from typing import Dict, List, Tuple, Iterator
+from typing import Dict,List,Tuple,Iterator
 
 from more_itertools.more import chunked, sort_together
 
-from modules.feeds.hostname_expressions import generate_hostname_expressions
+from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 from modules.utils.log import init_logger
 
 logger = init_logger()
@@ -23,7 +23,8 @@ def _get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
     """
     try:
         with open(txt_filepath, "r") as file:
-            for raw_urls in chunked((_.strip() for _ in file.readlines()), 40_000):
+            for raw_urls in chunked((_.strip() for _ in file.readlines()),
+            hostname_expression_batch_size):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
         logger.error(

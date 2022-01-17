@@ -4,7 +4,7 @@ HTTP Request Utilities
 from io import BytesIO
 import time
 import json
-from typing import Mapping, Optional, Text, Union
+from typing import Mapping,Optional,Text,Union
 import pycurl
 
 from modules.utils.log import init_logger

@@ -29,8 +29,8 @@ def current_datetime_str() -> str:
 
 def write_blocklist_txt(urls: List[str], vendor: Vendors) -> None:
     """Split list of urls into hostnames and ip addresses, then write
-    hostnames and ip addresses to separate .txt files with timestamp
-    in filename and store them in `BLOCKLISTS_FOLDER`.
+    hostnames and ip addresses in ascending order to separate .txt files
+    with timestamp in filename and store them in `BLOCKLISTS_FOLDER`.
 
     `BLOCKLISTS_FOLDER` is created beforehand if it does not exist yet.
 
@@ -52,11 +52,13 @@ def write_blocklist_txt(urls: List[str], vendor: Vendors) -> None:
         except ValueError:
             hostnames.append(url)
 
+    hostnames.sort()
     hostnames_txt_filename = f"{vendor}_hostnames_{current_datetime_str()}.txt"
     with open(f"{BLOCKLISTS_FOLDER}{os.sep}{hostnames_txt_filename}", "a") as outfile:
         outfile.writelines("\n".join(hostnames))
         logger.info("%d hostname URLs written to file: %s", len(hostnames), hostnames_txt_filename)
 
+    ip_addresses.sort()
     ip_addresses_txt_filename = f"{vendor}_ipv4_{current_datetime_str()}.txt"
     with open(f"{BLOCKLISTS_FOLDER}{os.sep}{ip_addresses_txt_filename}", "a") as outfile:
         outfile.writelines("\n".join(ip_addresses))

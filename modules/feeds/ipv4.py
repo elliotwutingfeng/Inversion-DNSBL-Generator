@@ -1,7 +1,7 @@
 """
 For generating and scanning IPv4 addresses
 """
-from typing import Dict, List, Tuple
+from typing import Dict,List,Tuple
 
 from modules.utils.log import init_logger
 

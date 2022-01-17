@@ -8,6 +8,8 @@ from modules.utils.log import init_logger
 
 logger = init_logger()
 
+# UPSERT hostname expressions into database in small batches to reduce RAM usage
+hostname_expression_batch_size: int = 40_000
 
 def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
     """Generate Safe Browsing API-compliant hostname expressions

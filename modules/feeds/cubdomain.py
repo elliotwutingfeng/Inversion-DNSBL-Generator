@@ -3,13 +3,14 @@ For fetching and scanning URLs from cubdomain.com
 """
 from datetime import datetime, timedelta
 from collections import ChainMap
-from typing import Dict, Iterator, List, Tuple
+from typing import Dict,Iterator,List,Tuple
 from bs4 import BeautifulSoup, SoupStrainer
-import cchardet  # pylint: disable=unused-import
+import cchardet # pylint: disable=unused-import
+from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
 from modules.utils.http import curl_req
-from modules.feeds.hostname_expressions import generate_hostname_expressions
+from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
 logger = init_logger()
@@ -110,11 +111,13 @@ def _get_cubdomain_page_urls_by_db_filename() -> Dict:
     Returns:
         Dict: Mapping of db_filename to page_urls
     """
+    logger.info("Creating list of all cubdomain.com pages")
     cubdomain_page_urls_by_date_str = _get_page_urls_by_date_str()
     cubdomain_page_urls_by_db_filename = {
             f"cubdomain_{date_str}": page_urls
             for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
         }
+    logger.info("Creating list of all cubdomain.com pages...[DONE]")
     return cubdomain_page_urls_by_db_filename
 
 
@@ -147,7 +150,9 @@ def _download_cubdomain(page_urls: List[str]) -> Iterator[List[str]]:
                 res = soup.find_all(
                     lambda tag: tag.string is not None
                 )  # Filter out empty tags
-                yield generate_hostname_expressions([tag.string.strip() for tag in res])
+                for raw_urls in chunked((tag.string.strip() for tag in res),
+                hostname_expression_batch_size):
+                    yield generate_hostname_expressions(raw_urls)
             except Exception as error:
                 logger.error("%s %s", page_url, error, exc_info=True)
                 yield []

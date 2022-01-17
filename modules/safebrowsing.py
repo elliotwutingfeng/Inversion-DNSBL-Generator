@@ -3,7 +3,7 @@ Safe Browsing API helper class
 """
 from __future__ import annotations
 import time
-from typing import Dict, List, Set
+from typing import Dict,List,Set
 import itertools
 import base64
 import json

@@ -2,14 +2,14 @@
 For generating and scanning Amazon Web Services EC2 URLs
 """
 from __future__ import annotations
-from typing import Dict,List,Iterator, Tuple
+from typing import Dict,List,Iterator,Tuple
 import ipaddress
 import json
 from collections import defaultdict
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.http import curl_req
-from modules.feeds.hostname_expressions import generate_hostname_expressions
+from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
 logger = init_logger()
@@ -69,7 +69,7 @@ def _get_ec2_url_list(region: str, ip_ranges: List[str]) -> Iterator[List[str]]:
 
     ec2_url_generator = _generate_ec2_urls(region,ip_ranges)
 
-    for batch in chunked(ec2_url_generator, 40_000):
+    for batch in chunked(ec2_url_generator, hostname_expression_batch_size):
         yield generate_hostname_expressions(batch)
 
 

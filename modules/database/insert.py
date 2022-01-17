@@ -2,7 +2,7 @@
 SQLite utilities for making INSERT queries
 """
 from __future__ import annotations
-from typing import Callable, List, Mapping, Optional, Set, Iterator
+from typing import Callable,List,Mapping,Optional,Set,Iterator
 
 from apsw import Error
 from modules.utils.log import init_logger

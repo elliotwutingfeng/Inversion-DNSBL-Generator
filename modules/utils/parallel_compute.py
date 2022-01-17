@@ -15,7 +15,7 @@ https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 from __future__ import annotations
 from asyncio import Event
-from typing import Any, Callable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any,Callable,List,Mapping,Optional,Sequence,Tuple
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
 import ray

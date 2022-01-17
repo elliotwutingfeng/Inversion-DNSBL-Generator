@@ -2,7 +2,7 @@
 SQLite utilities for making SELECT queries
 """
 from __future__ import annotations
-from typing import  List, Set
+from typing import  List,Set
 import os
 from apsw import Error
 from modules.database.connect import create_connection
