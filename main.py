@@ -7,7 +7,6 @@ from argparse import (
     RawTextHelpFormatter,
     ArgumentDefaultsHelpFormatter,
 )
-from typing import List
 from modules.process_flags import process_flags
 
 
@@ -39,7 +38,6 @@ if __name__ == "__main__":
         and update them to database
         """,
     )
-
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-i",
@@ -68,7 +66,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-u",
         "--use-existing-hashes",
-        dest="use_existing_hashes",
         action="store_true",
         help="""
         Use existing malicious URL hashes when identifying malicious URLs in database.
@@ -80,17 +77,20 @@ if __name__ == "__main__":
         "--sources",
         nargs="+",
         required=False,
-        choices=["top1m", "top10m", "domainsproject", "ipv4"],
+        choices=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ec2", "ipv4"],
         help="""
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
         ----------------------------
         top1m -> Tranco TOP1M
         top10m -> DomCop TOP10M
+        r01 -> Registrar R01 (.ru, .su, .rf)
+        cubdomain -> CubDomain.com
         domainsproject -> domainsproject.org
+        ec2 -> Amazon Web Services EC2 public hostnames
         ipv4 -> ipv4 addresses
         """,
-        default=["top1m", "top10m", "domainsproject", "ipv4"],
+        default=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ec2", "ipv4"],
         type=str,
     )
     parser.add_argument(
@@ -109,17 +109,22 @@ if __name__ == "__main__":
         default=["google", "yandex"],
         type=str,
     )
+    parser.add_argument(
+        "-n",
+        "--num-cpus",
+        required=False,
+        help="""
+        (OPTIONAL: Omit this flag to use all available CPUs)
+        Number of CPUs to use for parallel processes. By default
+        all available CPUs will be used.
+        """,
+        default=None,
+        type=int,
+    )
 
     args = parser.parse_args()
     args.vendors = sorted([x.capitalize() for x in args.vendors])
     if not (args.fetch or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
-    fetch: bool = args.fetch
-    identify: bool = args.identify
-    use_existing_hashes: bool = args.use_existing_hashes
-    retrieve: bool = args.retrieve
-    sources: List[str] = args.sources
-    vendors: List[str] = args.vendors
-
-    process_flags(fetch, identify, use_existing_hashes, retrieve, sources, vendors)
+    process_flags(parser_args=vars(args))

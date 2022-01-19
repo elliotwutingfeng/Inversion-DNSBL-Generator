@@ -2,131 +2,90 @@
 Process flags
 """
 import time
-import os
-import pathlib
-from typing import Any, List, Tuple
+from typing import Dict
 from more_itertools import flatten
-from more_itertools.more import sort_together
 import ray
 
-from modules.db_utils import (
-    add_ip_addresses,
-    replace_malicious_url_hash_prefixes,
-    get_matching_hash_prefix_urls,
-    initialise_databases,
-    add_urls,
+from modules.database.select import (
+    retrieve_matching_hash_prefix_urls,
     retrieve_malicious_urls,
     retrieve_vendor_hash_prefix_sizes,
-    update_malicious_urls,
 )
-from modules.filewriter import write_urls_to_txt_file
-from modules.ray_utils import execute_with_ray
+from modules.database.create_table import initialise_databases
+from modules.database.insert import (
+    add_urls,
+    add_ip_addresses,
+    replace_malicious_url_hash_prefixes,
+)
+from modules.database.update import update_malicious_urls
+
+from modules.filewriter import write_blocklist_txt
+from modules.utils.parallel_compute import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
-from modules.url_utils import (
-    get_local_file_url_list,
-    get_top10m_url_list,
-    get_top1m_url_list,
-)
 
+from modules.feeds.top1m import Top1M
+from modules.feeds.top10m import Top10M
+from modules.feeds.registrar_r01 import RegistrarR01
+from modules.feeds.cubdomain import CubDomain
+from modules.feeds.domainsproject import DomainsProject
+from modules.feeds.aws_ec2 import AmazonWebServicesEC2
+from modules.feeds.ipv4 import Ipv4
 
-def process_flags(
-    fetch: bool,
-    identify: bool,
-    use_existing_hashes: bool,
-    retrieve: bool,
-    sources: List[str],
-    vendors: List[str],
-) -> None:
-    # pylint: disable=too-many-locals,too-many-branches,too-many-arguments,too-many-statements
-
-    """Run assorted DNSBL generator tasks in sequence based on flags set by user.
+def process_flags(parser_args: Dict) -> None:
+    # pylint: disable=too-many-locals
+    """Run DNSBL generator tasks in sequence based on `parser_args` flags set by user.
 
     Args:
-        fetch (bool): If True, fetch URL datasets from local and/or remote sources,
-        and update them to database
-        identify (bool): If True, use Safe Browsing API to identify malicious URLs in database,
-        write the URLs to a .txt file blocklist, and update database with these malicious URLs
-        use_existing_hashes (bool): If True, use existing malicious URL hashes when
-        identifying malicious URLs in database
-        retrieve (bool): If True, retrieve URLs in database that have been flagged
-        as malicious from past scans, then create a .txt file blocklist
-        sources (List[str]): URL sources (e.g. top1m, top10m etc.)
-        vendors (List[str]): Safe Browsing API vendors (e.g. Google, Yandex etc.)
+        parser_args (Dict): Flags set by user; see `main.py` for more details
     """
     ray.shutdown()
-    ray.init(include_dashboard=True)
+    ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])
     update_time = int(time.time())  # seconds since UNIX Epoch
 
-    urls_filenames: List[str] = []
-    ips_filenames: List[str] = []
+    top1m = Top1M(parser_args,update_time)
+    top10m = Top10M(parser_args,update_time)
+    r01 = RegistrarR01(parser_args,update_time)
+    cubdomain = CubDomain(parser_args,update_time)
+    domainsproject = DomainsProject(parser_args,update_time)
+    ec2 = AmazonWebServicesEC2(parser_args,update_time)
 
-    if "domainsproject" in sources:
-        # Scan Domains Project's "domains" directory for local urls_filenames
-        local_domains_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
-        local_domains_filepaths: List[str] = []
-        for root, _, files in os.walk(local_domains_dir):
-            for file in files:
-                if file.lower().endswith(".txt"):
-                    urls_filenames.append(f"{file[:-4]}")
-                    local_domains_filepaths.append(os.path.join(root, file))
-        # Sort local_domains_filepaths and urls_filenames by ascending filesize
+    domains_db_filenames = (
+        top1m.db_filenames
+        + top10m.db_filenames
+        + r01.db_filenames
+        + cubdomain.db_filenames
+        + domainsproject.db_filenames
+        + ec2.db_filenames
+    )
 
-        local_domains_filesizes: List[int] = [
-            os.path.getsize(path) for path in local_domains_filepaths
-        ]
-
-        [local_domains_filesizes, local_domains_filepaths, urls_filenames] = [
-            list(_)
-            for _ in sort_together(
-                (local_domains_filesizes, local_domains_filepaths, urls_filenames)
-            )
-        ]
-
-    if "top1m" in sources:
-        urls_filenames.append("top1m_urls")
-    if "top10m" in sources:
-        urls_filenames.append("top10m_urls")
-
-    if "ipv4" in sources:
-        add_ip_addresses_jobs: List[Tuple] = [
-            (f"ipv4_{first_octet}", first_octet) for first_octet in range(2 ** 8)
-        ]
-        ips_filenames = [_[0] for _ in add_ip_addresses_jobs]
+    ipv4 = Ipv4(parser_args)
 
     # Create database files
-    initialise_databases(urls_filenames, mode="domains")
-    initialise_databases(ips_filenames, mode="ips")
+    initialise_databases(domains_db_filenames, mode="domains")
+    initialise_databases(ipv4.db_filenames, mode="ips")
 
-    if fetch:
-        add_urls_jobs: List[Tuple[Any, ...]] = []
-        if "domainsproject" in sources:
-            # Extract and Add local URLs to database
-            add_urls_jobs += [
-                (get_local_file_url_list, update_time, filename, filepath)
-                for filepath, filename in zip(local_domains_filepaths, urls_filenames)
-            ]
-        if "top1m" in sources:
-            # Download and Add TOP1M URLs to database
-            add_urls_jobs.append((get_top1m_url_list, update_time, "top1m_urls"))
-        if "top10m" in sources:
-            # Download and Add TOP10M URLs to database
-            add_urls_jobs.append((get_top10m_url_list, update_time, "top10m_urls"))
-        execute_with_ray(add_urls, add_urls_jobs)
+    domains_jobs = (
+        top1m.jobs
+        + top10m.jobs
+        + r01.jobs
+        + cubdomain.jobs
+        + domainsproject.jobs
+        + ec2.jobs
+    )
+    # Insert-Update URLs to database
+    execute_with_ray(add_urls, domains_jobs)
+    execute_with_ray(add_ip_addresses, ipv4.jobs)
 
-        if "ipv4" in sources:
-            # Generate and Add ipv4 addresses to database
-            execute_with_ray(add_ip_addresses, add_ip_addresses_jobs)
-
-    if identify:
+    if parser_args["identify"]:
         malicious_urls = dict()
-        for vendor in vendors:
+        for vendor in parser_args["vendors"]:
             safebrowsing = SafeBrowsing(vendor)
 
-            if not use_existing_hashes:
+            if not parser_args["use_existing_hashes"]:
                 # Download and Update Safe Browsing API Malicious URL hash prefixes to database
-                hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes()
-                replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
-                del hash_prefixes  # "frees" memory
+                replace_malicious_url_hash_prefixes(
+                    safebrowsing.get_malicious_url_hash_prefixes(), vendor
+                    )
 
             prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 
@@ -134,38 +93,38 @@ def process_flags(
             suspected_urls = set(
                 flatten(
                     execute_with_ray(
-                        get_matching_hash_prefix_urls,
+                        retrieve_matching_hash_prefix_urls,
                         [
                             (filename, prefix_sizes, vendor)
-                            for filename in urls_filenames + ips_filenames
+                            for filename in domains_db_filenames + ipv4.db_filenames
                         ],
                     ),
                 )
             )
 
-            # To Improve: Store suspected_urls into malicious.db under
-            # suspected_urls table columns: [url,Google,Yandex]
             # Among these URLs, identify those with full Hashes
             # found on Safe Browsing API Server
             vendor_malicious_urls = safebrowsing.get_malicious_urls(suspected_urls)
             del suspected_urls  # "frees" memory
             malicious_urls[vendor] = vendor_malicious_urls
 
-        write_urls_to_txt_file(list(set(flatten(malicious_urls.values()))))
+            write_blocklist_txt(malicious_urls[vendor],vendor)
 
         # TODO push blocklist to GitHub
 
         # Update malicious URL statuses in database
-        for vendor in vendors:
+        for vendor in parser_args["vendors"]:
             execute_with_ray(
                 update_malicious_urls,
                 [
                     (update_time, vendor, filename)
-                    for filename in urls_filenames + ips_filenames
+                    for filename in domains_db_filenames + ipv4.db_filenames
                 ],
                 task_obj_store_args={"malicious_urls": malicious_urls[vendor]},
             )
 
-    if retrieve:
-        write_urls_to_txt_file(retrieve_malicious_urls(urls_filenames))
+    # Retrieve malicious URLs from database and write to blocklists
+    if parser_args["retrieve"]:
+        for vendor in parser_args["vendors"]:
+            write_blocklist_txt(retrieve_malicious_urls(domains_db_filenames, vendor), vendor)
     ray.shutdown()

@@ -15,7 +15,7 @@ https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 from __future__ import annotations
 from asyncio import Event
-from typing import Any, Callable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any,Callable,List,Mapping,Optional,Sequence,Tuple
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
 import ray
@@ -102,7 +102,7 @@ class ProgressBar:
     def actor(self) -> ActorHandle:
         """Returns a reference to the remote `ProgressBarActor`.
 
-        When you complete tasks, call `update` on the actor.
+        When a task is completed, call `update` on the actor.
 
         Returns:
             ActorHandle: A reference to the remote `ProgressBarActor`
@@ -127,7 +127,7 @@ class ProgressBar:
 
 
 @ray.remote
-def aux(
+def _run_task_handler(
     task_handler: Callable,
     task_args: Tuple,
     task_obj_store_args: Mapping,
@@ -189,7 +189,7 @@ def execute_with_ray(
         actor_id = ray.put(actor)
 
     tasks_pre_launch = [
-        aux.remote(
+        _run_task_handler.remote(
             task_handler,
             task_args,
             task_obj_store_args={
@@ -202,7 +202,7 @@ def execute_with_ray(
         for task_args in task_args_list
     ]
 
-    # Opens progressbar until all tasks are completed
+    # Keeps progressbar open until all tasks are completed
     if progress_bar:
         pbar.print_until_done()
 

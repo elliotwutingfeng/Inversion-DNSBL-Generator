@@ -3,18 +3,17 @@ Safe Browsing API helper class
 """
 from __future__ import annotations
 import time
-from typing import Dict, List, Set
+from typing import Dict,List,Set
 import itertools
-import logging
 import base64
+import json
 from dotenv import dotenv_values
 from more_itertools.more import chunked
-import requests
-from requests.models import Response
 from tqdm import tqdm  # type: ignore
-from modules.logger_utils import init_logger
-from modules.ray_utils import execute_with_ray
-from modules.requests_utils import get_with_retries, post_with_retries
+from modules.utils.log import init_logger
+from modules.utils.parallel_compute import execute_with_ray
+from modules.utils.http import curl_req
+from modules.utils.types import Vendors
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
 YANDEX_API_KEY = dotenv_values(".env")["YANDEX_API_KEY"]
@@ -27,12 +26,12 @@ class SafeBrowsing:
     Safe Browsing API helper class
     """
 
-    def __init__(self, vendor: str) -> None:
+    def __init__(self, vendor: Vendors) -> None:
         """Initializes Safe Browsing API helper class
         for a given `vendor` (e.g. "Google", "Yandex" etc.)
 
         Args:
-            vendor (str): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+            vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
 
         Raises:
             ValueError: `vendor` must be "Google" or "Yandex"
@@ -120,24 +119,22 @@ class SafeBrowsing:
         }
         return data
 
-    def _threat_matches_lookup(self, url_batch: List[str]) -> Response:
+    def _threat_matches_lookup(self, url_batch: List[str]) -> Dict:
         """Submits list of URLs to Safe Browsing API threatMatches endpoint
-        and returns the API `Response`
+        and returns the API response.
 
         Args:
             url_batch (List[str]): URLs to submit to Safe Browsing API
             threatMatches endpoint for inspection
 
         Returns:
-            Response: Safe Browsing API threatMatches `Response`
+            Dict: Safe Browsing API threatMatches response
         """
 
         data = SafeBrowsing._threat_matches_payload(url_batch)
-        try:
-            # Make POST request for each sublist of URLs
-            res = post_with_retries(self.threatMatchesEndpoint, data)
-        except requests.exceptions.RequestException:
-            res = requests.Response()
+
+        # Make POST request for each sublist of URLs
+        res = json.loads(curl_req(self.threatMatchesEndpoint, payload=data, request_type="POST"))
 
         time.sleep(2)  # To prevent rate limiting
         return res
@@ -151,10 +148,10 @@ class SafeBrowsing:
         Returns:
             List[str]: URLs deemed by Safe Browsing API to be malicious
         """
-        logging.info("Verifying suspected %s malicious URLs", self.vendor)
+        logger.info("Verifying suspected %s malicious URLs", self.vendor)
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = chunked(urls, self.maximum_url_batch_size)
-        logging.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
+        logger.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
         results = execute_with_ray(
             self._threat_matches_lookup,
             [(url_batch,) for url_batch in url_batches],
@@ -163,7 +160,7 @@ class SafeBrowsing:
 
         malicious = list(
             itertools.chain(
-                *(res.json()["matches"] for res in results if "matches" in res.json())
+                *(res["matches"] for res in results if "matches" in res)
             )
         )
         # Removes http, https prefixes
@@ -176,7 +173,7 @@ class SafeBrowsing:
             )
         )
 
-        logging.info(
+        logger.info(
             "%d URLs confirmed to be marked malicious by %s Safe Browsing API.",
             len(malicious_urls),
             self.vendor,
@@ -199,65 +196,67 @@ class SafeBrowsing:
             Dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
             https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
         """
-        threatlist_combinations = get_with_retries(self.threatListsEndpoint).json()[
-            "threatLists"
-        ]
-        # TODO: Check if "IP_RANGE" is useful,
-        # currently Google has only one hashPrefix entry.
-        if self.vendor == "Google":
-            url_threatlist_combinations = [
-                x
-                for x in threatlist_combinations
-                if "threatEntryType" in x
-                and x["threatEntryType"]
-                in (
-                    "URL",
-                    "IP_RANGE",
-                )
+        threat_lists_endpoint_resp = curl_req(self.threatListsEndpoint)
+        if threat_lists_endpoint_resp:
+            threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
+                "threatLists"
             ]
-        else:
-            # Yandex API returns status code 204 with no content
-            # if url_threatlist_combinations is too large
-            url_threatlist_combinations = [
-                {
-                    "threatType": "ANY",
-                    "platformType": "ANY_PLATFORM",
-                    "threatEntryType": "URL",
-                    "state": "",
-                },
-                {
-                    "threatType": "UNWANTED_SOFTWARE",
-                    "threatEntryType": "URL",
-                    "platformType": "PLATFORM_TYPE_UNSPECIFIED",
-                    "state": "",
-                },
-                {
-                    "threatType": "MALWARE",
-                    "threatEntryType": "URL",
-                    "platformType": "PLATFORM_TYPE_UNSPECIFIED",
-                    "state": "",
-                },
-                {
-                    "threatType": "SOCIAL_ENGINEERING",
-                    "threatEntryType": "URL",
-                    "platformType": "PLATFORM_TYPE_UNSPECIFIED",
-                    "state": "",
-                },
-            ]
+            if self.vendor == "Google":
+                url_threatlist_combinations = [
+                    x
+                    for x in threatlist_combinations
+                    if "threatEntryType" in x
+                    and x["threatEntryType"]
+                    in (
+                        "URL",
+                        "IP_RANGE",
+                    )
+                ]
+            else:
+                # Yandex API returns status code 204 with no content
+                # if url_threatlist_combinations is too large
+                url_threatlist_combinations = [
+                    {
+                        "threatType": "ANY",
+                        "platformType": "ANY_PLATFORM",
+                        "threatEntryType": "URL",
+                        "state": "",
+                    },
+                    {
+                        "threatType": "UNWANTED_SOFTWARE",
+                        "threatEntryType": "URL",
+                        "platformType": "PLATFORM_TYPE_UNSPECIFIED",
+                        "state": "",
+                    },
+                    {
+                        "threatType": "MALWARE",
+                        "threatEntryType": "URL",
+                        "platformType": "PLATFORM_TYPE_UNSPECIFIED",
+                        "state": "",
+                    },
+                    {
+                        "threatType": "SOCIAL_ENGINEERING",
+                        "threatEntryType": "URL",
+                        "platformType": "PLATFORM_TYPE_UNSPECIFIED",
+                        "state": "",
+                    },
+                ]
 
-        req_body = {
-            "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
-            "listUpdateRequests": url_threatlist_combinations,
-        }
-        res = post_with_retries(self.threatListUpdatesEndpoint, req_body)
+            req_body = {
+                "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
+                "listUpdateRequests": url_threatlist_combinations,
+            }
+            res = curl_req(self.threatListUpdatesEndpoint, payload=req_body, request_type="POST")
 
-        res_json = (
-            res.json()
-        )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
-        if "listUpdateResponses" not in res_json:
-            return {}
-        logging.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
-        return res_json
+            res_json = (
+                json.loads(res)
+            )  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
+            if "listUpdateResponses" not in res_json:
+                return {}
+            logger.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
+            return res_json
+
+        return {} # Empty dict() if self.threatListsEndpoint is unreachable
 
     def get_malicious_url_hash_prefixes(self) -> Set[bytes]:
         """Download latest malicious URL hash prefixes from Safe Browsing API.
@@ -269,7 +268,7 @@ class SafeBrowsing:
         Returns:
             Set[bytes]: Malicious URL hash prefixes from Safe Browsing API
         """
-        logging.info("Downloading %s malicious URL hashes", self.vendor)
+        logger.info("Downloading %s malicious URL hashes", self.vendor)
         res_json = self._retrieve_threat_list_updates()
         if res_json == {}:
             return set()
@@ -282,7 +281,7 @@ class SafeBrowsing:
                 raw_hash_prefixes_ = addition["rawHashes"]
                 prefix_size = raw_hash_prefixes_["prefixSize"]
                 raw_hash_prefixes = base64.b64decode(
-                    raw_hash_prefixes_["rawHashes"].encode("ascii")
+                    raw_hash_prefixes_["rawHashes"].encode()
                 )
 
                 hashes_list = sorted(
@@ -292,5 +291,5 @@ class SafeBrowsing:
                     ]
                 )
                 hash_prefixes.update(hashes_list)
-        logging.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
+        logger.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
         return hash_prefixes

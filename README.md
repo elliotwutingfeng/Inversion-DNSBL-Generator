@@ -9,7 +9,7 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)
 
 \
-Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net) using the Safe Browsing API from [Google](https://developers.google.com/safe-browsing) and/or [Yandex](https://yandex.com/dev/safebrowsing), with URLs sourced from various public lists like [Tranco TOP1M](https://tranco-list.eu), [DomCop TOP10M](https://www.domcop.com/top-10-million-domains), and [Domains Project](https://domainsproject.org).
+Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net) by scanning various public URL sources using the Safe Browsing API from [Google](https://developers.google.com/safe-browsing) and/or [Yandex](https://yandex.com/dev/safebrowsing).
 
 ---
 
@@ -17,7 +17,10 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 
 -   Tranco TOP1M (~1 million URLs): <https://tranco-list.eu>
 -   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
+-   Registrar R01 (~5.8 million URLs): <https://r01.ru>
+-   CubDomain.com (~200 million URLs): <https://cubdomain.com>
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
+-   Amazon Web Services EC2 (~56 million URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
 
 ## Safe Browsing API vendors
@@ -30,10 +33,11 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 ## Requirements
 
 -   Linux or macOS
+-   [libcurl](https://curl.se/libcurl)
 -   Tested on Python 3.8.12
 -   Multi-core x86-64 CPU; for Python Ray support
 -   Recommended: At least 8GB RAM
--   At least 5GB SSD free storage space; **at least 600GB required to process Domains Project URLs and IPv4 Addresses**
+-   At least 25GB SSD free storage space; **at least 600GB required to process all URL sources**
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -92,13 +96,10 @@ Fetch URLs from all sources, insert their contents to local database, and genera
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Domains Project**, **IPv4 Addresses**
+-   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **Domains Project**, **Amazon Web Services EC2**, **IPv4 Addresses**
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m domainsproject ipv4 \
---vendors google yandex
-# or alternatively
 python3 main.py --fetch-urls --identify-malicious-urls
 ```
 
@@ -136,12 +137,10 @@ This project is not sponsored, endorsed, or otherwise affiliated with Google and
 -   [APSW](https://rogerbinns.github.io/apsw)
 -   [Ray](https://www.ray.io)
 -   [TLDExtract](https://github.com/john-kurkowski/tldextract)
+-   [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io)
 
 ## References
 
 -   <https://developers.google.com/safe-browsing>
 -   <https://yandex.com/dev/safebrowsing>
--   <https://tranco-list.eu>
--   <https://www.domcop.com/top-10-million-domains>
--   <https://domainsproject.org>
 -   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>

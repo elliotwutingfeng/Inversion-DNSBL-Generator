@@ -51,10 +51,21 @@
     "python.linting.mypyEnabled": true,
     "python.linting.pylintEnabled": true,
     "python.linting.banditEnabled": true,
-    "python.linting.pylintArgs": [
-        "--extension-pkg-whitelist=apsw"
-    ],
+    "python.linting.banditArgs": ["--configfile bandit.yaml"],
+    "python.linting.pylintArgs": ["--extension-pkg-whitelist=apsw,pycurl"],
     "cSpell.words": [
+        "cchardet",
+        "COULDNT",
+        "hostnames",
+        "libcurl",
+        "lxml",
+        "NOSIGNAL",
+        "pycurl",
         "rusqlite"
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
