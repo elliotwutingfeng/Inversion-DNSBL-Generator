@@ -167,10 +167,11 @@ class CubDomain:
         self.jobs: List[Tuple] = []
         self.page_urls_by_db_filename = dict()
         if "cubdomain" in parser_args["sources"]:
-            self.page_urls_by_db_filename = _get_cubdomain_page_urls_by_db_filename()
-            self.db_filenames = list(self.page_urls_by_db_filename)
+            self.db_filenames = [f"cubdomain_{date_str}" for date_str
+            in _get_page_urls_by_date_str()]
             if parser_args["fetch"]:
                 # Download and Add CubDomain.com URLs to database
+                self.page_urls_by_db_filename = _get_cubdomain_page_urls_by_db_filename()
                 self.jobs = [
                 (
                     _download_cubdomain,
