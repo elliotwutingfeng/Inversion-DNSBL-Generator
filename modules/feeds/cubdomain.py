@@ -15,6 +15,7 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
+DATE_STR_FORMAT: str = "{dt:%Y}-{dt:%m}-{dt:%d}"
 
 def _generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
     """Generate list of dates ranging
@@ -28,7 +29,7 @@ def _generate_dates_and_root_urls() -> Tuple[List[datetime], List[str]]:
     num_days = (now - datetime.strptime("25 June 2017", "%d %B %Y")).days
     dates = [now - timedelta(days=x) for x in range(num_days)]
     root_urls = [
-        "https://www.cubdomain.com/domains-registered-by-date/{dt:%Y}-{dt:%m}-{dt:%d}/".format(
+        f"https://www.cubdomain.com/domains-registered-by-date/{DATE_STR_FORMAT}/".format(
             dt=date
         )
         for date in dates
@@ -96,9 +97,7 @@ def _get_page_urls_by_date_str() -> Dict:
     )  # Mapping of each root URL to its total number of pages and its date
     page_urls_by_date_str: Dict = dict()
     for root_url, details in root_urls_to_last_page_and_date.items():
-        date_str = "{dt:%Y}-{dt:%m}-{dt:%d}".format(  # pylint: disable=invalid-name
-            dt=details["date"]
-        )
+        date_str = f"{DATE_STR_FORMAT}".format(dt=details["date"])
         page_urls_by_date_str[date_str] = []
         for page_number in range(1, details["num_pages"] + 1):
             page_urls_by_date_str[date_str].append(f"{root_url}{page_number}")
@@ -167,8 +166,8 @@ class CubDomain:
         self.jobs: List[Tuple] = []
         self.page_urls_by_db_filename = dict()
         if "cubdomain" in parser_args["sources"]:
-            self.db_filenames = [f"cubdomain_{date_str}" for date_str
-            in _get_page_urls_by_date_str()]
+            self.db_filenames = [f"cubdomain_{DATE_STR_FORMAT}".format(dt=date) for date
+            in _generate_dates_and_root_urls()[0]]
             if parser_args["fetch"]:
                 # Download and Add CubDomain.com URLs to database
                 self.page_urls_by_db_filename = _get_cubdomain_page_urls_by_db_filename()
