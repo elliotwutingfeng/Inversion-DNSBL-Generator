@@ -33,7 +33,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 ## Requirements
 
 -   Linux or macOS
--   [libcurl](https://curl.se/libcurl)
+-   [libcurl](https://curl.se/libcurl) >= 7.81.0
 -   Tested on Python 3.8.12
 -   Multi-core x86-64 CPU; for Python Ray support
 -   Recommended: At least 8GB RAM
