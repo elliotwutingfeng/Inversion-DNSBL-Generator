@@ -13,9 +13,9 @@ Inspired by:
 https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
-from __future__ import annotations
 from asyncio import Event
-from typing import Any,Callable,List,Mapping,Optional,Sequence,Tuple
+from typing import Any,Optional
+from collections.abc import Callable,Mapping,Sequence
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
 import ray
@@ -46,7 +46,7 @@ class ProgressBarActor:
         self.delta += num_items_completed
         self.event.set()
 
-    async def wait_for_update(self) -> Tuple[int, int]:
+    async def wait_for_update(self) -> tuple[int, int]:
         """Blocking call.
 
         Waits until somebody calls `update`, then returns a tuple of
@@ -54,7 +54,7 @@ class ProgressBarActor:
         `wait_for_update`, and the total number of completed items.
 
         Returns:
-            Tuple[int, int]: (Number of updates since the last call to `wait_for_update`,
+            tuple[int, int]: (Number of updates since the last call to `wait_for_update`,
             Total number of completed items)
         """
         await self.event.wait()
@@ -129,7 +129,7 @@ class ProgressBar:
 @ray.remote
 def _run_task_handler(
     task_handler: Callable,
-    task_args: Tuple,
+    task_args: tuple,
     task_obj_store_args: Mapping,
     actor_id: Optional[Any] = None,
 ) -> Any:
@@ -138,7 +138,7 @@ def _run_task_handler(
 
     Args:
         task_handler (Callable): Callable function to parallelise
-        task_args (Tuple): Arguments to be passed into `task_handler`
+        task_args (tuple): Arguments to be passed into `task_handler`
         task_obj_store_args (Mapping): Object IDs to be passed
         from ray object store into `task_handler`
         actor_id (Optional[Any], optional): Object reference assigned
@@ -159,24 +159,24 @@ def _run_task_handler(
 
 def execute_with_ray(
     task_handler: Callable,
-    task_args_list: Sequence[Tuple],
+    task_args_list: Sequence[tuple],
     task_obj_store_args: Optional[Mapping] = None,
     progress_bar: bool = True,
-) -> List:
+) -> list:
     """Apply task_handler to list of tasks.
 
     Tasks are processed in parallel with pipelining to maximise throughput.
 
     Args:
         task_handler (Callable): Callable function to parallelise
-        task_args_list (Sequence[Tuple]): Sequence of Tuples of Arguments
+        task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
         task_obj_store_args (Optional[Mapping], optional): Object IDs to be passed
         from ray object store into `task_handler`, if any. Defaults to None.
         progress_bar (bool, optional): If set to True, shows progressbar. Defaults to True.
 
     Returns:
-        List: List of returned values from each instance of task_handler
+        list: List of returned values from each instance of task_handler
     """
 
     if len(task_args_list) == 0:

@@ -1,9 +1,7 @@
 """
 Safe Browsing API helper class
 """
-from __future__ import annotations
 import time
-from typing import Dict,List,Set
 import itertools
 import base64
 import json
@@ -71,8 +69,8 @@ class SafeBrowsing:
     ######## Safe Browsing Lookup API ########
     @staticmethod
     def _threat_matches_payload(
-        url_list: List[str],
-    ) -> Dict:  # pylint: disable=invalid-name
+        url_list: list[str],
+    ) -> dict:  # pylint: disable=invalid-name
         """For a given list of URLs,
         generate a POST request payload for Safe Browsing API threatMatches endpoint.
 
@@ -83,10 +81,10 @@ class SafeBrowsing:
         https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/lookup.html
 
         Args:
-            url_list (List[str]): URLs to add to Safe Browsing API threatMatches payload
+            url_list (list[str]): URLs to add to Safe Browsing API threatMatches payload
 
         Returns:
-            Dict: Safe Browsing API threatMatches payload
+            dict: Safe Browsing API threatMatches payload
         """
         data = {
             "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
@@ -119,16 +117,16 @@ class SafeBrowsing:
         }
         return data
 
-    def _threat_matches_lookup(self, url_batch: List[str]) -> Dict:
+    def _threat_matches_lookup(self, url_batch: list[str]) -> dict:
         """Submits list of URLs to Safe Browsing API threatMatches endpoint
         and returns the API response.
 
         Args:
-            url_batch (List[str]): URLs to submit to Safe Browsing API
+            url_batch (list[str]): URLs to submit to Safe Browsing API
             threatMatches endpoint for inspection
 
         Returns:
-            Dict: Safe Browsing API threatMatches response
+            dict: Safe Browsing API threatMatches response
         """
 
         data = SafeBrowsing._threat_matches_payload(url_batch)
@@ -139,14 +137,14 @@ class SafeBrowsing:
         time.sleep(2)  # To prevent rate limiting
         return res
 
-    def get_malicious_urls(self, urls: Set[str]) -> List[str]:
+    def get_malicious_urls(self, urls: set[str]) -> list[str]:
         """Identify all URLs in a given set of `urls` deemed by Safe Browsing API to be malicious.
 
         Args:
-            urls (Set[str]): URLs to be submitted to Safe Browsing API
+            urls (set[str]): URLs to be submitted to Safe Browsing API
 
         Returns:
-            List[str]: URLs deemed by Safe Browsing API to be malicious
+            list[str]: URLs deemed by Safe Browsing API to be malicious
         """
         logger.info("Verifying suspected %s malicious URLs", self.vendor)
         # Split list of URLs into sublists of length == maximum_url_batch_size
@@ -182,7 +180,7 @@ class SafeBrowsing:
         return malicious_urls
 
     ######## Safe Browsing Update API ########
-    def _retrieve_threat_list_updates(self) -> Dict:
+    def _retrieve_threat_list_updates(self) -> dict:
         """GET names of currently available Safe Browsing lists from threatLists endpoint,
         and returns threatListUpdates endpoint JSON response
         in Dictionary-form for all available lists.
@@ -193,7 +191,7 @@ class SafeBrowsing:
         https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/update-threatlist.html
 
         Returns:
-            Dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
+            dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
             https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
         """
         threat_lists_endpoint_resp = curl_req(self.threatListsEndpoint)
@@ -258,7 +256,7 @@ class SafeBrowsing:
 
         return {} # Empty dict() if self.threatListsEndpoint is unreachable
 
-    def get_malicious_url_hash_prefixes(self) -> Set[bytes]:
+    def get_malicious_url_hash_prefixes(self) -> set[bytes]:
         """Download latest malicious URL hash prefixes from Safe Browsing API.
 
         The uncompressed threat entries in hash format of a particular prefix length.
@@ -266,7 +264,7 @@ class SafeBrowsing:
         but some hashes are lengthened if they collide with the hash of a popular URL.
 
         Returns:
-            Set[bytes]: Malicious URL hash prefixes from Safe Browsing API
+            set[bytes]: Malicious URL hash prefixes from Safe Browsing API
         """
         logger.info("Downloading %s malicious URL hashes", self.vendor)
         res_json = self._retrieve_threat_list_updates()

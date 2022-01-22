@@ -2,7 +2,6 @@
 Process flags
 """
 import time
-from typing import Dict
 from more_itertools import flatten
 import ray
 
@@ -31,12 +30,12 @@ from modules.feeds.domainsproject import DomainsProject
 from modules.feeds.aws_ec2 import AmazonWebServicesEC2
 from modules.feeds.ipv4 import Ipv4
 
-def process_flags(parser_args: Dict) -> None:
+def process_flags(parser_args: dict) -> None:
     # pylint: disable=too-many-locals
     """Run DNSBL generator tasks in sequence based on `parser_args` flags set by user.
 
     Args:
-        parser_args (Dict): Flags set by user; see `main.py` for more details
+        parser_args (dict): Flags set by user; see `main.py` for more details
     """
     ray.shutdown()
     ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])

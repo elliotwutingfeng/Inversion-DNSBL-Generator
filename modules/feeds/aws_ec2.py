@@ -1,11 +1,10 @@
 """
 For generating and scanning Amazon Web Services EC2 URLs
 """
-from __future__ import annotations
-from typing import Dict,List,Iterator,Tuple
 import ipaddress
 import json
 from collections import defaultdict
+from collections.abc import Iterator
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.http import curl_req
@@ -14,25 +13,25 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-def _collapse_cidrs(list_of_cidr_nets: List[str]) -> List[str]:
+def _collapse_cidrs(list_of_cidr_nets: list[str]) -> list[str]:
     """Remove overlapping ip ranges
 
     Args:
-        list_of_cidr_nets (List[str]): IP ranges
+        list_of_cidr_nets (list[str]): IP ranges
 
     Returns:
-        List[str]: IP ranges with overlaps removed
+        list[str]: IP ranges with overlaps removed
     """
     nets = (ipaddress.ip_network(_ip) for _ip in list_of_cidr_nets)
     ip_ranges = [str(ip_range) for ip_range in ipaddress.collapse_addresses(nets)]
     return ip_ranges
 
-def _get_region_to_ip_ranges_per_region_map() -> Dict:
+def _get_region_to_ip_ranges_per_region_map() -> dict:
     """Downloads Amazon's official IP ranges and generates list of Amazon Web Services
     EC2 IPv4 ranges for each AWS region.
 
     Returns:
-        Dict: Map each AWS region to a list of EC2 IPv4 ranges associated with that region
+        dict: Map each AWS region to a list of EC2 IPv4 ranges associated with that region
     """
     resp = curl_req("https://ip-ranges.amazonaws.com/ip-ranges.json")
     if resp == b'':
@@ -48,18 +47,18 @@ def _get_region_to_ip_ranges_per_region_map() -> Dict:
         region_to_ip_ranges_map[region].append(ip_prefix)
     return region_to_ip_ranges_map
 
-def _get_ec2_url_list(region: str, ip_ranges: List[str]) -> Iterator[List[str]]:
+def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> Iterator[list[str]]:
     """Generates Amazon Web Services EC2 URLs located at
     AWS `region` and yields all listed URLs in batches.
 
     Args:
         region (str): AWS region
-        ip_ranges (List[str]): IP Ranges for aws `region`
+        ip_ranges (list[str]): IP Ranges for aws `region`
 
     Yields:
-        Iterator[List[str]]: Batch of URLs as a list
+        Iterator[list[str]]: Batch of URLs as a list
     """
-    def _generate_ec2_urls(region: str,ip_ranges: List[str]):
+    def _generate_ec2_urls(region: str,ip_ranges: list[str]):
         suffix = f'''.{'compute-1' if region == 'us-east-1'
         else region+'.compute'}.amazonaws.com'''
         collapsed_ip_ranges = _collapse_cidrs(ip_ranges) # Removes overlapping ip ranges
@@ -78,9 +77,9 @@ class AmazonWebServicesEC2:
     For generating and scanning Amazon Web Services EC2 URLs
     """
     # pylint: disable=too-few-public-methods
-    def __init__(self, parser_args:Dict, update_time:int):
-        self.db_filenames: List[str] = []
-        self.jobs: List[Tuple] = []
+    def __init__(self, parser_args:dict, update_time:int):
+        self.db_filenames: list[str] = []
+        self.jobs: list[tuple] = []
 
         if "ec2" in parser_args["sources"]:
             map_region_to_ip_ranges_per_region = _get_region_to_ip_ranges_per_region_map()

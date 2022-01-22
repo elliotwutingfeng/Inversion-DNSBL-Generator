@@ -1,8 +1,7 @@
 """
 For fetching and scanning URLs from Registrar R01
 """
-from __future__ import annotations
-from typing import Dict,List,Tuple,Iterator
+from collections.abc import Iterator
 import gzip
 from more_itertools import chunked
 from modules.utils.log import init_logger
@@ -12,17 +11,17 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-def _get_r01_domains() -> Iterator[List[str]]:
+def _get_r01_domains() -> Iterator[list[str]]:
     """Downloads domains from Registrar R01 and yields all listed URLs in batches.
 
     Yields:
-        Iterator[List[str]]: Batch of URLs as a list
+        Iterator[list[str]]: Batch of URLs as a list
     """
     logger.info("Downloading Registrar R01 lists...")
     endpoints = ["https://partner.r01.ru/zones/ru_domains.gz",
                 "https://partner.r01.ru/zones/su_domains.gz",
                 "https://partner.r01.ru/zones/rf_domains.gz"]
-    raw_urls: List[str] = []
+    raw_urls: list[str] = []
     for endpoint in endpoints:
         resp = curl_req(endpoint)
         if resp:
@@ -40,9 +39,9 @@ class RegistrarR01:
     For fetching and scanning URLs from Registrar R01
     """
     # pylint: disable=too-few-public-methods
-    def __init__(self,parser_args:Dict,update_time:int):
-        self.db_filenames: List[str] = []
-        self.jobs: List[Tuple] = []
+    def __init__(self,parser_args: dict, update_time: int):
+        self.db_filenames: list[str] = []
+        self.jobs: list[tuple] = []
         if "r01" in parser_args["sources"]:
             self.db_filenames = ["r01_urls"]
             if parser_args["fetch"]:

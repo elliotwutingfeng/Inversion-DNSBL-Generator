@@ -1,8 +1,6 @@
 """
 For generating Safe Browsing API-compliant hostname expressions
 """
-from __future__ import annotations
-from typing import List
 import tldextract  # type: ignore
 from modules.utils.log import init_logger
 
@@ -11,16 +9,16 @@ logger = init_logger()
 # UPSERT hostname expressions into database in small batches to reduce RAM usage
 hostname_expression_batch_size: int = 40_000
 
-def generate_hostname_expressions(raw_urls: List[str]) -> List[str]:
+def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     """Generate Safe Browsing API-compliant hostname expressions
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
 
     Args:
-        raw_urls (List[str]): URLs to generate Safe Browsing API-compliant
+        raw_urls (list[str]): URLs to generate Safe Browsing API-compliant
         hostname expressions from.
 
     Returns:
-        List[str]: `raw_urls` + Safe Browsing API-compliant hostname expressions of `raw_urls`
+        list[str]: `raw_urls` + Safe Browsing API-compliant hostname expressions of `raw_urls`
     """
     # pylint: disable=broad-except
 

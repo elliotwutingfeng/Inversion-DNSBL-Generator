@@ -1,8 +1,7 @@
 """
 URL and IP Address hashing utilities
 """
-from __future__ import annotations
-from typing import Tuple
+
 from hashlib import sha256
 import socket
 import struct
@@ -19,7 +18,7 @@ def compute_url_hash(url: str) -> bytes:
     return sha256(f"{url}/".encode()).digest()
 
 
-def int_addr_to_ip_and_hash(int_addr: int) -> Tuple[str, bytes]:
+def int_addr_to_ip_and_hash(int_addr: int) -> tuple[str, bytes]:
     """Convert integer representation of ipv4 address
     to `ip_address` string and its Safe Browsing API sha256 `ip_hash`
 
@@ -27,7 +26,7 @@ def int_addr_to_ip_and_hash(int_addr: int) -> Tuple[str, bytes]:
         int_addr (int): integer representation of ipv4 address
 
     Returns:
-        Tuple[str, bytes]: `ip_address` string and its Safe Browsing API sha256 `ip_hash`
+        tuple[str, bytes]: `ip_address` string and its Safe Browsing API sha256 `ip_hash`
     """
     ip_address = socket.inet_ntoa(struct.pack("!I", int_addr))
     ip_hash = compute_url_hash(ip_address)

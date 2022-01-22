@@ -1,8 +1,8 @@
 """
 SQLite utilities for making INSERT queries
 """
-from __future__ import annotations
-from typing import Callable,List,Mapping,Optional,Set,Iterator
+from typing import Optional
+from collections.abc import Callable,Mapping,Iterator
 
 from apsw import Error
 from modules.utils.log import init_logger
@@ -13,7 +13,7 @@ from modules.utils.types import Vendors
 logger = init_logger()
 
 def add_urls(
-    url_list_fetcher: Callable[..., Iterator[List[str]]],
+    url_list_fetcher: Callable[..., Iterator[list[str]]],
     update_time: int,
     db_filename: str,
     url_list_fetcher_args: Optional[Mapping] = None,
@@ -24,7 +24,7 @@ def add_urls(
     update its lastListed timestamp field to `update_time`.
 
     Args:
-        url_list_fetcher (Callable[..., Iterator[List[str]]]): Fetches URL list
+        url_list_fetcher (Callable[..., Iterator[list[str]]]): Fetches URL list
         from local or remote sources
         update_time (int): Time when URLs are added to database in UNIX Epoch seconds
         db_filename (str): SQLite database filename
@@ -122,12 +122,12 @@ def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         conn.close()
 
 
-def replace_malicious_url_hash_prefixes(hash_prefixes: Set[bytes], vendor: Vendors) -> None:
+def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendors) -> None:
     """Replace maliciousHashPrefixes table contents with latest malicious URL
     hash prefixes from Safe Browsing API
 
     Args:
-        hash_prefixes (Set[bytes]): Malicious URL hash prefixes from Safe Browsing API
+        hash_prefixes (set[bytes]): Malicious URL hash prefixes from Safe Browsing API
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
     logger.info("Updating database with %s malicious URL hashes", vendor)

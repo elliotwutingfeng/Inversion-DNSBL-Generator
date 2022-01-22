@@ -4,11 +4,9 @@ File Writer
 For writing URLs to .txt file with with timestamp in filename
 """
 
-from __future__ import annotations
 import os
 import ipaddress
 from datetime import datetime
-from typing import List
 
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
@@ -27,7 +25,7 @@ def current_datetime_str() -> str:
     return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
-def write_blocklist_txt(urls: List[str], vendor: Vendors) -> None:
+def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
     """Split list of urls into hostnames and ip addresses, then write
     hostnames and ip addresses in ascending order to separate .txt files
     with timestamp in filename and store them in `BLOCKLISTS_FOLDER`.
@@ -35,14 +33,14 @@ def write_blocklist_txt(urls: List[str], vendor: Vendors) -> None:
     `BLOCKLISTS_FOLDER` is created beforehand if it does not exist yet.
 
     Args:
-        urls (List[str]): List of URLs
+        urls (list[str]): List of URLs
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
     if not os.path.exists(BLOCKLISTS_FOLDER):
         os.mkdir(BLOCKLISTS_FOLDER)
 
-    hostnames: List[str] = []
-    ip_addresses: List[str] = []
+    hostnames: list[str] = []
+    ip_addresses: list[str] = []
     for url in urls:
         try:
             if isinstance(ipaddress.ip_address(url), ipaddress.IPv4Address):
