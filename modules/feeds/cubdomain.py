@@ -11,7 +11,7 @@ import cchardet # pylint: disable=unused-import
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import curl_req, download_page_responses
+from modules.utils.http import download_page_responses
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
