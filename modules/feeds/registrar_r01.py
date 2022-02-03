@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator
 import gzip
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_req
+from modules.utils.http import download_page_responses
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
@@ -18,12 +18,16 @@ async def _get_r01_domains() -> AsyncIterator[list[str]]:
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
     logger.info("Downloading Registrar R01 lists...")
+
     endpoints = ["https://partner.r01.ru/zones/ru_domains.gz",
                 "https://partner.r01.ru/zones/su_domains.gz",
                 "https://partner.r01.ru/zones/rf_domains.gz"]
+
+    page_responses = await download_page_responses(endpoints)
+
     raw_urls: list[str] = []
-    for endpoint in endpoints:
-        resp = curl_req(endpoint)
+    
+    for endpoint,resp in page_responses.items():
         if resp:
             decompressed_lines = gzip.decompress(resp).decode().split("\n")
             raw_urls += [line.split('\t')[0].lower() for line in decompressed_lines]

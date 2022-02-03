@@ -1,17 +1,17 @@
 """
 For fetching and scanning URLs from cubdomain.com
 """
-import aiohttp
+
 import asyncio
 from datetime import datetime, timedelta
 from collections import ChainMap
-from collections.abc import AsyncIterator,Iterator
+from collections.abc import AsyncIterator
 from bs4 import BeautifulSoup, SoupStrainer
 import cchardet # pylint: disable=unused-import
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import curl_req
+from modules.utils.http import curl_req, download_page_responses
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
@@ -40,23 +40,22 @@ def _generate_dates_and_root_urls() -> tuple[list[datetime], list[str]]:
     return dates, root_urls
 
 
-async def _create_root_url_map(date: datetime, root_url: str) -> dict:
+async def _create_root_url_map(root_url: str, date: datetime, content: bytes) -> dict:
     """Determine number of available pages for
     `date` YYYY-MM-DD represented by`root_url`.
 
     Args:
-        date (datetime): Date for given `root_url`
         root_url (str): Root URL representing `date`
+        date (datetime): Date for given `root_url`
+        content (bytes): first page content for given `root_url`
 
     Returns:
         dict: Mapping of root URL to its total number of pages and its date
     """
     # pylint: disable=broad-except
     root_url_to_last_page_and_date = dict()
-    first_page_url = root_url + "1"
-    # Go to page 1
-    first_page_response: str = curl_req(first_page_url).decode()
-    if first_page_response:
+
+    if content:
         try:
             # Find all instances of "/domains-registered-by-date/YYYY-MM-DD/{page_number}"
             only_a_tag_with_page_link = SoupStrainer(
@@ -65,7 +64,7 @@ async def _create_root_url_map(date: datetime, root_url: str) -> dict:
                 href=lambda x: "/domains-registered-by-date/" in x,
             )
             soup = BeautifulSoup(
-                first_page_response,
+                content,
                 "lxml",
                 parse_only=only_a_tag_with_page_link,
             )
@@ -83,19 +82,26 @@ async def _create_root_url_map(date: datetime, root_url: str) -> dict:
                 "date": date,
             }
         except Exception as error:
-            logger.error("%s %s", first_page_url, error, exc_info=True)
+            logger.error("%s %s", root_url+"1", error, exc_info=True)
     return root_url_to_last_page_and_date
 
 
-def _get_page_urls_by_date_str() -> dict:
+async def _get_page_urls_by_date_str() -> dict:
     """Create list of all domain pages for all dates
 
     Returns:
         dict: Mapping of date string to its page URLs
     """
     dates, root_urls = _generate_dates_and_root_urls()
+    first_page_url_to_date = dict(zip([root_url + "1" for root_url in root_urls],dates))
+
+    first_page_responses = await download_page_responses([root_url + "1" for root_url in root_urls])
+
+    root_urls_dates_and_contents = [(first_page_url[:-1],first_page_url_to_date[first_page_url],content)
+    for first_page_url,content in first_page_responses.items()]
+
     root_urls_to_last_page_and_date = dict(
-        ChainMap(*execute_with_ray(_create_root_url_map, list(zip(dates, root_urls))))
+        ChainMap(*execute_with_ray(_create_root_url_map, root_urls_dates_and_contents))
     )  # Mapping of each root URL to its total number of pages and its date
     page_urls_by_date_str: dict = dict()
     for root_url, details in root_urls_to_last_page_and_date.items():
@@ -106,14 +112,14 @@ def _get_page_urls_by_date_str() -> dict:
     return page_urls_by_date_str
 
 
-def _get_cubdomain_page_urls_by_db_filename() -> dict:
+async def _get_cubdomain_page_urls_by_db_filename() -> dict:
     """Create list of all domain pages for all db_filenames
 
     Returns:
         dict: Mapping of db_filename to page_urls
     """
     logger.info("Creating list of all cubdomain.com pages")
-    cubdomain_page_urls_by_date_str = _get_page_urls_by_date_str()
+    cubdomain_page_urls_by_date_str = await _get_page_urls_by_date_str()
     cubdomain_page_urls_by_db_filename = {
             f"cubdomain_{date_str}": page_urls
             for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
@@ -136,7 +142,7 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
     # pylint: disable=broad-except
-    page_responses = await _download_page_responses(page_urls)
+    page_responses = await download_page_responses(page_urls)
 
     only_a_tag_with_cubdomain_site = SoupStrainer(
         "a", href=lambda x: "cubdomain.com/site/" in x
@@ -159,32 +165,6 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
                 logger.error("%s %s", page_url, error, exc_info=True)
                 yield []
 
-async def _download_page_responses(page_urls: list[str]) -> dict[str,str]:
-    """Downloads raw text content from a list of `page_urls` asynchronously
-
-    Args:
-        page_urls (list[str]): Page URLs to download from
-
-    Returns:
-        dict[str,str]: Mapping of page_url to its content
-    """
-    async def gather_with_concurrency(n: int, *tasks) -> dict[str,str]:
-        semaphore = asyncio.Semaphore(n)
-
-        async def sem_task(task):
-            async with semaphore:
-                return await task
-
-        return dict(await asyncio.gather(*(sem_task(task) for task in tasks)))
-
-    async def get_async(url, session):
-        async with session.get(url) as response:
-            return (url,await response.text())
-    
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
-        # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
-        return await gather_with_concurrency(10, *[get_async(url, session) for url in page_urls])
-
 
 class CubDomain:
     """
@@ -200,7 +180,8 @@ class CubDomain:
             in _generate_dates_and_root_urls()[0]]
             if parser_args["fetch"]:
                 # Download and Add CubDomain.com URLs to database
-                self.page_urls_by_db_filename = _get_cubdomain_page_urls_by_db_filename()
+                loop = asyncio.get_event_loop() 
+                self.page_urls_by_db_filename =  loop.run_until_complete(_get_cubdomain_page_urls_by_db_filename())
                 self.jobs = [
                 (
                     _download_cubdomain,

@@ -1,6 +1,8 @@
 """
 HTTP Request Utilities
 """
+import aiohttp
+import asyncio
 from io import BytesIO
 import time
 import json
@@ -107,3 +109,30 @@ def curl_req(url: Union[str, bytes], payload: Optional[Mapping] = None
     if not get_body:
         logger.error("URL: %s %s request failed!", url, request_type)
     return get_body
+
+
+async def download_page_responses(page_urls: list[str]) -> dict[str,bytes]:
+    """Downloads raw bytes content from a list of `page_urls` asynchronously
+
+    Args:
+        page_urls (list[str]): Page URLs to download from
+
+    Returns:
+        dict[str,bytes]: Mapping of page_url to its raw bytes content
+    """
+    async def gather_with_concurrency(n: int, *tasks) -> dict[str,bytes]:
+        semaphore = asyncio.Semaphore(n)
+
+        async def sem_task(task):
+            async with semaphore:
+                return await task
+
+        return dict(await asyncio.gather(*(sem_task(task) for task in tasks)))
+
+    async def get_async(url, session):
+        async with session.get(url) as response:
+            return (url,await response.read())
+    
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
+        # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
+        return await gather_with_concurrency(10, *[get_async(url, session) for url in page_urls])
