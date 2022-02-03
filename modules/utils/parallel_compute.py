@@ -188,7 +188,7 @@ def execute_with_ray(
         actor = pbar.actor
         actor_id = ray.put(actor)
 
-    task_actor = TaskActor.remote() # type:ignore
+    task_actors = [TaskActor.remote() for _ in task_args_list] # type:ignore
 
     tasks_pre_launch = [
         task_actor.run_task_handler.remote(
@@ -201,7 +201,7 @@ def execute_with_ray(
             else {},
             actor_id=actor_id if progress_bar else None,
         )
-        for task_args in task_args_list
+        for task_actor,task_args in zip(task_actors,task_args_list)
     ]
 
     # Keeps progressbar open until all tasks are completed
