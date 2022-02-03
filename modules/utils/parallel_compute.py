@@ -136,7 +136,7 @@ def run_task_handler(
     updates progressbar and returns the value returned by `task_handler`
 
     Args:
-        task_handler (Callable[...,Awaitable]): Asynchronous Callable function to parallelise
+        task_handler (Callable[...,Awaitable]): Asynchronous function to parallelise
         task_args (tuple): Arguments to be passed into `task_handler`
         task_obj_store_args (Mapping): Object IDs to be passed
         from ray object store into `task_handler`
@@ -181,8 +181,7 @@ def execute_with_ray(
     Tasks are processed in parallel with pipelining to maximise throughput.
 
     Args:
-        task_handler (Callable): Callable function to parallelise. Can be
-        either synchronous or asynchronous.
+        task_handler (Callable): Asynchronous function to parallelise
         task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
         task_obj_store_args (Optional[Mapping], optional): Object IDs to be passed

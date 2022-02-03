@@ -1,7 +1,7 @@
 """
 Safe Browsing API helper class
 """
-import time
+import asyncio
 import itertools
 import base64
 import json
@@ -134,7 +134,7 @@ class SafeBrowsing:
         # Make POST request for each sublist of URLs
         res = json.loads(curl_req(self.threatMatchesEndpoint, payload=data, request_type="POST"))
 
-        time.sleep(2)  # To prevent rate limiting
+        await asyncio.sleep(2)  # To prevent rate limiting
         return res
 
     def get_malicious_urls(self, urls: set[str]) -> list[str]:

@@ -20,7 +20,7 @@ logger = init_logger()
 DATE_STR_FORMAT: str = "{dt:%Y}-{dt:%m}-{dt:%d}"
 
 def _generate_dates_and_root_urls() -> tuple[list[datetime], list[str]]:
-    """Generate list of dates ranging
+    """Generate list of dates and corresponding root URLs ranging
     from 25th June 2017 to today inclusive
 
     Returns:
