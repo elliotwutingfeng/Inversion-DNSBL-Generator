@@ -1,8 +1,8 @@
 """
 SQLite utilities for making INSERT queries
 """
-from typing import Optional
-from collections.abc import Callable,Mapping,Iterator
+from typing import Optional, Union
+from collections.abc import Callable,Mapping,Iterator,AsyncIterator
 
 from apsw import Error
 from modules.utils.log import init_logger
@@ -12,8 +12,8 @@ from modules.utils.types import Vendors
 
 logger = init_logger()
 
-def add_urls(
-    url_list_fetcher: Callable[..., Iterator[list[str]]],
+async def add_urls(
+    url_list_fetcher: Callable[..., AsyncIterator[list[str]]],
     update_time: int,
     db_filename: str,
     url_list_fetcher_args: Optional[Mapping] = None,
@@ -24,8 +24,8 @@ def add_urls(
     update its lastListed timestamp field to `update_time`.
 
     Args:
-        url_list_fetcher (Callable[..., Iterator[list[str]]]): Fetches URL list
-        from local or remote sources
+        url_list_fetcher (Callable[..., AsyncIterator[list[str]]]): 
+        Fetches URL list from local or remote sources
         update_time (int): Time when URLs are added to database in UNIX Epoch seconds
         db_filename (str): SQLite database filename
         url_list_fetcher_args (Optional[Mapping], optional): Arguments for `url_list_fetcher`.
@@ -45,7 +45,7 @@ def add_urls(
                     "Performing INSERT-UPDATE URLs to urls table of %s...", db_filename
                 )
 
-                for url_batch in urls:
+                async for url_batch in urls:
                     cur.executemany(
                         """
                     INSERT INTO urls (url, lastListed, hash)
@@ -68,7 +68,7 @@ def add_urls(
         conn.close()
 
 
-def add_ip_addresses(db_filename: str, first_octet: int) -> None:
+async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
     """For a given `first_octet`, INSERT all 2 ** 24 ipv4 addresses and their sha256 hashes
     into urls table of SQLite database at `db_filename`.db.
 

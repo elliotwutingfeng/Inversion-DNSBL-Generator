@@ -8,7 +8,7 @@ from modules.utils.types import Vendors
 
 logger = init_logger()
 
-def update_malicious_urls(
+async def update_malicious_urls(
     update_time: int, vendor: Vendors, db_filename: str, malicious_urls: list[str]
 ) -> None:
     """Updates malicious status of all URLs currently in database

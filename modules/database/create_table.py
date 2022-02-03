@@ -10,7 +10,7 @@ from modules.utils.types import DatabaseTableModes
 
 logger = init_logger()
 
-def _create_ips_table(db_filename: str) -> None:
+async def _create_ips_table(db_filename: str) -> None:
     """Create SQLite table for storing ipv4 addresses
     at `db_filename`.db database.
 
@@ -37,7 +37,7 @@ def _create_ips_table(db_filename: str) -> None:
         conn.close()
 
 
-def _create_urls_table(db_filename: str) -> None:
+async def _create_urls_table(db_filename: str) -> None:
     """Create SQLite table for storing URLs (that are not ipv4 addresses)
     at `db_filename`.db database.
 

@@ -11,7 +11,7 @@ from modules.utils.types import Vendors
 logger = init_logger()
 
 
-def retrieve_matching_hash_prefix_urls(
+async def retrieve_matching_hash_prefix_urls(
     db_filename: str, prefix_sizes: list[int], vendor: Vendors
 ) -> list[str]:
     """Identify URLs from `db_filename`.db database with sha256 hashes beginning with
@@ -113,7 +113,7 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
         "marked as malicious by %s Safe Browsing API",vendor
     )
 
-    def retrieve_malicious_urls_(urls_db_filename: str, vendor: Vendors) -> set[str]:
+    async def retrieve_malicious_urls_(urls_db_filename: str, vendor: Vendors) -> set[str]:
         malicious_urls: set[str] = set()
         conn = create_connection(urls_db_filename)
         if conn is not None:

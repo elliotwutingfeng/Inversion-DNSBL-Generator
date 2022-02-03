@@ -1,7 +1,7 @@
 """
 For fetching and scanning URLs from Tranco TOP1M
 """
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 from io import BytesIO
 from zipfile import ZipFile
 from more_itertools import chunked
@@ -12,11 +12,11 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-def _get_top1m_url_list() -> Iterator[list[str]]:
+async def _get_top1m_url_list() -> AsyncIterator[list[str]]:
     """Downloads the Tranco TOP1M dataset and yields all listed URLs in batches.
 
     Yields:
-        Iterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[list[str]]: Batch of URLs as a list
     """
     logger.info("Downloading TOP1M list...")
     with BytesIO() as file:

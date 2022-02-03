@@ -3,7 +3,7 @@ For fetching and scanning URLs from Domains Project
 """
 import os
 import pathlib
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 
 from more_itertools.more import chunked, sort_together
 
@@ -12,14 +12,14 @@ from modules.utils.log import init_logger
 
 logger = init_logger()
 
-def _get_local_file_url_list(txt_filepath: str) -> Iterator[list[str]]:
+async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[list[str]]:
     """Yields all listed URLs in batches from local text file.
 
     Args:
         txt_filepath (str): Filepath of local text file containing URLs
 
     Yields:
-        Iterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[list[str]]: Batch of URLs as a list
     """
     try:
         with open(txt_filepath, "r") as file:

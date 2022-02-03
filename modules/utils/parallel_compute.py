@@ -14,12 +14,11 @@ https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb9
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 from asyncio import Event
-from typing import Any,Optional
+from typing import Any, Awaitable,Optional
 from collections.abc import Callable,Mapping,Sequence
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
 import ray
-
 
 @ray.remote
 class ProgressBarActor:
@@ -125,36 +124,36 @@ class ProgressBar:
                 pbar.close()
                 return
 
-
 @ray.remote
-def _run_task_handler(
-    task_handler: Callable,
-    task_args: tuple,
-    task_obj_store_args: Mapping,
-    actor_id: Optional[Any] = None,
-) -> Any:
-    """Runs `task_handler` on `task_args`,
-    updates progressbar and returns the value returned by `task_handler`
+class TaskActor:
+    async def run_task_handler(self,
+        task_handler: Callable[...,Awaitable],
+        task_args: tuple,
+        task_obj_store_args: Mapping,
+        actor_id: Optional[Any] = None,
+    ) -> Any:
+        """Runs `task_handler` on `task_args`,
+        updates progressbar and returns the value returned by `task_handler`
 
-    Args:
-        task_handler (Callable): Callable function to parallelise
-        task_args (tuple): Arguments to be passed into `task_handler`
-        task_obj_store_args (Mapping): Object IDs to be passed
-        from ray object store into `task_handler`
-        actor_id (Optional[Any], optional): Object reference assigned
-        to `ProgressBar` actor. Defaults to None.
+        Args:
+            task_handler (Callable[...,Awaitable]): Asynchronous Callable function to parallelise
+            task_args (tuple): Arguments to be passed into `task_handler`
+            task_obj_store_args (Mapping): Object IDs to be passed
+            from ray object store into `task_handler`
+            actor_id (Optional[Any], optional): Object reference assigned
+            to `ProgressBar` actor. Defaults to None.
 
-    Returns:
-        Any: Value returned by `task_handler`
-    """
+        Returns:
+            Any: Value returned by `task_handler`
+        """
+        result = await task_handler(
+            *task_args,
+            **{arg: await task_obj_store_args[arg] for arg in task_obj_store_args}
+        )
 
-    result = task_handler(
-        *task_args,
-        **{arg: ray.get(task_obj_store_args[arg]) for arg in task_obj_store_args}
-    )
-    if actor_id is not None:
-        actor_id.update.remote(1)  # type: ignore
-    return result
+        if actor_id is not None:
+            actor_id.update.remote(1)  # type: ignore
+        return result
 
 
 def execute_with_ray(
@@ -168,7 +167,8 @@ def execute_with_ray(
     Tasks are processed in parallel with pipelining to maximise throughput.
 
     Args:
-        task_handler (Callable): Callable function to parallelise
+        task_handler (Callable): Callable function to parallelise. Can be
+        either synchronous or asynchronous.
         task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
         task_obj_store_args (Optional[Mapping], optional): Object IDs to be passed
@@ -188,8 +188,10 @@ def execute_with_ray(
         actor = pbar.actor
         actor_id = ray.put(actor)
 
+    task_actor = TaskActor.remote() # type:ignore
+
     tasks_pre_launch = [
-        _run_task_handler.remote(
+        task_actor.run_task_handler.remote(
             task_handler,
             task_args,
             task_obj_store_args={

@@ -1,7 +1,7 @@
 """
 For fetching and scanning URLs from Registrar R01
 """
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 import gzip
 from more_itertools import chunked
 from modules.utils.log import init_logger
@@ -11,11 +11,11 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-def _get_r01_domains() -> Iterator[list[str]]:
+async def _get_r01_domains() -> AsyncIterator[list[str]]:
     """Downloads domains from Registrar R01 and yields all listed URLs in batches.
 
     Yields:
-        Iterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[list[str]]: Batch of URLs as a list
     """
     logger.info("Downloading Registrar R01 lists...")
     endpoints = ["https://partner.r01.ru/zones/ru_domains.gz",

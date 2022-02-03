@@ -117,7 +117,7 @@ class SafeBrowsing:
         }
         return data
 
-    def _threat_matches_lookup(self, url_batch: list[str]) -> dict:
+    async def _threat_matches_lookup(self, url_batch: list[str]) -> dict:
         """Submits list of URLs to Safe Browsing API threatMatches endpoint
         and returns the API response.
 

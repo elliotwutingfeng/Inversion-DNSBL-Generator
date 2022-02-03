@@ -1,9 +1,11 @@
 """
 For fetching and scanning URLs from cubdomain.com
 """
+import aiohttp
+import asyncio
 from datetime import datetime, timedelta
 from collections import ChainMap
-from collections.abc import Iterator
+from collections.abc import AsyncIterator,Iterator
 from bs4 import BeautifulSoup, SoupStrainer
 import cchardet # pylint: disable=unused-import
 from more_itertools import chunked
@@ -38,7 +40,7 @@ def _generate_dates_and_root_urls() -> tuple[list[datetime], list[str]]:
     return dates, root_urls
 
 
-def _create_root_url_map(date: datetime, root_url: str) -> dict:
+async def _create_root_url_map(date: datetime, root_url: str) -> dict:
     """Determine number of available pages for
     `date` YYYY-MM-DD represented by`root_url`.
 
@@ -120,7 +122,7 @@ def _get_cubdomain_page_urls_by_db_filename() -> dict:
     return cubdomain_page_urls_by_db_filename
 
 
-def _download_cubdomain(page_urls: list[str]) -> Iterator[list[str]]:
+async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
     """Download cubdomain.com domains and yields
     all listed URLs from each page_url in `page_urls`.
 
@@ -131,14 +133,15 @@ def _download_cubdomain(page_urls: list[str]) -> Iterator[list[str]]:
         page_urls (list[str]): Page URLs containing domains registered on date `date_str`
 
     Yields:
-        Iterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[list[str]]: Batch of URLs as a list
     """
     # pylint: disable=broad-except
+    page_responses = await _download_page_responses(page_urls)
+
     only_a_tag_with_cubdomain_site = SoupStrainer(
         "a", href=lambda x: "cubdomain.com/site/" in x
     )
-    for page_url in page_urls:
-        page_response: str = curl_req(page_url).decode()
+    for page_url,page_response in page_responses.items():
         if page_response:
             try:
                 soup = BeautifulSoup(
@@ -155,6 +158,33 @@ def _download_cubdomain(page_urls: list[str]) -> Iterator[list[str]]:
             except Exception as error:
                 logger.error("%s %s", page_url, error, exc_info=True)
                 yield []
+
+async def _download_page_responses(page_urls: list[str]) -> dict[str,str]:
+    """Downloads raw text content from a list of `page_urls` asynchronously
+
+    Args:
+        page_urls (list[str]): Page URLs to download from
+
+    Returns:
+        dict[str,str]: Mapping of page_url to its content
+    """
+    async def gather_with_concurrency(n: int, *tasks) -> dict[str,str]:
+        semaphore = asyncio.Semaphore(n)
+
+        async def sem_task(task):
+            async with semaphore:
+                return await task
+
+        return dict(await asyncio.gather(*(sem_task(task) for task in tasks)))
+
+    async def get_async(url, session):
+        async with session.get(url) as response:
+            return (url,await response.text())
+    
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
+        # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
+        return await gather_with_concurrency(10, *[get_async(url, session) for url in page_urls])
+
 
 class CubDomain:
     """
