@@ -129,10 +129,40 @@ async def download_page_responses(page_urls: list[str]) -> dict[str,bytes]:
 
         return dict(await asyncio.gather(*(sem_task(task) for task in tasks)))
 
-    async def get_async(url, session):
+    async def get(url, session):
         async with session.get(url) as response:
             return (url,await response.read())
     
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
         # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
-        return await gather_with_concurrency(10, *[get_async(url, session) for url in page_urls])
+        return await gather_with_concurrency(10, *[get(url, session) for url in page_urls])
+
+
+async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[str,bytes]]:
+    """Given a list of HTTP endpoints and a list of payloads, 
+    make HTTP POST requests asynchronously
+
+    Args:
+        endpoints (list[str]): List of HTTP POST request endpoints
+        payloads (list[bytes]): List of HTTP POST request payloads
+
+    Returns:
+        list[tuple[str,bytes]]: List of HTTP POST request endpoints 
+        and their HTTP response contents
+    """
+    async def gather_with_concurrency(n: int, *tasks) -> list[tuple[str,bytes]]:
+        semaphore = asyncio.Semaphore(n)
+
+        async def sem_task(task):
+            async with semaphore:
+                return await task
+
+        return await asyncio.gather(*(sem_task(task) for task in tasks))
+
+    async def post(url, payload, session):
+        async with session.post(url, data=payload) as response:
+            return (url,await response.read())
+
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
+        # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
+        return await gather_with_concurrency(10, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])

@@ -2,15 +2,17 @@
 Safe Browsing API helper class
 """
 import asyncio
+from http.client import responses
 import itertools
 import base64
 import json
+from typing import Iterator
 from dotenv import dotenv_values
 from more_itertools.more import chunked
 from tqdm import tqdm  # type: ignore
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import curl_req
+from modules.utils.http import curl_req, post_async
 from modules.utils.types import Vendors
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
@@ -117,25 +119,27 @@ class SafeBrowsing:
         }
         return data
 
-    async def _threat_matches_lookup(self, url_batch: list[str]) -> dict:
+    async def _threat_matches_lookup(self, url_batches: Iterator[list[str]]) -> list[dict]:
         """Submits list of URLs to Safe Browsing API threatMatches endpoint
         and returns the API response.
 
         Args:
-            url_batch (list[str]): URLs to submit to Safe Browsing API
-            threatMatches endpoint for inspection
+            url_batches (Iterator[list[str]]): Batches of URLs to submit 
+            to Safe Browsing API threatMatches endpoint for inspection
 
         Returns:
-            dict: Safe Browsing API threatMatches response
+            list[dict]: List of each URL batch's 
+            Safe Browsing API threatMatches response
         """
+        endpoints: list[str] = []
+        payloads: list[bytes] = []
+        for url_batch in url_batches:
+            # Make POST request for each sublist of URLs
+            endpoints.append(self.threatMatchesEndpoint)  
+            payloads.append(json.dumps(SafeBrowsing._threat_matches_payload(url_batch)).encode())
+        responses = await post_async(endpoints,payloads)
 
-        data = SafeBrowsing._threat_matches_payload(url_batch)
-
-        # Make POST request for each sublist of URLs
-        res = json.loads(curl_req(self.threatMatchesEndpoint, payload=data, request_type="POST"))
-
-        await asyncio.sleep(2)  # To prevent rate limiting
-        return res
+        return [json.loads(body) for _,body in responses]
 
     def get_malicious_urls(self, urls: set[str]) -> list[str]:
         """Identify all URLs in a given set of `urls` deemed by Safe Browsing API to be malicious.
@@ -150,18 +154,15 @@ class SafeBrowsing:
         # Split list of URLs into sublists of length == maximum_url_batch_size
         url_batches = chunked(urls, self.maximum_url_batch_size)
         logger.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
-        results = execute_with_ray(
-            self._threat_matches_lookup,
-            [(url_batch,) for url_batch in url_batches],
-            progress_bar=True,
-        )
+
+        results =  asyncio.get_event_loop().run_until_complete(self._threat_matches_lookup(url_batches))
 
         malicious = list(
             itertools.chain(
                 *(res["matches"] for res in results if "matches" in res)
             )
         )
-        # Removes http, https prefixes
+        # Removes `https` and `http` prefixes
         malicious_urls = list(
             set(
                 (
