@@ -153,7 +153,7 @@ class SafeBrowsing:
         results = execute_with_ray(
             self._threat_matches_lookup,
             [(url_batch,) for url_batch in url_batches],
-            progress_bar=False,
+            progress_bar=True,
         )
 
         malicious = list(
