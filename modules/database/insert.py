@@ -39,8 +39,8 @@ async def add_urls(
     conn = create_connection(db_filename)
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 logger.info(
                     "Performing INSERT-UPDATE URLs to urls table of %s...", db_filename
                 )
@@ -84,8 +84,8 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         ips_to_generate = 2 ** 24
         try:
             # Check if there are 2 ** 24 ips in database
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute("SELECT MAX(_rowid_) FROM urls")
                 number_of_ipv4_addresses = cur.fetchall()[0][0]
             if number_of_ipv4_addresses != ips_to_generate:
@@ -97,10 +97,8 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     db_filename,
                 )
                 with conn:
-                    cur = conn.cursor()
                     cur.execute("DELETE FROM urls")
                 with conn:
-                    cur = conn.cursor()
                     cur.executemany(
                         """
                     INSERT INTO urls (url,hash)
@@ -134,8 +132,8 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
     conn = create_connection("malicious")
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     "DELETE FROM maliciousHashPrefixes WHERE vendor = ?", (vendor,)
                 )

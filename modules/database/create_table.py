@@ -20,8 +20,8 @@ async def _create_ips_table(db_filename: str) -> None:
     conn = create_connection(db_filename)
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS urls (
                             url text,
@@ -47,8 +47,8 @@ async def _create_urls_table(db_filename: str) -> None:
     conn = create_connection(db_filename)
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS urls (
                             url text UNIQUE,
@@ -70,8 +70,8 @@ def _create_malicious_url_hash_prefixes_table() -> None:
     conn = create_connection("malicious")
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
                                                 hashPrefix blob,

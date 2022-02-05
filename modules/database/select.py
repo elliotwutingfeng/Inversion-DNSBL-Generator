@@ -30,8 +30,8 @@ async def retrieve_matching_hash_prefix_urls(
     urls = []
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur = cur.execute(
                     f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
                 )
@@ -82,9 +82,9 @@ def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> list[int]:
     conn = create_connection("malicious")
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
                 # Find all prefix_sizes
-                cur = conn.cursor()
                 cur = cur.execute(
                     "SELECT DISTINCT prefixSize FROM maliciousHashPrefixes WHERE vendor = ?",
                     (vendor,),
@@ -118,8 +118,8 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
         conn = create_connection(urls_db_filename)
         if conn is not None:
             try:
+                cur = conn.cursor()
                 with conn:
-                    cur = conn.cursor()
                     if vendor == "Google":
                         # Most recent lastGoogleMalicious timestamp
                         cur.execute("SELECT MAX(lastGoogleMalicious) FROM urls")

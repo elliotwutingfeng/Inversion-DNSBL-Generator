@@ -45,8 +45,8 @@ async def update_malicious_urls(
     conn = create_connection(db_filename)
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """
                     CREATE TEMPORARY TABLE
