@@ -11,7 +11,7 @@ from dotenv import dotenv_values
 from more_itertools.more import chunked
 from tqdm import tqdm  # type: ignore
 from modules.utils.log import init_logger
-from modules.utils.http import curl_req, post_async
+from modules.utils.http import get_async, post_async
 from modules.utils.types import Vendors
 
 GOOGLE_API_KEY = dotenv_values(".env")["GOOGLE_API_KEY"]
@@ -194,7 +194,7 @@ class SafeBrowsing:
             dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
             https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
         """
-        threat_lists_endpoint_resp = curl_req(self.threatListsEndpoint)
+        threat_lists_endpoint_resp = asyncio.get_event_loop().run_until_complete(get_async([self.threatListsEndpoint]))[self.threatListsEndpoint]
         if threat_lists_endpoint_resp:
             threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
                 "threatLists"
@@ -244,7 +244,8 @@ class SafeBrowsing:
                 "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
                 "listUpdateRequests": url_threatlist_combinations,
             }
-            res = curl_req(self.threatListUpdatesEndpoint, payload=req_body, request_type="POST")
+            payload: bytes = json.dumps(req_body).encode()
+            res = asyncio.get_event_loop().run_until_complete(post_async([self.threatListUpdatesEndpoint],[payload]))[0][1]
 
             res_json = (
                 json.loads(res)

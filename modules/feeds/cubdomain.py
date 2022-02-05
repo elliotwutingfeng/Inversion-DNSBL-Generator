@@ -11,7 +11,7 @@ import cchardet # pylint: disable=unused-import
 from more_itertools import chunked
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from modules.utils.http import download_page_responses
+from modules.utils.http import get_async
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
@@ -95,7 +95,7 @@ async def _get_page_urls_by_date_str() -> dict:
     dates, root_urls = _generate_dates_and_root_urls()
     first_page_url_to_date = dict(zip([root_url + "1" for root_url in root_urls],dates))
 
-    first_page_responses = await download_page_responses([root_url + "1" for root_url in root_urls])
+    first_page_responses = await get_async([root_url + "1" for root_url in root_urls])
 
     root_urls_dates_and_contents = [(first_page_url[:-1],first_page_url_to_date[first_page_url],content)
     for first_page_url,content in first_page_responses.items()]
@@ -142,7 +142,7 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
     # pylint: disable=broad-except
-    page_responses = await download_page_responses(page_urls)
+    page_responses = await get_async(page_urls)
 
     only_a_tag_with_cubdomain_site = SoupStrainer(
         "a", href=lambda x: "cubdomain.com/site/" in x
@@ -180,8 +180,7 @@ class CubDomain:
             in _generate_dates_and_root_urls()[0]]
             if parser_args["fetch"]:
                 # Download and Add CubDomain.com URLs to database
-                loop = asyncio.get_event_loop() 
-                self.page_urls_by_db_filename =  loop.run_until_complete(_get_cubdomain_page_urls_by_db_filename())
+                self.page_urls_by_db_filename = asyncio.get_event_loop().run_until_complete(_get_cubdomain_page_urls_by_db_filename())
                 self.jobs = [
                 (
                     _download_cubdomain,

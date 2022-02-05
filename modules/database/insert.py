@@ -1,8 +1,8 @@
 """
 SQLite utilities for making INSERT queries
 """
-from typing import Optional, Union
-from collections.abc import Callable,Mapping,Iterator,AsyncIterator
+from typing import Optional
+from collections.abc import Callable,Mapping,AsyncIterator
 
 from apsw import Error
 from modules.utils.log import init_logger

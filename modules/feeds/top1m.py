@@ -6,7 +6,7 @@ from io import BytesIO
 from zipfile import ZipFile
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_req
+from modules.utils.http import get_async
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
@@ -20,7 +20,8 @@ async def _get_top1m_url_list() -> AsyncIterator[list[str]]:
     """
     logger.info("Downloading TOP1M list...")
     with BytesIO() as file:
-        resp = curl_req("https://tranco-list.eu/top-1m.csv.zip")
+        endpoint: str = "https://tranco-list.eu/top-1m.csv.zip"
+        resp = (await get_async([endpoint]))[endpoint]
         if resp:
             file.write(resp)
             zipfile = ZipFile(file)

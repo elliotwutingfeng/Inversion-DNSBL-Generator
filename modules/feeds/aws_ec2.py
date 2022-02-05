@@ -1,13 +1,14 @@
 """
 For generating and scanning Amazon Web Services EC2 URLs
 """
+import asyncio
 import ipaddress
 import json
 from collections import defaultdict
 from collections.abc import AsyncIterator
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_req
+from modules.utils.http import get_async
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
@@ -33,8 +34,9 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     Returns:
         dict: Map each AWS region to a list of EC2 IPv4 ranges associated with that region
     """
-    resp = curl_req("https://ip-ranges.amazonaws.com/ip-ranges.json")
-    if resp == b'':
+    endpoint: str = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+    resp = asyncio.get_event_loop().run_until_complete(get_async([endpoint]))[endpoint]
+    if resp == b'{}':
         logger.warning("Failed to retrieve Amazon Web "
         "Services IP ranges; returning empty list")
         return defaultdict(list)

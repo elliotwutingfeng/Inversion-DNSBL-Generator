@@ -120,14 +120,14 @@ def curl_req(url: Union[str, bytes], payload: Optional[Mapping] = None
     return get_body
 
 
-async def download_page_responses(page_urls: list[str]) -> dict[str,bytes]:
-    """Downloads raw bytes content from a list of `page_urls` asynchronously
+async def get_async(endpoints: list[str]) -> dict[str,bytes]:
+    """Given a list of HTTP endpoints, make HTTP GET requests asynchronously
 
     Args:
-        page_urls (list[str]): Page URLs to download from
+        endpoints (list[str]): List of HTTP GET request endpoints
 
     Returns:
-        dict[str,bytes]: Mapping of page_url to its raw bytes content
+        dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content
     """
     async def gather_with_concurrency(n: int, *tasks) -> dict[str,bytes]:
         semaphore = asyncio.Semaphore(n)
@@ -144,7 +144,8 @@ async def download_page_responses(page_urls: list[str]) -> dict[str,bytes]:
     
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
         # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
-        return await gather_with_concurrency(10, *[get(url, session) for url in page_urls])
+        # Only one instance of any duplicate endpoint will be used
+        return await gather_with_concurrency(10, *[get(url, session) for url in set(endpoints)])
 
 
 async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[str,bytes]]:

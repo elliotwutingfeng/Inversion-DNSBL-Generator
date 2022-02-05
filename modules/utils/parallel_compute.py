@@ -13,7 +13,6 @@ Inspired by:
 https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
-from asyncio import Event
 import asyncio
 from typing import Any, Awaitable,Optional
 from collections.abc import Callable,Mapping,Sequence
@@ -27,13 +26,13 @@ class ProgressBarActor:
 
     counter: int
     delta: int
-    event: Event
+    event: asyncio.Event
 
     def __init__(self) -> None:
         """Initializes progressbar actor."""
         self.counter = 0
         self.delta = 0
-        self.event = Event()
+        self.event = asyncio.Event()
 
     def update(self, num_items_completed: int) -> None:
         """Updates the progressbar with the incremental
