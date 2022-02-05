@@ -11,7 +11,6 @@ from dotenv import dotenv_values
 from more_itertools.more import chunked
 from tqdm import tqdm  # type: ignore
 from modules.utils.log import init_logger
-from modules.utils.parallel_compute import execute_with_ray
 from modules.utils.http import curl_req, post_async
 from modules.utils.types import Vendors
 

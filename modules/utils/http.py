@@ -26,15 +26,23 @@ DEFAULT_TIMEOUT = 120  # in seconds
 logger = init_logger()
 
 
-def backoff_delay(backoff_factor: float,number_of__retries_made: int) -> None:
-    """Time delay that exponentially increases with `number_of__retries_made`
+def backoff_delay(backoff_factor: float,number_of_retries_made: int) -> None:
+    """Time delay that exponentially increases with `number_of_retries_made`
 
     Args:
         backoff_factor (float): Backoff delay multiplier
-        number_of__retries_made (int): More retries made -> Longer backoff delay
+        number_of_retries_made (int): More retries made -> Longer backoff delay
     """
-    time.sleep(backoff_factor * (2 ** (number_of__retries_made - 1)))
+    time.sleep(backoff_factor * (2 ** (number_of_retries_made - 1)))
 
+async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int) -> None:
+    """Asynchronous time delay that exponentially increases with `number_of_retries_made`
+
+    Args:
+        backoff_factor (float): Backoff delay multiplier
+        number_of_retries_made (int): More retries made -> Longer backoff delay
+    """
+    await asyncio.sleep(backoff_factor * (2 ** (number_of_retries_made - 1)))
 
 def curl_req(url: Union[str, bytes], payload: Optional[Mapping] = None
 , request_type: RequestTypes = "GET") -> bytes:
@@ -52,7 +60,7 @@ def curl_req(url: Union[str, bytes], payload: Optional[Mapping] = None
     # pylint: disable=no-member
     max_retries: int = 5
     get_body: bytes = b""
-    for number_of__retries_made in range(max_retries):
+    for number_of_retries_made in range(max_retries):
         try:
             b_obj = BytesIO()
             crl = pycurl.Curl()
@@ -104,9 +112,10 @@ def curl_req(url: Union[str, bytes], payload: Optional[Mapping] = None
                 break
             # End curl session
             crl.close()
-        if number_of__retries_made != max_retries - 1: # No delay if final attempt fails
-            backoff_delay(1,number_of__retries_made)
+        if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
+            backoff_delay(1,number_of_retries_made)
     if not get_body:
+        get_body = b"{}" # Allow json.loads to parse body if request fails
         logger.error("URL: %s %s request failed!", url, request_type)
     return get_body
 
@@ -160,8 +169,19 @@ async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[
         return await asyncio.gather(*(sem_task(task) for task in tasks))
 
     async def post(url, payload, session):
-        async with session.post(url, data=payload) as response:
-            return (url,await response.read())
+        max_retries: int = 5
+        errors: list[str] = []
+        for number_of_retries_made in range(max_retries):
+            try:
+                async with session.post(url, data=payload) as response:
+                    return (url,await response.read())
+            except aiohttp.client_exceptions.ClientConnectorError as error:
+                errors.append(error)
+                logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
+                if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
+                    await backoff_delay_async(1, number_of_retries_made)
+        logger.error("URL: %s POST request failed! Errors: %s", url, errors)
+        return (url,b"{}") # Allow json.loads to parse body if request fails
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
         # Limit number of concurrent connections to 10 to prevent rate-limiting by web server

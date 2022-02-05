@@ -138,6 +138,7 @@ This project is not sponsored, endorsed, or otherwise affiliated with Google and
 -   [Ray](https://www.ray.io)
 -   [TLDExtract](https://github.com/john-kurkowski/tldextract)
 -   [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io)
+-   [AIOHTTP](https://docs.aiohttp.org/en/stable)
 
 ## References
 
