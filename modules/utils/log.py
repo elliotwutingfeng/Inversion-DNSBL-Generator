@@ -6,7 +6,7 @@ import logging
 
 
 def init_logger(logs_folder: str = "logs") -> logging.Logger:
-    """Returns a logger with custom format settings.
+    """Return a logger with custom format settings.
 
     `logs_folder` is created beforehand if it does not exist yet.
 

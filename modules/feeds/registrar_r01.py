@@ -12,7 +12,7 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 logger = init_logger()
 
 async def _get_r01_domains() -> AsyncIterator[list[str]]:
-    """Downloads domains from Registrar R01 and yields all listed URLs in batches.
+    """Download domains from Registrar R01 and yields all listed URLs in batches.
 
     Yields:
         AsyncIterator[list[str]]: Batch of URLs as a list

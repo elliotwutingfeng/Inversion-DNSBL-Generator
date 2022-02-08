@@ -11,7 +11,7 @@ logger = init_logger()
 async def update_malicious_urls(
     update_time: int, vendor: Vendors, db_filename: str, malicious_urls: list[str]
 ) -> None:
-    """Updates malicious status of all URLs currently in database
+    """Update malicious status of all URLs currently in database
     i.e. for URLs found in `malicious_urls`,
     set lastGoogleMalicious or lastYandexMalicious value to `update_time`.
 

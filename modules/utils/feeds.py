@@ -26,15 +26,22 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
     for raw_url in raw_urls:
         try:
             ext = tldextract.extract(raw_url)
-            if ext.subdomain == "":
+            if ext.registered_domain == "":
+                # No registered_domain recognised -> do not split raw_url into parts
+                parts = []
+            elif ext.subdomain == "":
+                # No subdomains found -> extract registered_domain
                 parts = [ext.registered_domain]
             else:
+                # Subdomains and registered_domain found -> extract them all
                 parts = ext.subdomain.split(".") + [ext.registered_domain]
+
+            # Safe Browsing API-compliant hostname expressions
             hostname_expressions.update(
                 [
                     f"{'.'.join(parts[-i:])}"
                     for i in range(len(parts) if len(parts) < 5 else 5)
-                ]
+                ] + [raw_url]
             )
         except Exception as error:
             logger.error("%s %s", raw_url, error, exc_info=True)

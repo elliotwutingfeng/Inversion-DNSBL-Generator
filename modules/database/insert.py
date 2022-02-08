@@ -18,7 +18,7 @@ async def add_urls(
     db_filename: str,
     url_list_fetcher_args: Optional[Mapping] = None,
 ) -> None:
-    """Retrieves a list of URLs and UPSERT URLs into
+    """Retrieve a list of URLs and UPSERT URLs into
     urls table of SQLite database at `db_filename`.db.
     If any given URL already exists in urls table,
     update its lastListed timestamp field to `update_time`.

@@ -9,7 +9,7 @@ from modules.utils.log import init_logger
 
 
 class MockMkdir:
-    """Mocks os.mkdir for testing"""
+    """Mock os.mkdir for testing"""
 
     def __init__(self) -> None:
         self.received_args: Any = None
@@ -18,7 +18,7 @@ class MockMkdir:
         self.received_args = args
 
     def get_received_args(self) -> Any:
-        """Returns received arguments
+        """Return received arguments
 
         Returns:
             Any: received arguments

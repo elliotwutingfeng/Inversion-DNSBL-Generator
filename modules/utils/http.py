@@ -46,7 +46,7 @@ async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int)
 
 def curl_req(url: Union[str, bytes], payload: Optional[Mapping] = None
 , request_type: RequestTypes = "GET") -> bytes:
-    """HTTP GET or POST request with retry attempts and backoff delay between
+    """Make HTTP GET or POST request with retry attempts and backoff delay between
     attempts, using CURL.
 
     Args:

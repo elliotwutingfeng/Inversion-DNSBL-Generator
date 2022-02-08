@@ -26,7 +26,7 @@ class SafeBrowsing:
     """
 
     def __init__(self, vendor: Vendors) -> None:
-        """Initializes Safe Browsing API helper class
+        """Initialize Safe Browsing API helper class
         for a given `vendor` (e.g. "Google", "Yandex" etc.)
 
         Args:
@@ -119,8 +119,8 @@ class SafeBrowsing:
         return data
 
     async def _threat_matches_lookup(self, url_batches: Iterator[list[str]]) -> list[dict]:
-        """Submits list of URLs to Safe Browsing API threatMatches endpoint
-        and returns the API response.
+        """Submit list of URLs to Safe Browsing API threatMatches endpoint
+        and return the API response.
 
         Args:
             url_batches (Iterator[list[str]]): Batches of URLs to submit 
@@ -182,7 +182,7 @@ class SafeBrowsing:
     ######## Safe Browsing Update API ########
     def _retrieve_threat_list_updates(self) -> dict:
         """GET names of currently available Safe Browsing lists from threatLists endpoint,
-        and returns threatListUpdates endpoint JSON response
+        and return threatListUpdates endpoint JSON response
         in Dictionary-form for all available lists.
 
         Google API Reference
@@ -211,7 +211,7 @@ class SafeBrowsing:
                     )
                 ]
             else:
-                # Yandex API returns status code 204 with no content
+                # Yandex API will return status code 204 with no content
                 # if url_threatlist_combinations is too large
                 url_threatlist_combinations = [
                     {

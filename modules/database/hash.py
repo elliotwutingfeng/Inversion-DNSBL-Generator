@@ -7,7 +7,7 @@ import socket
 import struct
 
 def compute_url_hash(url: str) -> bytes:
-    """Computes sha256 hash of `url` as specified by Safe Browsing API.
+    """Compute sha256 hash of `url` as specified by Safe Browsing API.
 
     Args:
         url (str): URL to be hashed

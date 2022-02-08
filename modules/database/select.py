@@ -97,7 +97,7 @@ def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> list[int]:
 
 
 def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> list[str]:
-    """Retrieves URLs from database most recently marked as malicious by Safe Browsing API
+    """Retrieve URLs from database most recently marked as malicious by Safe Browsing API
     of `vendor`.
 
     Args:

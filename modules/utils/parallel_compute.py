@@ -29,13 +29,13 @@ class ProgressBarActor:
     event: asyncio.Event
 
     def __init__(self) -> None:
-        """Initializes progressbar actor."""
+        """Initialize progressbar actor."""
         self.counter = 0
         self.delta = 0
         self.event = asyncio.Event()
 
     def update(self, num_items_completed: int) -> None:
-        """Updates the progressbar with the incremental
+        """Update the progressbar with the incremental
         number of items that were just completed.
 
         Args:
@@ -48,7 +48,7 @@ class ProgressBarActor:
     async def wait_for_update(self) -> tuple[int, int]:
         """Blocking call.
 
-        Waits until somebody calls `update`, then returns a tuple of
+        Wait until somebody calls `update`, then return a tuple of
         the number of updates since the last call to
         `wait_for_update`, and the total number of completed items.
 
@@ -63,7 +63,7 @@ class ProgressBarActor:
         return saved_delta, self.counter
 
     def get_counter(self) -> int:
-        """Returns the total number of complete items.
+        """Return the total number of complete items.
 
         Returns:
             int: Total number of complete items
@@ -80,7 +80,7 @@ class ProgressBar:
     pbar: tqdm
 
     def __init__(self, total: int, description: str = "") -> None:
-        """Initializes progressbar.
+        """Initialize progressbar.
 
         Ray actors don't seem to play nice with mypy, generating
         a spurious warning for the following line
@@ -99,7 +99,7 @@ class ProgressBar:
 
     @property
     def actor(self) -> ActorHandle:
-        """Returns a reference to the remote `ProgressBarActor`.
+        """Return a reference to the remote `ProgressBarActor`.
 
         When a task is completed, call `update` on the actor.
 
@@ -113,7 +113,7 @@ class ProgressBar:
 
         Do this after starting a series of remote Ray tasks, to which you've
         passed the actor handle. Each of them calls `update` on the actor.
-        When the progress meter reaches 100%, this method returns.
+        When the progress meter reaches 100%, this method will return.
         """
         # See https://stackoverflow.com/questions/41707229/tqdm-printing-to-newline
         pbar = tqdm(desc=self.description, total=self.total, position=0, leave=True)
@@ -132,7 +132,7 @@ def run_task_handler(
         actor_id: Optional[Any] = None,
     ) -> Any:
     """Runs `task_handler` on `task_args`,
-    updates progressbar and returns the value returned by `task_handler`
+    update progressbar and return the value returned by `task_handler`
 
     Args:
         task_handler (Callable[...,Awaitable]): Asynchronous function to parallelise

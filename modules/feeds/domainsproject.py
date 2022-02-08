@@ -13,7 +13,7 @@ from modules.utils.log import init_logger
 logger = init_logger()
 
 async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[list[str]]:
-    """Yields all listed URLs in batches from local text file.
+    """Yield all listed URLs in batches from local text file.
 
     Args:
         txt_filepath (str): Filepath of local text file containing URLs
@@ -39,7 +39,7 @@ async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[list[str]
 def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[
 list[str], list[str]
 ]:
-    """Scans for Domains Project .txt source files and generates filepaths
+    """Scan for Domains Project .txt source files and generate filepaths
     to .txt source files, and database filenames for each .txt source file.
 
     Returns:

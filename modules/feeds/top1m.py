@@ -13,7 +13,7 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 logger = init_logger()
 
 async def _get_top1m_url_list() -> AsyncIterator[list[str]]:
-    """Downloads the Tranco TOP1M dataset and yields all listed URLs in batches.
+    """Download the Tranco TOP1M dataset and yield all listed URLs in batches.
 
     Yields:
         AsyncIterator[list[str]]: Batch of URLs as a list

@@ -28,7 +28,7 @@ def _collapse_cidrs(list_of_cidr_nets: list[str]) -> list[str]:
     return ip_ranges
 
 def _get_region_to_ip_ranges_per_region_map() -> dict:
-    """Downloads Amazon's official IP ranges and generates list of Amazon Web Services
+    """Download Amazon's official IP ranges and generates list of Amazon Web Services
     EC2 IPv4 ranges for each AWS region.
 
     Returns:
@@ -50,7 +50,7 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     return region_to_ip_ranges_map
 
 async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[list[str]]:
-    """Generates Amazon Web Services EC2 URLs located at
+    """Generate Amazon Web Services EC2 URLs located at
     AWS `region` and yields all listed URLs in batches.
 
     Args:
