@@ -189,7 +189,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[
             try:
                 async with session.post(url, data=payload) as response:
                     return (url,await response.read())
-            except aiohttp.client_exceptions.ClientConnectorError as error:
+            except aiohttp.client_exceptions.ClientError as error:
                 errors.append(error)
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
