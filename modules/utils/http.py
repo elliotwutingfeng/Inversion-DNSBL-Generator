@@ -134,15 +134,27 @@ async def get_async(endpoints: list[str]) -> dict[str,bytes]:
 
         async def sem_task(task):
             async with semaphore:
+                await asyncio.sleep(0.5)
                 return await task
 
         return dict(await asyncio.gather(*(sem_task(task) for task in tasks)))
 
     async def get(url, session):
-        async with session.get(url) as response:
-            return (url,await response.read())
-    
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
+        max_retries: int = 5
+        errors: list[str] = []
+        for number_of_retries_made in range(max_retries):
+            try:
+                async with session.get(url) as response:
+                    return (url,await response.read())
+            except aiohttp.client_exceptions.ClientConnectorError as error:
+                errors.append(error)
+                logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
+                if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
+                    await backoff_delay_async(1, number_of_retries_made)
+        logger.error("URL: %s GET request failed! Errors: %s", url, errors)
+        return (url,b"{}") # Allow json.loads to parse body if request fails 
+
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True) as session:
         # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
         # Only one instance of any duplicate endpoint will be used
         return await gather_with_concurrency(10, *[get(url, session) for url in set(endpoints)])
@@ -165,6 +177,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[
 
         async def sem_task(task):
             async with semaphore:
+                await asyncio.sleep(0.5)
                 return await task
 
         return await asyncio.gather(*(sem_task(task) for task in tasks))
@@ -184,6 +197,6 @@ async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[
         logger.error("URL: %s POST request failed! Errors: %s", url, errors)
         return (url,b"{}") # Allow json.loads to parse body if request fails
 
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)) as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True) as session:
         # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
         return await gather_with_concurrency(10, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])
