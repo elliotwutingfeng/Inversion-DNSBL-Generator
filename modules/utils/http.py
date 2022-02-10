@@ -146,7 +146,7 @@ async def get_async(endpoints: list[str]) -> dict[str,bytes]:
             try:
                 async with session.get(url) as response:
                     return (url,await response.read())
-            except aiohttp.client_exceptions.ClientConnectorError as error:
+            except aiohttp.client_exceptions.ClientError as error:
                 errors.append(error)
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
