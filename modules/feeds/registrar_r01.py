@@ -28,7 +28,7 @@ async def _get_r01_domains() -> AsyncIterator[list[str]]:
     raw_urls: list[str] = []
     
     for endpoint,resp in page_responses.items():
-        if resp:
+        if resp != b"{}":
             decompressed_lines = gzip.decompress(resp).decode().split("\n")
             raw_urls += [line.split('\t')[0].lower() for line in decompressed_lines]
         else:

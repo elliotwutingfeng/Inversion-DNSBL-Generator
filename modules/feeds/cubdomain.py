@@ -148,7 +148,7 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
         "a", href=lambda x: "cubdomain.com/site/" in x
     )
     for page_url,page_response in page_responses.items():
-        if page_response:
+        if page_response != b"{}":
             try:
                 soup = BeautifulSoup(
                     page_response,

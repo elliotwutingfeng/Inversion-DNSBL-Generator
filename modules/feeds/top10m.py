@@ -21,7 +21,7 @@ async def _get_top10m_url_list() -> AsyncIterator[list[str]]:
     with BytesIO() as file:
         endpoint: str = "https://www.domcop.com/files/top/top10milliondomains.csv.zip"
         resp = (await get_async([endpoint]))[endpoint]
-        if resp:
+        if resp != b"{}":
             file.write(resp)
             zipfile = ZipFile(file)
             raw_urls = (
