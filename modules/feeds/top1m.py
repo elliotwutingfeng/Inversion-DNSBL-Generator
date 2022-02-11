@@ -22,7 +22,7 @@ async def _get_top1m_url_list() -> AsyncIterator[list[str]]:
     with BytesIO() as file:
         endpoint: str = "https://tranco-list.eu/top-1m.csv.zip"
         resp = (await get_async([endpoint]))[endpoint]
-        if resp:
+        if resp != b"{}":
             file.write(resp)
             zipfile = ZipFile(file)
             raw_urls = (

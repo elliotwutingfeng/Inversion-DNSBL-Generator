@@ -36,7 +36,7 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     """
     endpoint: str = "https://ip-ranges.amazonaws.com/ip-ranges.json"
     resp = asyncio.get_event_loop().run_until_complete(get_async([endpoint]))[endpoint]
-    if resp == b'{}':
+    if resp == b"{}":
         logger.warning("Failed to retrieve Amazon Web "
         "Services IP ranges; returning empty list")
         return defaultdict(list)

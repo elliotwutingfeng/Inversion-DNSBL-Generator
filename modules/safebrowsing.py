@@ -195,7 +195,7 @@ class SafeBrowsing:
             https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
         """
         threat_lists_endpoint_resp = asyncio.get_event_loop().run_until_complete(get_async([self.threatListsEndpoint]))[self.threatListsEndpoint]
-        if threat_lists_endpoint_resp:
+        if threat_lists_endpoint_resp != b"{}":
             threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
                 "threatLists"
             ]
