@@ -1,8 +1,6 @@
 """
 SQLite utilities for making CREATE TABLE queries
 """
-from __future__ import annotations
-from typing import List
 from apsw import Error
 
 from modules.utils.log import init_logger
@@ -12,7 +10,7 @@ from modules.utils.types import DatabaseTableModes
 
 logger = init_logger()
 
-def _create_ips_table(db_filename: str) -> None:
+async def _create_ips_table(db_filename: str) -> None:
     """Create SQLite table for storing ipv4 addresses
     at `db_filename`.db database.
 
@@ -22,8 +20,8 @@ def _create_ips_table(db_filename: str) -> None:
     conn = create_connection(db_filename)
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS urls (
                             url text,
@@ -39,7 +37,7 @@ def _create_ips_table(db_filename: str) -> None:
         conn.close()
 
 
-def _create_urls_table(db_filename: str) -> None:
+async def _create_urls_table(db_filename: str) -> None:
     """Create SQLite table for storing URLs (that are not ipv4 addresses)
     at `db_filename`.db database.
 
@@ -49,8 +47,8 @@ def _create_urls_table(db_filename: str) -> None:
     conn = create_connection(db_filename)
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS urls (
                             url text UNIQUE,
@@ -72,8 +70,8 @@ def _create_malicious_url_hash_prefixes_table() -> None:
     conn = create_connection("malicious")
     if conn is not None:
         try:
+            cur = conn.cursor()
             with conn:
-                cur = conn.cursor()
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
                                                 hashPrefix blob,
@@ -86,13 +84,13 @@ def _create_malicious_url_hash_prefixes_table() -> None:
         conn.close()
 
 
-def initialise_databases(db_filenames: List[str], mode: DatabaseTableModes) -> None:
+def initialise_databases(db_filenames: list[str], mode: DatabaseTableModes) -> None:
     """Create database for each db_filename in `db_filenames` list, and
     database `malicious`.db for storing malicious URL hash prefixes
     if any of them do not exist yet.
 
     Args:
-        db_filenames (List[str]): SQLite database filenames
+        db_filenames (list[str]): SQLite database filenames
         mode (DatabaseTableModes): If "domains", create databases for non-ipv4 URLs,
         if "ips", create databases for ipv4 addresses
 

@@ -1,26 +1,26 @@
 """
 For fetching and scanning URLs from DomCop TOP10M
 """
-from __future__ import annotations
-from typing import Dict,List,Tuple,Iterator
+from collections.abc import AsyncIterator
 from io import BytesIO
 from zipfile import ZipFile
 from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import curl_req
+from modules.utils.http import get_async
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 logger = init_logger()
 
-def _get_top10m_url_list() -> Iterator[List[str]]:
-    """Downloads the DomCop TOP10M dataset and yields all listed URLs in batches.
+async def _get_top10m_url_list() -> AsyncIterator[list[str]]:
+    """Download the DomCop TOP10M dataset and yield all listed URLs in batches.
 
     Yields:
-        Iterator[List[str]]: Batch of URLs as a list
+        AsyncIterator[list[str]]: Batch of URLs as a list
     """
     logger.info("Downloading TOP10M list...")
     with BytesIO() as file:
-        resp = curl_req("https://www.domcop.com/files/top/top10milliondomains.csv.zip")
+        endpoint: str = "https://www.domcop.com/files/top/top10milliondomains.csv.zip"
+        resp = (await get_async([endpoint]))[endpoint]
         if resp:
             file.write(resp)
             zipfile = ZipFile(file)
@@ -41,9 +41,9 @@ class Top10M:
     For fetching and scanning URLs from DomCop TOP10M
     """
     # pylint: disable=too-few-public-methods
-    def __init__(self,parser_args:Dict,update_time:int):
-        self.db_filenames: List[str] = []
-        self.jobs: List[Tuple] = []
+    def __init__(self,parser_args: dict, update_time: int):
+        self.db_filenames: list[str] = []
+        self.jobs: list[tuple] = []
         if "top10m" in parser_args["sources"]:
             self.db_filenames = ["top10m_urls"]
             if parser_args["fetch"]:

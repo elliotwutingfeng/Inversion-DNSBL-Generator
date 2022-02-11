@@ -13,13 +13,12 @@ Inspired by:
 https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
-from __future__ import annotations
-from asyncio import Event
-from typing import Any,Callable,List,Mapping,Optional,Sequence,Tuple
+import asyncio
+from typing import Any, Awaitable,Optional
+from collections.abc import Callable,Mapping,Sequence
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
 import ray
-
 
 @ray.remote
 class ProgressBarActor:
@@ -27,16 +26,16 @@ class ProgressBarActor:
 
     counter: int
     delta: int
-    event: Event
+    event: asyncio.Event
 
     def __init__(self) -> None:
-        """Initializes progressbar actor."""
+        """Initialize progressbar actor."""
         self.counter = 0
         self.delta = 0
-        self.event = Event()
+        self.event = asyncio.Event()
 
     def update(self, num_items_completed: int) -> None:
-        """Updates the progressbar with the incremental
+        """Update the progressbar with the incremental
         number of items that were just completed.
 
         Args:
@@ -46,15 +45,15 @@ class ProgressBarActor:
         self.delta += num_items_completed
         self.event.set()
 
-    async def wait_for_update(self) -> Tuple[int, int]:
+    async def wait_for_update(self) -> tuple[int, int]:
         """Blocking call.
 
-        Waits until somebody calls `update`, then returns a tuple of
+        Wait until somebody calls `update`, then return a tuple of
         the number of updates since the last call to
         `wait_for_update`, and the total number of completed items.
 
         Returns:
-            Tuple[int, int]: (Number of updates since the last call to `wait_for_update`,
+            tuple[int, int]: (Number of updates since the last call to `wait_for_update`,
             Total number of completed items)
         """
         await self.event.wait()
@@ -64,7 +63,7 @@ class ProgressBarActor:
         return saved_delta, self.counter
 
     def get_counter(self) -> int:
-        """Returns the total number of complete items.
+        """Return the total number of complete items.
 
         Returns:
             int: Total number of complete items
@@ -81,7 +80,7 @@ class ProgressBar:
     pbar: tqdm
 
     def __init__(self, total: int, description: str = "") -> None:
-        """Initializes progressbar.
+        """Initialize progressbar.
 
         Ray actors don't seem to play nice with mypy, generating
         a spurious warning for the following line
@@ -100,7 +99,7 @@ class ProgressBar:
 
     @property
     def actor(self) -> ActorHandle:
-        """Returns a reference to the remote `ProgressBarActor`.
+        """Return a reference to the remote `ProgressBarActor`.
 
         When a task is completed, call `update` on the actor.
 
@@ -114,7 +113,7 @@ class ProgressBar:
 
         Do this after starting a series of remote Ray tasks, to which you've
         passed the actor handle. Each of them calls `update` on the actor.
-        When the progress meter reaches 100%, this method returns.
+        When the progress meter reaches 100%, this method will return.
         """
         # See https://stackoverflow.com/questions/41707229/tqdm-printing-to-newline
         pbar = tqdm(desc=self.description, total=self.total, position=0, leave=True)
@@ -125,20 +124,19 @@ class ProgressBar:
                 pbar.close()
                 return
 
-
 @ray.remote
-def _run_task_handler(
-    task_handler: Callable,
-    task_args: Tuple,
-    task_obj_store_args: Mapping,
-    actor_id: Optional[Any] = None,
-) -> Any:
+def run_task_handler(
+        task_handler: Callable[...,Awaitable],
+        task_args: tuple,
+        task_obj_store_args: Mapping,
+        actor_id: Optional[Any] = None,
+    ) -> Any:
     """Runs `task_handler` on `task_args`,
-    updates progressbar and returns the value returned by `task_handler`
+    update progressbar and return the value returned by `task_handler`
 
     Args:
-        task_handler (Callable): Callable function to parallelise
-        task_args (Tuple): Arguments to be passed into `task_handler`
+        task_handler (Callable[...,Awaitable]): Asynchronous function to parallelise
+        task_args (tuple): Arguments to be passed into `task_handler`
         task_obj_store_args (Mapping): Object IDs to be passed
         from ray object store into `task_handler`
         actor_id (Optional[Any], optional): Object reference assigned
@@ -147,36 +145,50 @@ def _run_task_handler(
     Returns:
         Any: Value returned by `task_handler`
     """
+    async def run_task_handler_(
+        task_handler: Callable[...,Awaitable],
+        task_args: tuple,
+        task_obj_store_args: Mapping,
+        actor_id: Optional[Any] = None,
+    ) -> Any:
+        result = await task_handler(
+            *task_args,
+            **{arg: await task_obj_store_args[arg] for arg in task_obj_store_args}
+        )
 
-    result = task_handler(
-        *task_args,
-        **{arg: ray.get(task_obj_store_args[arg]) for arg in task_obj_store_args}
-    )
-    if actor_id is not None:
-        actor_id.update.remote(1)  # type: ignore
-    return result
+        if actor_id is not None:
+            actor_id.update.remote(1)  # type: ignore
+        return result
+    
+    # Reference: https://docs.ray.io/en/latest/async_api.html#asyncio-for-remote-tasks
+    return asyncio.get_event_loop().run_until_complete(run_task_handler_(
+        task_handler,
+        task_args,
+        task_obj_store_args,
+        actor_id
+    ))
 
 
 def execute_with_ray(
     task_handler: Callable,
-    task_args_list: Sequence[Tuple],
+    task_args_list: Sequence[tuple],
     task_obj_store_args: Optional[Mapping] = None,
     progress_bar: bool = True,
-) -> List:
+) -> list:
     """Apply task_handler to list of tasks.
 
     Tasks are processed in parallel with pipelining to maximise throughput.
 
     Args:
-        task_handler (Callable): Callable function to parallelise
-        task_args_list (Sequence[Tuple]): Sequence of Tuples of Arguments
+        task_handler (Callable): Asynchronous function to parallelise
+        task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
         task_obj_store_args (Optional[Mapping], optional): Object IDs to be passed
         from ray object store into `task_handler`, if any. Defaults to None.
         progress_bar (bool, optional): If set to True, shows progressbar. Defaults to True.
 
     Returns:
-        List: List of returned values from each instance of task_handler
+        list: List of returned values from each instance of task_handler
     """
 
     if len(task_args_list) == 0:
@@ -189,7 +201,7 @@ def execute_with_ray(
         actor_id = ray.put(actor)
 
     tasks_pre_launch = [
-        _run_task_handler.remote(
+        run_task_handler.remote(
             task_handler,
             task_args,
             task_obj_store_args={

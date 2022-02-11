@@ -6,7 +6,7 @@ import logging
 
 
 def init_logger(logs_folder: str = "logs") -> logging.Logger:
-    """Returns a logger with custom format settings.
+    """Return a logger with custom format settings.
 
     `logs_folder` is created beforehand if it does not exist yet.
 
@@ -32,8 +32,8 @@ def init_logger(logs_folder: str = "logs") -> logging.Logger:
         datefmt="%d-%m-%Y %H:%M:%S",
     )
 
-    # Prevents tldextract library's filelock-related messages from cluttering the logs
-    logging.getLogger("filelock").setLevel(logging.WARNING)
+    # (Temporarily disabled) Prevents tldextract library's filelock-related messages from cluttering the logs
+    # logging.getLogger("filelock").setLevel(logging.WARNING)
 
     logger = logging.getLogger()
     logger.setLevel("INFO")

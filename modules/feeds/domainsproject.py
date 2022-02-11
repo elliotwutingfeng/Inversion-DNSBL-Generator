@@ -3,7 +3,7 @@ For fetching and scanning URLs from Domains Project
 """
 import os
 import pathlib
-from typing import Dict,List,Tuple,Iterator
+from collections.abc import AsyncIterator
 
 from more_itertools.more import chunked, sort_together
 
@@ -12,14 +12,14 @@ from modules.utils.log import init_logger
 
 logger = init_logger()
 
-def _get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
-    """Yields all listed URLs in batches from local text file.
+async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[list[str]]:
+    """Yield all listed URLs in batches from local text file.
 
     Args:
         txt_filepath (str): Filepath of local text file containing URLs
 
     Yields:
-        Iterator[List[str]]: Batch of URLs as a list
+        AsyncIterator[list[str]]: Batch of URLs as a list
     """
     try:
         with open(txt_filepath, "r") as file:
@@ -36,20 +36,20 @@ def _get_local_file_url_list(txt_filepath: str) -> Iterator[List[str]]:
         yield []
 
 
-def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> Tuple[
-List[str], List[str]
+def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[
+list[str], list[str]
 ]:
-    """Scans for Domains Project .txt source files and generates filepaths
+    """Scan for Domains Project .txt source files and generate filepaths
     to .txt source files, and database filenames for each .txt source file.
 
     Returns:
-        Tuple[List[str], List[str]]: (Filepaths to .txt source files,
+        tuple[list[str], list[str]]: (Filepaths to .txt source files,
         Database filenames for each .txt source file)
     """
     # Scan Domains Project's "domains" directory for domainsproject_urls_db_filenames
     domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
-    domainsproject_txt_filepaths: List[str] = []
-    domainsproject_urls_db_filenames: List[str] = []
+    domainsproject_txt_filepaths: list[str] = []
+    domainsproject_urls_db_filenames: list[str] = []
     for root, _, files in os.walk(domainsproject_dir):
         for file in files:
             if file.lower().endswith(".txt"):
@@ -57,7 +57,7 @@ List[str], List[str]
                 domainsproject_txt_filepaths.append(os.path.join(root, file))
 
     # Sort domainsproject_txt_filepaths and domainsproject_urls_db_filenames by ascending filesize
-    domainsproject_filesizes: List[int] = [
+    domainsproject_filesizes: list[int] = [
         os.path.getsize(path) for path in domainsproject_txt_filepaths
     ]
     [
@@ -81,10 +81,10 @@ class DomainsProject:
     For fetching and scanning URLs from Domains Project
     """
     # pylint: disable=too-few-public-methods
-    def __init__(self,parser_args:Dict,update_time:int):
-        self.txt_filepaths: List[str] = []
-        self.db_filenames: List[str] = []
-        self.jobs: List[Tuple] = []
+    def __init__(self,parser_args: dict, update_time: int):
+        self.txt_filepaths: list[str] = []
+        self.db_filenames: list[str] = []
+        self.jobs: list[tuple] = []
         if "domainsproject" in parser_args["sources"]:
             (self.txt_filepaths, self.db_filenames) \
             = _retrieve_domainsproject_txt_filepaths_and_db_filenames()

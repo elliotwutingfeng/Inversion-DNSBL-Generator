@@ -1,6 +1,7 @@
 # Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
 
 [![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
+[![GitHub watchers](https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers)
 [![GitHub forks](https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)
 ![GitHub repo size](https://img.shields.io/github/repo-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)
@@ -33,11 +34,10 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 ## Requirements
 
 -   Linux or macOS
--   [libcurl](https://curl.se/libcurl)
--   Tested on Python 3.8.12
+-   Python >= 3.9.10
 -   Multi-core x86-64 CPU; for Python Ray support
--   Recommended: At least 8GB RAM
--   At least 25GB SSD free storage space; **at least 600GB required to process all URL sources**
+-   RAM: At least 8GB
+-   SSD Drive Space: At least 600GB required to process all URL sources
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -138,6 +138,7 @@ This project is not sponsored, endorsed, or otherwise affiliated with Google and
 -   [Ray](https://www.ray.io)
 -   [TLDExtract](https://github.com/john-kurkowski/tldextract)
 -   [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io)
+-   [AIOHTTP](https://docs.aiohttp.org/en/stable)
 
 ## References
 

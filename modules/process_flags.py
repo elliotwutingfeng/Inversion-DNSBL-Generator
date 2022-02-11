@@ -1,8 +1,8 @@
 """
 Process flags
 """
+import asyncio
 import time
-from typing import Dict
 from more_itertools import flatten
 import ray
 
@@ -20,6 +20,7 @@ from modules.database.insert import (
 from modules.database.update import update_malicious_urls
 
 from modules.filewriter import write_blocklist_txt
+from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
 
@@ -31,12 +32,14 @@ from modules.feeds.domainsproject import DomainsProject
 from modules.feeds.aws_ec2 import AmazonWebServicesEC2
 from modules.feeds.ipv4 import Ipv4
 
-def process_flags(parser_args: Dict) -> None:
+logger = init_logger()
+
+def process_flags(parser_args: dict) -> None:
     # pylint: disable=too-many-locals
     """Run DNSBL generator tasks in sequence based on `parser_args` flags set by user.
 
     Args:
-        parser_args (Dict): Flags set by user; see `main.py` for more details
+        parser_args (dict): Flags set by user; see `main.py` for more details
     """
     ray.shutdown()
     ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])
@@ -90,6 +93,7 @@ def process_flags(parser_args: Dict) -> None:
             prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 
             # Identify URLs in database whose full Hashes match with Malicious URL hash prefixes
+            logger.info("Identifying suspected %s malicious URLs",vendor)
             suspected_urls = set(
                 flatten(
                     execute_with_ray(
@@ -108,12 +112,13 @@ def process_flags(parser_args: Dict) -> None:
             del suspected_urls  # "frees" memory
             malicious_urls[vendor] = vendor_malicious_urls
 
-            write_blocklist_txt(malicious_urls[vendor],vendor)
+            asyncio.get_event_loop().run_until_complete(write_blocklist_txt(malicious_urls[vendor],vendor))
 
         # TODO push blocklist to GitHub
 
         # Update malicious URL statuses in database
         for vendor in parser_args["vendors"]:
+            logger.info("Updating %s malicious URL statuses in database",vendor)
             execute_with_ray(
                 update_malicious_urls,
                 [
@@ -126,5 +131,5 @@ def process_flags(parser_args: Dict) -> None:
     # Retrieve malicious URLs from database and write to blocklists
     if parser_args["retrieve"]:
         for vendor in parser_args["vendors"]:
-            write_blocklist_txt(retrieve_malicious_urls(domains_db_filenames, vendor), vendor)
+            asyncio.get_event_loop().run_until_complete(write_blocklist_txt(retrieve_malicious_urls(domains_db_filenames, vendor), vendor))
     ray.shutdown()

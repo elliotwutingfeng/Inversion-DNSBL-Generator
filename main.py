@@ -27,7 +27,9 @@ if __name__ == "__main__":
     run `python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google`
     """,
         formatter_class=CustomFormatter,
+        allow_abbrev=False # Disallows long options to be abbreviated if the abbreviation is unambiguous
     )
+
     parser.add_argument(
         "-f",
         "--fetch-urls",
@@ -38,6 +40,7 @@ if __name__ == "__main__":
         and update them to database
         """,
     )
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-i",
@@ -72,6 +75,7 @@ if __name__ == "__main__":
         If '--identify-malicious-urls' is not enabled, this flag will be silently ignored.
         """,
     )
+
     parser.add_argument(
         "-s",
         "--sources",
@@ -93,6 +97,7 @@ if __name__ == "__main__":
         default=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ec2", "ipv4"],
         type=str,
     )
+
     parser.add_argument(
         "-v",
         "--vendors",
@@ -109,6 +114,7 @@ if __name__ == "__main__":
         default=["google", "yandex"],
         type=str,
     )
+
     parser.add_argument(
         "-n",
         "--num-cpus",
