@@ -66,6 +66,8 @@
         "lxml",
         "NOSIGNAL",
         "pycurl",
+        "recognised",
+        "Referer",
         "rusqlite"
     ],
     "python.testing.pytestArgs": [

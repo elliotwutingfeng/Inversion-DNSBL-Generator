@@ -3,24 +3,8 @@ HTTP Request Utilities
 """
 import aiohttp
 import asyncio
-from io import BytesIO
-import time
-import json
-from typing import Optional,Union
-from collections.abc import Mapping
 
 from modules.utils.log import init_logger
-from modules.utils.types import RequestTypes
-
-
-headers = {
-    "Content-Type":"application/json",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8,application/json",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) "
-    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15",
-}
-
-DEFAULT_TIMEOUT = 120  # in seconds
 
 logger = init_logger()
 
