@@ -3,24 +3,8 @@ HTTP Request Utilities
 """
 import aiohttp
 import asyncio
-from io import BytesIO
-import time
-import json
-from typing import Optional,Union
-from collections.abc import Mapping
 
 from modules.utils.log import init_logger
-from modules.utils.types import RequestTypes
-
-
-headers = {
-    "Content-Type":"application/json",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8,application/json",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) "
-    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15",
-}
-
-DEFAULT_TIMEOUT = 120  # in seconds
 
 logger = init_logger()
 
@@ -33,24 +17,26 @@ async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int)
     """
     await asyncio.sleep(backoff_factor * (2 ** (number_of_retries_made - 1)))
 
-async def get_async(endpoints: list[str]) -> dict[str,bytes]:
+async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> dict[str,bytes]:
     """Given a list of HTTP endpoints, make HTTP GET requests asynchronously
 
     Args:
         endpoints (list[str]): List of HTTP GET request endpoints
+        max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests
 
     Returns:
         dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content
     """
-    async def gather_with_concurrency(n: int, *tasks) -> dict[str,bytes]:
-        semaphore = asyncio.Semaphore(n)
+    async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> dict[str,bytes]:
+        semaphore = asyncio.Semaphore(max_concurrent_requests)
 
         async def sem_task(task):
             async with semaphore:
                 await asyncio.sleep(0.5)
                 return await task
 
-        return dict(await asyncio.gather(*(sem_task(task) for task in tasks)))
+        tasklist = [sem_task(task) for task in tasks]
+        return dict([await f for f in asyncio.as_completed(tasklist)])
 
     async def get(url, session):
         max_retries: int = 5
@@ -68,32 +54,33 @@ async def get_async(endpoints: list[str]) -> dict[str,bytes]:
         return (url,b"{}") # Allow json.loads to parse body if request fails 
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True) as session:
-        # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
         # Only one instance of any duplicate endpoint will be used
-        return await gather_with_concurrency(10, *[get(url, session) for url in set(endpoints)])
+        return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
 
-async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[str,bytes]]:
+async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5) -> list[tuple[str,bytes]]:
     """Given a list of HTTP endpoints and a list of payloads, 
     make HTTP POST requests asynchronously
 
     Args:
         endpoints (list[str]): List of HTTP POST request endpoints
         payloads (list[bytes]): List of HTTP POST request payloads
+        max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests
 
     Returns:
         list[tuple[str,bytes]]: List of HTTP POST request endpoints 
         and their HTTP response contents
     """
-    async def gather_with_concurrency(n: int, *tasks) -> list[tuple[str,bytes]]:
-        semaphore = asyncio.Semaphore(n)
+    async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> list[tuple[str,bytes]]:
+        semaphore = asyncio.Semaphore(max_concurrent_requests)
 
         async def sem_task(task):
             async with semaphore:
                 await asyncio.sleep(0.5)
                 return await task
 
-        return await asyncio.gather(*(sem_task(task) for task in tasks))
+        tasklist = [sem_task(task) for task in tasks]
+        return [await f for f in asyncio.as_completed(tasklist)]
 
     async def post(url, payload, session):
         max_retries: int = 5
@@ -111,5 +98,4 @@ async def post_async(endpoints: list[str], payloads: list[bytes]) -> list[tuple[
         return (url,b"{}") # Allow json.loads to parse body if request fails
 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True) as session:
-        # Limit number of concurrent connections to 10 to prevent rate-limiting by web server
-        return await gather_with_concurrency(10, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])
+        return await gather_with_concurrency(max_concurrent_requests, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])

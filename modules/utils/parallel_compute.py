@@ -14,6 +14,7 @@ https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb9
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 import asyncio
+import copy
 from typing import Any, Awaitable,Optional
 from collections.abc import Callable,Mapping,Sequence
 from ray.actor import ActorHandle
@@ -205,7 +206,7 @@ def execute_with_ray(
             task_handler,
             task_args,
             task_obj_store_args={
-                key: ray.put(task_obj_store_args[key]) for key in task_obj_store_args
+                key: ray.put(copy.deepcopy(task_obj_store_args[key])) for key in task_obj_store_args
             }
             if task_obj_store_args is not None
             else {},
@@ -222,6 +223,6 @@ def execute_with_ray(
     results = []
     while len(tasks_pre_launch) != 0:
         done_id, tasks_pre_launch = ray.wait(tasks_pre_launch)
-        results.append(ray.get(done_id[0]))
+        results.append(copy.deepcopy(ray.get(done_id[0])))
 
     return results
