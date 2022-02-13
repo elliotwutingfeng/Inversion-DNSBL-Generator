@@ -136,7 +136,7 @@ class SafeBrowsing:
             # Make POST request for each sublist of URLs
             endpoints.append(self.threatMatchesEndpoint)  
             payloads.append(json.dumps(SafeBrowsing._threat_matches_payload(url_batch)).encode())
-        responses = await post_async(endpoints,payloads)
+        responses = await post_async(endpoints,payloads, max_concurrent_requests = 10)
 
         return [json.loads(body) for _,body in responses]
 
