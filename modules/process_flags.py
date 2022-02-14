@@ -125,7 +125,7 @@ def process_flags(parser_args: dict) -> None:
                     (update_time, vendor, filename)
                     for filename in domains_db_filenames + ipv4.db_filenames
                 ],
-                task_obj_store_args={"malicious_urls": malicious_urls[vendor]},
+                task_obj_store_objects={"malicious_urls": malicious_urls[vendor]},
             )
 
     # Retrieve malicious URLs from database and write to blocklists
