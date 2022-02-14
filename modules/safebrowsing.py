@@ -180,21 +180,14 @@ class SafeBrowsing:
         return malicious_urls
 
     ######## Safe Browsing Update API ########
-    def _retrieve_threat_list_updates(self) -> dict:
-        """GET names of currently available Safe Browsing lists from threatLists endpoint,
-        and return threatListUpdates endpoint JSON response
-        in Dictionary-form for all available lists.
-
-        Google API Reference
-        https://developers.google.com/safe-browsing/v4/update-api
-        Yandex API Reference
-        https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/update-threatlist.html
+    def _retrieve_url_threatlist_combinations(self) -> list[dict]:
+        """GET names of currently available Safe Browsing lists from threatLists endpoint
 
         Returns:
-            dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
-            https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
+            list[dict]: Names of currently available Safe Browsing lists from threatLists endpoint
         """
         threat_lists_endpoint_resp = asyncio.get_event_loop().run_until_complete(get_async([self.threatListsEndpoint]))[self.threatListsEndpoint]
+        url_threatlist_combinations = [] # Empty list if self.threatListsEndpoint is unreachable
         if threat_lists_endpoint_resp != b"{}":
             threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
                 "threatLists"
@@ -239,7 +232,24 @@ class SafeBrowsing:
                         "state": "",
                     },
                 ]
+        return url_threatlist_combinations
+    
+    def _retrieve_threat_list_updates(self) -> dict:
+        """Return threatListUpdates endpoint JSON response
+        in Dictionary-form for all available lists.
 
+        Google API Reference
+        https://developers.google.com/safe-browsing/v4/update-api
+        Yandex API Reference
+        https://yandex.com/dev/safebrowsing/doc/quickstart/concepts/update-threatlist.html
+
+        Returns:
+            dict: Dictionary-form of Safe Browsing API threatListUpdates.fetch JSON response
+            https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch
+        """
+        url_threatlist_combinations: list[dict] = self._retrieve_url_threatlist_combinations()
+
+        if url_threatlist_combinations:
             req_body = {
                 "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
                 "listUpdateRequests": url_threatlist_combinations,
@@ -255,7 +265,7 @@ class SafeBrowsing:
             logger.info("Minimum wait duration: %s", res_json["minimumWaitDuration"])
             return res_json
 
-        return {} # Empty dict() if self.threatListsEndpoint is unreachable
+        return {} # Empty dict() if url_threatlist_combinations is empty
 
     def get_malicious_url_hash_prefixes(self) -> set[bytes]:
         """Download latest malicious URL hash prefixes from Safe Browsing API.
