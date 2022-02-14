@@ -14,7 +14,6 @@ https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb9
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 import asyncio
-import copy
 from typing import Any, Awaitable,Optional
 from collections.abc import Callable,Mapping,Sequence
 from ray.actor import ActorHandle
@@ -138,8 +137,8 @@ def run_task_handler(
     Args:
         task_handler (Callable[...,Awaitable]): Asynchronous function to parallelise
         task_args (tuple): Arguments to be passed into `task_handler`
-        task_obj_store_args (Mapping): Object IDs to be passed
-        from ray object store into `task_handler`
+        task_obj_store_args (Mapping): Serializable object IDs to be passed
+        from Ray object store into `task_handler`
         actor_id (Optional[Any], optional): Object reference assigned
         to `ProgressBar` actor. Defaults to None.
 
@@ -173,7 +172,7 @@ def run_task_handler(
 def execute_with_ray(
     task_handler: Callable,
     task_args_list: Sequence[tuple],
-    task_obj_store_args: Optional[Mapping] = None,
+    task_obj_store_objects: Optional[Mapping] = None,
     progress_bar: bool = True,
 ) -> list:
     """Apply task_handler to list of tasks.
@@ -184,8 +183,9 @@ def execute_with_ray(
         task_handler (Callable): Asynchronous function to parallelise
         task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
-        task_obj_store_args (Optional[Mapping], optional): Object IDs to be passed
-        from ray object store into `task_handler`, if any. Defaults to None.
+        task_obj_store_objects (Optional[Mapping], optional): Serializable objects, 
+        common to all task instances, to be put into 
+        Ray object store, if any. Defaults to None.
         progress_bar (bool, optional): If set to True, shows progressbar. Defaults to True.
 
     Returns:
@@ -201,15 +201,15 @@ def execute_with_ray(
         actor = pbar.actor
         actor_id = ray.put(actor)
 
+    # Put large serializable objects common to all task instances into Ray object store
+    task_obj_store_args = { key: ray.put(task_obj_store_objects[key]) 
+    for key in task_obj_store_objects} if task_obj_store_objects else {}
+
     tasks_pre_launch = [
         run_task_handler.remote(
             task_handler,
             task_args,
-            task_obj_store_args={
-                key: ray.put(copy.deepcopy(task_obj_store_args[key])) for key in task_obj_store_args
-            }
-            if task_obj_store_args is not None
-            else {},
+            task_obj_store_args,
             actor_id=actor_id if progress_bar else None,
         )
         for task_args in task_args_list
@@ -223,6 +223,6 @@ def execute_with_ray(
     results = []
     while len(tasks_pre_launch) != 0:
         done_id, tasks_pre_launch = ray.wait(tasks_pre_launch)
-        results.append(copy.deepcopy(ray.get(done_id[0])))
+        results.append(ray.get(done_id[0]))
 
     return results

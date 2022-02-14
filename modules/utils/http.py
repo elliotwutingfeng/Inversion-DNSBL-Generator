@@ -22,7 +22,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> d
 
     Args:
         endpoints (list[str]): List of HTTP GET request endpoints
-        max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests
+        max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
 
     Returns:
         dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content
@@ -65,7 +65,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
     Args:
         endpoints (list[str]): List of HTTP POST request endpoints
         payloads (list[bytes]): List of HTTP POST request payloads
-        max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests
+        max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
 
     Returns:
         list[tuple[str,bytes]]: List of HTTP POST request endpoints 
