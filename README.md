@@ -20,6 +20,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
 -   Registrar R01 (~5.8 million URLs): <https://r01.ru>
 -   CubDomain.com (~200 million URLs): <https://cubdomain.com>
+-   ICANN (~? million URLs): <https://czds.icann.org>
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
 -   Amazon Web Services EC2 (~56 million URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
@@ -37,7 +38,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   Python >= 3.9.10
 -   Multi-core x86-64 CPU; for Python Ray support
 -   RAM: At least 8GB
--   SSD Drive Space: At least 600GB required to process all URL sources
+-   SSD Drive Space: At least 1TB required to process all URL sources
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
@@ -91,12 +92,12 @@ python3 main.py --fetch-urls --sources top1m
 
 ---
 
-Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 600GB free space)**
+Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 1TB free space)**
 
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **Domains Project**, **Amazon Web Services EC2**, **IPv4 Addresses**
+-   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **ICANN**, **Domains Project**, **Amazon Web Services EC2**, **IPv4 Addresses**
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash

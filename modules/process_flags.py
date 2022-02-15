@@ -28,6 +28,7 @@ from modules.feeds.top1m import Top1M
 from modules.feeds.top10m import Top10M
 from modules.feeds.registrar_r01 import RegistrarR01
 from modules.feeds.cubdomain import CubDomain
+from modules.feeds.icann import ICANN
 from modules.feeds.domainsproject import DomainsProject
 from modules.feeds.aws_ec2 import AmazonWebServicesEC2
 from modules.feeds.ipv4 import Ipv4
@@ -49,6 +50,7 @@ def process_flags(parser_args: dict) -> None:
     top10m = Top10M(parser_args,update_time)
     r01 = RegistrarR01(parser_args,update_time)
     cubdomain = CubDomain(parser_args,update_time)
+    icann = ICANN(parser_args,update_time)
     domainsproject = DomainsProject(parser_args,update_time)
     ec2 = AmazonWebServicesEC2(parser_args,update_time)
 
@@ -57,6 +59,7 @@ def process_flags(parser_args: dict) -> None:
         + top10m.db_filenames
         + r01.db_filenames
         + cubdomain.db_filenames
+        + icann.db_filenames
         + domainsproject.db_filenames
         + ec2.db_filenames
     )
@@ -72,6 +75,7 @@ def process_flags(parser_args: dict) -> None:
         + top10m.jobs
         + r01.jobs
         + cubdomain.jobs
+        + icann.jobs
         + domainsproject.jobs
         + ec2.jobs
     )
@@ -125,7 +129,7 @@ def process_flags(parser_args: dict) -> None:
                     (update_time, vendor, filename)
                     for filename in domains_db_filenames + ipv4.db_filenames
                 ],
-                task_obj_store_objects={"malicious_urls": malicious_urls[vendor]},
+                object_store={"malicious_urls": malicious_urls[vendor]},
             )
 
     # Retrieve malicious URLs from database and write to blocklists

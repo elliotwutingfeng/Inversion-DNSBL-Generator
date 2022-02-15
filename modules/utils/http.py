@@ -25,7 +25,8 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> d
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
 
     Returns:
-        dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content
+        dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content. If
+        the GET request failed, its HTTP response content will be `b"{}"`
     """
     async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> dict[str,bytes]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
@@ -69,7 +70,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
 
     Returns:
         list[tuple[str,bytes]]: List of HTTP POST request endpoints 
-        and their HTTP response contents
+        and their HTTP response contents. If a POST request failed, its HTTP response content will be `b"{}"`
     """
     async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> list[tuple[str,bytes]]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)

@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "--sources",
         nargs="+",
         required=False,
-        choices=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ec2", "ipv4"],
+        choices=["top1m", "top10m", "r01", "cubdomain", "icann", "domainsproject", "ec2", "ipv4"],
         help="""
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
@@ -90,11 +90,12 @@ if __name__ == "__main__":
         top10m -> DomCop TOP10M
         r01 -> Registrar R01 (.ru, .su, .rf)
         cubdomain -> CubDomain.com
+        icann -> ICANN zonefiles
         domainsproject -> domainsproject.org
         ec2 -> Amazon Web Services EC2 public hostnames
         ipv4 -> ipv4 addresses
         """,
-        default=["top1m", "top10m", "r01", "cubdomain", "domainsproject", "ec2", "ipv4"],
+        default=["top1m", "top10m", "r01", "cubdomain", "icann", "domainsproject", "ec2", "ipv4"],
         type=str,
     )
 

@@ -53,15 +53,17 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
         except ValueError:
             hostnames.append(url)
 
+    hostnames.sort()
+    ip_addresses.sort()
+
     async def write_hostnames():
-        hostnames.sort()
         hostnames_txt_filename = f"{vendor}_hostnames_{current_datetime_str()}.txt"
         async with aiofiles.open(f"{BLOCKLISTS_FOLDER}{os.sep}{hostnames_txt_filename}", "a") as outfile:
             await outfile.writelines("\n".join(hostnames))
-            logger.info("%d hostname URLs written to file: %s", len(hostnames), hostnames_txt_filename)
+            logger.info("%d hostname URLs written to file: %s",
+            len(hostnames), hostnames_txt_filename)
 
     async def write_ips():
-        ip_addresses.sort()
         ip_addresses_txt_filename = f"{vendor}_ipv4_{current_datetime_str()}.txt"
         async with aiofiles.open(f"{BLOCKLISTS_FOLDER}{os.sep}{ip_addresses_txt_filename}", "a") as outfile:
             await outfile.writelines("\n".join(ip_addresses))

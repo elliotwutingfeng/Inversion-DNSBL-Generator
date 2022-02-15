@@ -37,6 +37,8 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
                 parts = ext.subdomain.split(".") + [ext.registered_domain]
 
             # Safe Browsing API-compliant hostname expressions
+            # Include [raw_url] for cases where url has a subdirectory
+            # (e.g. google.com/<subdirectory>)
             hostname_expressions.update(
                 [
                     f"{'.'.join(parts[-i:])}"

@@ -68,9 +68,8 @@ class SafeBrowsing:
             raise ValueError('vendor must be "Google" or "Yandex"')
 
     ######## Safe Browsing Lookup API ########
-    @staticmethod
     def _threat_matches_payload(
-        url_list: list[str],
+        self, url_list: list[str],
     ) -> dict:  # pylint: disable=invalid-name
         """For a given list of URLs,
         generate a POST request payload for Safe Browsing API threatMatches endpoint.
@@ -87,7 +86,7 @@ class SafeBrowsing:
         Returns:
             dict: Safe Browsing API threatMatches payload
         """
-        data = {
+        return {
             "client": {"clientId": "yourcompanyname", "clientVersion": "1.5.2"},
             "threatInfo": {
                 "threatTypes": [
@@ -116,7 +115,6 @@ class SafeBrowsing:
                 "threatEntries": [{"url": f"http://{url}"} for url in url_list],
             },
         }
-        return data
 
     async def _threat_matches_lookup(self, url_batches: Iterator[list[str]]) -> list[dict]:
         """Submit list of URLs to Safe Browsing API threatMatches endpoint
@@ -135,7 +133,7 @@ class SafeBrowsing:
         for url_batch in url_batches:
             # Make POST request for each sublist of URLs
             endpoints.append(self.threatMatchesEndpoint)  
-            payloads.append(json.dumps(SafeBrowsing._threat_matches_payload(url_batch)).encode())
+            payloads.append(json.dumps(self._threat_matches_payload(url_batch)).encode())
         responses = await post_async(endpoints,payloads, max_concurrent_requests = 10)
 
         return [json.loads(body) for _,body in responses]
@@ -156,11 +154,10 @@ class SafeBrowsing:
 
         results =  asyncio.get_event_loop().run_until_complete(self._threat_matches_lookup(url_batches))
 
-        malicious = list(
-            itertools.chain(
+        malicious = itertools.chain(
                 *(res["matches"] for res in results if "matches" in res)
             )
-        )
+        
         # Removes `https` and `http` prefixes
         malicious_urls = list(
             set(
@@ -293,12 +290,11 @@ class SafeBrowsing:
                     raw_hash_prefixes_["rawHashes"].encode()
                 )
 
-                hashes_list = sorted(
-                    [
+                hashes_list = [
                         raw_hash_prefixes[i : i + prefix_size]
                         for i in range(0, len(raw_hash_prefixes), prefix_size)
-                    ]
-                )
+                        ]
+                
                 hash_prefixes.update(hashes_list)
         logger.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
         return hash_prefixes
