@@ -89,10 +89,15 @@ def process_flags(parser_args: dict) -> None:
             safebrowsing = SafeBrowsing(vendor)
 
             if not parser_args["use_existing_hashes"]:
-                # Download and Update Safe Browsing API Malicious URL hash prefixes to database
-                replace_malicious_url_hash_prefixes(
-                    safebrowsing.get_malicious_url_hash_prefixes(), vendor
-                    )
+                # Download and Update Safe Browsing API Malicious URL hash prefixes and full hashes to database
+                url_threatlist_combinations: list[dict] = safebrowsing.retrieve_url_threatlist_combinations()
+                threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
+
+                hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
+                replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
+                
+                # full_hashes: set[bytes] = safebrowsing.get_malicious_url_full_hashes(hash_prefixes, url_threatlist_combinations)
+                # replace_malicious_url_full_hashes(full_hashes, vendor)
 
             prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
 
@@ -112,7 +117,7 @@ def process_flags(parser_args: dict) -> None:
 
             # Among these URLs, identify those with full Hashes
             # found on Safe Browsing API Server
-            vendor_malicious_urls = safebrowsing.get_malicious_urls(suspected_urls)
+            vendor_malicious_urls = safebrowsing.lookup_malicious_urls(suspected_urls)
             del suspected_urls  # "frees" memory
             malicious_urls[vendor] = vendor_malicious_urls
 

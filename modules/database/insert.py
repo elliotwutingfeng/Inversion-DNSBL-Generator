@@ -128,7 +128,7 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
         hash_prefixes (set[bytes]): Malicious URL hash prefixes from Safe Browsing API
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
-    logger.info("Updating database with %s malicious URL hashes", vendor)
+    logger.info("Updating database with %s malicious URL hash prefixes", vendor)
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -148,7 +148,41 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
                     ),
                 )
             logger.info(
-                "Updating database with %s malicious URL hashes...[DONE]", vendor
+                "Updating database with %s malicious URL hash prefixes...[DONE]", vendor
+            )
+        except Error as error:
+            logger.error("vendor:%s %s", vendor, error, exc_info=True)
+        conn.close()
+
+def replace_malicious_url_full_hashes(full_hashes: set[bytes], vendor: Vendors) -> None:
+    """Replace maliciousFullHashes table contents with latest malicious URL
+    full hashes from Safe Browsing API
+
+    Args:
+        full_hashes (set[bytes]): Malicious URL full hashes from Safe Browsing API
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+    """
+    logger.info("Updating database with %s malicious URL full hashes", vendor)
+    conn = create_connection("malicious")
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            with conn:
+                cur.execute(
+                    "DELETE FROM maliciousFullHashes WHERE vendor = ?", (vendor,)
+                )
+                cur.executemany(
+                    """
+                    INSERT INTO maliciousFullHashes (fullHash,vendor)
+                    VALUES (?, ?)
+                    """,
+                    (
+                        (fullHash, vendor)
+                        for fullHash in full_hashes
+                    ),
+                )
+            logger.info(
+                "Updating database with %s malicious URL full hashes...[DONE]", vendor
             )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)

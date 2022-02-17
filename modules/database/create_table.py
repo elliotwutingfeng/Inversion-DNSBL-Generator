@@ -63,8 +63,8 @@ async def _create_urls_table(db_filename: str) -> None:
         conn.close()
 
 
-def _create_malicious_url_hash_prefixes_table() -> None:
-    """Create SQLite table for storing malicious URL hash prefixes
+def _create_malicious_url_hashes_tables() -> None:
+    """Create SQLite tables for storing malicious URL hash prefixes and full hashes
     at `malicious`.db database.
     """
     conn = create_connection("malicious")
@@ -79,6 +79,12 @@ def _create_malicious_url_hash_prefixes_table() -> None:
                                                 vendor text
                                                 )"""
                 )
+                cur.execute(
+                    """CREATE TABLE IF NOT EXISTS maliciousFullHashes (
+                                                fullHash blob,
+                                                vendor text
+                                                )"""
+                )
         except Error as error:
             logger.error("%s", error, exc_info=True)
         conn.close()
@@ -86,7 +92,7 @@ def _create_malicious_url_hash_prefixes_table() -> None:
 
 def initialise_databases(db_filenames: list[str], mode: DatabaseTableModes) -> None:
     """Create database for each db_filename in `db_filenames` list, and
-    database `malicious`.db for storing malicious URL hash prefixes
+    database `malicious`.db for storing malicious URL hash prefixes and full hashes
     if any of them do not exist yet.
 
     Args:
@@ -114,4 +120,4 @@ def initialise_databases(db_filenames: list[str], mode: DatabaseTableModes) -> N
         )
     else:
         raise ValueError('mode must be "domains" or "ips"')
-    _create_malicious_url_hash_prefixes_table()
+    _create_malicious_url_hashes_tables()
