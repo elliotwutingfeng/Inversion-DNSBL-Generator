@@ -7,6 +7,7 @@ from more_itertools import flatten
 import ray
 
 from modules.database.select import (
+    retrieve_matching_full_hash_urls,
     retrieve_matching_hash_prefix_urls,
     retrieve_malicious_urls,
     retrieve_vendor_hash_prefix_sizes,
@@ -15,6 +16,7 @@ from modules.database.create_table import initialise_databases
 from modules.database.insert import (
     add_urls,
     add_ip_addresses,
+    replace_malicious_url_full_hashes,
     replace_malicious_url_hash_prefixes,
 )
 from modules.database.update import update_malicious_urls
@@ -87,55 +89,80 @@ def process_flags(parser_args: dict) -> None:
         malicious_urls = dict()
         for vendor in parser_args["vendors"]:
             safebrowsing = SafeBrowsing(vendor)
+            url_threatlist_combinations: list[dict] = []
+            threat_list_updates: dict = dict()
+            hash_prefixes: set[bytes] = set()
+            vendor_malicious_urls: list[str] = []
 
             if not parser_args["use_existing_hashes"]:
-                # Download and Update Safe Browsing API Malicious URL hash prefixes and full hashes to database
-                url_threatlist_combinations: list[dict] = safebrowsing.retrieve_url_threatlist_combinations()
-                threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
-
-                hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
+                # Download and Update Safe Browsing API Malicious URL hash prefixes to database
+                url_threatlist_combinations = safebrowsing.retrieve_url_threatlist_combinations()
+                threat_list_updates = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
+                hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
                 replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
-                
-                # full_hashes: set[bytes] = safebrowsing.get_malicious_url_full_hashes(hash_prefixes, url_threatlist_combinations)
-                # replace_malicious_url_full_hashes(full_hashes, vendor)
 
-            prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
+            if vendor == "Google":
+                if not parser_args["use_existing_hashes"]:
+                    # Download and Update Safe Browsing API Malicious URL full hashes to database
+                    replace_malicious_url_full_hashes(
+                        safebrowsing.get_malicious_url_full_hashes(hash_prefixes, url_threatlist_combinations), 
+                        vendor
+                        )
 
-            # Identify URLs in database whose full Hashes match with Malicious URL hash prefixes
-            logger.info("Identifying suspected %s malicious URLs",vendor)
-            suspected_urls = set(
-                flatten(
-                    execute_with_ray(
-                        retrieve_matching_hash_prefix_urls,
-                        [
-                            (filename, prefix_sizes, vendor)
-                            for filename in domains_db_filenames + ipv4.db_filenames
-                        ],
-                    ),
+                # Identify URLs in database whose full Hashes match with Malicious URL full hashes
+                logger.info("Identifying %s malicious URLs",vendor)
+                vendor_malicious_urls = list(set(
+                    flatten(
+                        execute_with_ray(
+                            retrieve_matching_full_hash_urls,
+                            [
+                                (update_time, filename, vendor)
+                                for filename in domains_db_filenames + ipv4.db_filenames
+                            ],
+                        ),
+                    )
+                ))
+            elif vendor == "Yandex":
+                prefix_sizes = retrieve_vendor_hash_prefix_sizes(vendor)
+
+                # Identify URLs in database whose full Hashes match with Malicious URL hash prefixes
+                logger.info("Identifying suspected %s malicious URLs",vendor)
+                suspected_urls = set(
+                    flatten(
+                        execute_with_ray(
+                            retrieve_matching_hash_prefix_urls,
+                            [
+                                (filename, prefix_sizes, vendor)
+                                for filename in domains_db_filenames + ipv4.db_filenames
+                            ],
+                        ),
+                    )
                 )
-            )
 
-            # Among these URLs, identify those with full Hashes
-            # found on Safe Browsing API Server
-            vendor_malicious_urls = safebrowsing.lookup_malicious_urls(suspected_urls)
-            del suspected_urls  # "frees" memory
+                # Among these URLs, identify those with full Hashes
+                # found on Safe Browsing API Server
+                vendor_malicious_urls = safebrowsing.lookup_malicious_urls(suspected_urls)
+                del suspected_urls  # "frees" memory
+            else:
+                raise ValueError('vendor must be "Google" or "Yandex"')
+            
             malicious_urls[vendor] = vendor_malicious_urls
-
             asyncio.get_event_loop().run_until_complete(write_blocklist_txt(malicious_urls[vendor],vendor))
 
         # TODO push blocklist to GitHub
 
         # Update malicious URL statuses in database
         for vendor in parser_args["vendors"]:
-            logger.info("Updating %s malicious URL statuses in database",vendor)
-            execute_with_ray(
-                update_malicious_urls,
-                [
-                    (update_time, vendor, filename)
-                    for filename in domains_db_filenames + ipv4.db_filenames
-                ],
-                object_store={"malicious_urls": malicious_urls[vendor]},
-            )
+            if vendor == "Yandex":
+                logger.info("Updating %s malicious URL statuses in database",vendor)
+                execute_with_ray(
+                    update_malicious_urls,
+                    [
+                        (update_time, vendor, filename)
+                        for filename in domains_db_filenames + ipv4.db_filenames
+                    ],
+                    object_store={"malicious_urls": malicious_urls[vendor]},
+                )
 
     # Retrieve malicious URLs from database and write to blocklists
     if parser_args["retrieve"]:

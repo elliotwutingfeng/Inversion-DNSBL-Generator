@@ -18,7 +18,6 @@ from modules.utils.types import Vendors
 SAFEBROWSING_API_KEYS = {'Google':dotenv_values(".env")["GOOGLE_API_KEY"],'Yandex':dotenv_values(".env")["YANDEX_API_KEY"]}
 
 logger = init_logger()
-# TODO use .get() for unpredictable json
 
 class SafeBrowsing:
     """
@@ -153,10 +152,10 @@ class SafeBrowsing:
         malicious_urls = list(
             set(
                 (
-                    x["threat"]["url"].replace("https://", "").replace("http://", "")
+                    x.get('threat',{}).get('url',"").replace("https://", "").replace("http://", "")
                     for x in malicious
                 )
-            )
+            ) 
         )
 
         logger.info(
@@ -279,11 +278,13 @@ class SafeBrowsing:
         hash_prefixes = set()
 
         for list_update_response in tqdm(list_update_responses):
-            for addition in list_update_response["additions"]:
-                raw_hash_prefixes_ = addition["rawHashes"]
-                prefix_size = raw_hash_prefixes_["prefixSize"]
+            for addition in list_update_response.get('additions',[]):
+                raw_hash_prefixes_ = addition.get('rawHashes',dict())
+                prefix_size: int = raw_hash_prefixes_.get('prefixSize', 0)
+                if type(prefix_size) != int or prefix_size <= 0:
+                    continue
                 raw_hash_prefixes = base64.b64decode(
-                    raw_hash_prefixes_["rawHashes"].encode()
+                    raw_hash_prefixes_.get('rawHashes',"").encode()
                 )
 
                 hashes_list = [

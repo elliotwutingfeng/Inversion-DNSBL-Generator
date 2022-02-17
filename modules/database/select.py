@@ -27,7 +27,7 @@ async def retrieve_matching_hash_prefix_urls(
         any of the malicious URL hash prefixes in `malicious`.db database
     """
     conn = create_connection(db_filename)
-    urls = []
+    urls: list[str] = []
     if conn is not None:
         try:
             cur = conn.cursor()
@@ -67,6 +67,70 @@ async def retrieve_matching_hash_prefix_urls(
 
     return urls
 
+async def retrieve_matching_full_hash_urls(
+    update_time: int, db_filename: str, vendor: Vendors
+) -> list[str]:
+    """Identify URLs from `db_filename`.db database with sha256 hashes matching with
+    any of the malicious URL full hashes in `malicious`.db database, and updates
+    malicious status of URL in `db_filename`.db database
+
+    Args:
+        update_time (int): Time when malicious URL statuses in database
+        are updated in UNIX Epoch seconds
+        db_filename (str): SQLite database filename
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+
+    Returns:
+        list[str]: URLs with sha256 hashes matching with
+        any of the malicious URL full hashes in `malicious`.db database
+    """
+    vendor_to_update_query = {
+        "Google":   """
+                    UPDATE urls
+                    SET lastGoogleMalicious = ?
+                    WHERE hash IN vendorFullHashes
+                    RETURNING url
+                    """,
+        "Yandex":   """
+                    UPDATE urls
+                    SET lastYandexMalicious = ?
+                    WHERE hash IN vendorFullHashes
+                    RETURNING url
+                    """,
+    }
+    if vendor not in vendor_to_update_query:
+        raise ValueError('vendor must be "Google" or "Yandex"')
+    conn = create_connection(db_filename)
+    urls: list[str] = []
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            with conn:
+                cur = cur.execute(
+                    f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
+                )
+                cur = cur.execute(
+                    """
+                    CREATE TEMPORARY TABLE IF NOT EXISTS vendorFullHashes
+                    AS SELECT fullHash FROM malicious.maliciousFullHashes
+                    WHERE vendor = ?
+                    """,
+                    (vendor,),
+                )
+                cur = cur.execute(vendor_to_update_query[vendor], (update_time,))
+                urls += [x[0] for x in cur.fetchall()]
+                cur.execute("DROP TABLE vendorFullHashes")
+        except Error as error:
+            logger.error(
+                "filename:%s vendor:%s %s",
+                db_filename,
+                vendor,
+                error,
+                exc_info=True,
+            )
+        conn.close()
+
+    return urls
 
 def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> list[int]:
     """Retrieve from database hash prefix sizes for a given `vendor`.
