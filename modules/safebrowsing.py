@@ -330,6 +330,6 @@ class SafeBrowsing:
 
         endpoints: list[str] = [self.fullHashesEndpoint] * len(payloads)
         responses: list[tuple] = asyncio.get_event_loop().run_until_complete(post_async(endpoints,payloads, max_concurrent_requests = 10)) # type:ignore
-        threat_matches: list[dict] = list(flatten([json.loads(x[1]).get('matches',[]) for x in responses]))
+        threat_matches: Iterator[dict] = flatten([json.loads(x[1]).get('matches',dict()) for x in responses])
         fullHashes = set(base64.b64decode(x.get('threat',{}).get('hash','').encode()) for x in threat_matches if x.get('threat',{}).get('hash','') != '')
         return fullHashes
