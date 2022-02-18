@@ -2,6 +2,7 @@
 Main
 """
 from argparse import (
+    Action,
     ArgumentParser,
     RawDescriptionHelpFormatter,
     RawTextHelpFormatter,
@@ -15,6 +16,14 @@ class CustomFormatter(
 ):
     """Custom Help text formatter for argparse."""
 
+
+class MinimumOneAction(Action):
+    """Ensures minimum argument input value of 1"""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values < 1:
+            parser.error("Minimum input value for {0} is 1".format(option_string))
+        setattr(namespace, self.dest, values)
 
 if __name__ == "__main__":
     parser = ArgumentParser(
@@ -90,13 +99,28 @@ if __name__ == "__main__":
         top10m -> DomCop TOP10M
         r01 -> Registrar R01 (.ru, .su, .rf)
         cubdomain -> CubDomain.com
-        icann -> ICANN zone files
+        icann -> ICANN zone files (ICANN ToS download limit per zone file: Once every 24 hours)
         domainsproject -> domainsproject.org
         ec2 -> Amazon Web Services EC2 public hostnames
         ipv4 -> ipv4 addresses
         """,
         default=["top1m", "top10m", "r01", "cubdomain", "icann", "domainsproject", "ec2", "ipv4"],
         type=str,
+    )
+
+    parser.add_argument(
+        "--cubdomain-num-days",
+        required=False,
+        help="""
+        (OPTIONAL: Omit this flag to fetch and/or analyse the entire CubDomain.com dataset)
+        Counting back from current date, the number of days of CubDomain.com 
+        data to fetch and/or analyse. By default all available data 
+        dating back to 25 June 2017 will be considered.
+        If 'cubdomain' is not enabled in `--sources`, this flag will be silently ignored.
+        """,
+        default=None,
+        type=int,
+        action=MinimumOneAction,
     )
 
     parser.add_argument(
@@ -127,6 +151,7 @@ if __name__ == "__main__":
         """,
         default=None,
         type=int,
+        action=MinimumOneAction,
     )
 
     args = parser.parse_args()

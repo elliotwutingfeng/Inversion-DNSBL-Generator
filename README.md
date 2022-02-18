@@ -48,6 +48,8 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 Once registered, turn off email notifications in the user settings,
 then select `Create New Request` on the Dashboard to request for zone file access.
 
+**ICANN ToS download limit per zone file:** Once every 24 hours
+
 ## Setup instructions
 
 `git clone` and `cd` into the project directory, then run the following
