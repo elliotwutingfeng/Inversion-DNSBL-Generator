@@ -72,7 +72,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
         AsyncIterator[list[str]]: Batch of URLs as a list
 
     """
-    logger.info("Downloading ICANN lists...")
+    logger.info("Downloading ICANN list %s...", endpoint)
 
     resp: bytes = (await get_async([endpoint], headers = {'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -86,7 +86,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
     else:
         logger.warning("Failed to retrieve ICANN list %s",endpoint)
 
-    logger.info("Downloading ICANN lists... [DONE]")
+    logger.info("Downloading ICANN list %s... [DONE]", endpoint)
     for batch in chunked(raw_urls, hostname_expression_batch_size):
         yield generate_hostname_expressions(batch)
 
