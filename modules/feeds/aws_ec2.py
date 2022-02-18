@@ -42,8 +42,12 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
         return defaultdict(list)
 
     resp_json = json.loads(resp)
+    
+    prefixes = resp_json.get("prefixes",[])
     ip_prefixes_and_regions = [(x['ip_prefix'],x['region'])
-    for x in resp_json["prefixes"] if x['service'].upper() == 'EC2'] # TODO use .get() for unpredictable json
+    for x in prefixes if x.get('service',"").upper() == 'EC2' 
+    and ('ip_prefix' in x) and ('region' in x)]
+
     region_to_ip_ranges_map = defaultdict(list)
     for ip_prefix,region in ip_prefixes_and_regions:
         region_to_ip_ranges_map[region].append(ip_prefix)

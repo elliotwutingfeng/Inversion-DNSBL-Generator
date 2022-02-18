@@ -20,7 +20,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
 -   Registrar R01 (~5.8 million URLs): <https://r01.ru>
 -   CubDomain.com (~200 million URLs): <https://cubdomain.com>
--   ICANN (~? million URLs): <https://czds.icann.org>
+-   ICANN CZDS (Centralized Zone Data Service) (~? million URLs): <https://czds.icann.org>
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
 -   Amazon Web Services EC2 (~56 million URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
@@ -41,6 +41,12 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   SSD Drive Space: At least 1TB required to process all URL sources
 -   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
 -   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
+-   [Sign up for a ICANN CZDS account](https://czds.icann.org)
+
+## Additional instructions for ICANN CZDS
+
+Once registered, turn off email notifications in the user settings,
+then select `Create New Request` on the Dashboard to request for zone file access.
 
 ## Setup instructions
 
@@ -49,6 +55,8 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 ```bash
 echo "GOOGLE_API_KEY=<your-google-api-key-here>" >> .env
 echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
+echo "ICANN_ACCOUNT_USERNAME=<your-icann-account-username-here>" >> .env
+echo "ICANN_ACCOUNT_PASSWORD=<your-icann-account-password-here>" >> .env
 pip3 install -r requirements.txt
 
 # Optional (dataset size ~49Gb): Download Domains Project URLs (https://domainsproject.org)
@@ -126,7 +134,7 @@ python3 main.py --help
 
 ## Known Issues
 
--   Yandex Safe Browsing API calls often fail with either ConnectionResetError or HTTP Status Code 204. Yandex Technical support has been notified. _Temporary workaround: Keep retrying API call until it succeeds_
+-   Yandex Safe Browsing Update API appears to be unserviceable. Yandex Technical support has been notified.
 
 ## Disclaimer
 
@@ -146,3 +154,4 @@ This project is not sponsored, endorsed, or otherwise affiliated with Google and
 -   <https://developers.google.com/safe-browsing>
 -   <https://yandex.com/dev/safebrowsing>
 -   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>
+-   <https://github.com/icann/czds-api-client-python>

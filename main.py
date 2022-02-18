@@ -90,7 +90,7 @@ if __name__ == "__main__":
         top10m -> DomCop TOP10M
         r01 -> Registrar R01 (.ru, .su, .rf)
         cubdomain -> CubDomain.com
-        icann -> ICANN zonefiles
+        icann -> ICANN zone files
         domainsproject -> domainsproject.org
         ec2 -> Amazon Web Services EC2 public hostnames
         ipv4 -> ipv4 addresses

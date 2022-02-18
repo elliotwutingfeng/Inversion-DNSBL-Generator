@@ -17,12 +17,13 @@ async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int)
     """
     await asyncio.sleep(backoff_factor * (2 ** (number_of_retries_made - 1)))
 
-async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> dict[str,bytes]:
+async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, headers: dict = None) -> dict[str,bytes]:
     """Given a list of HTTP endpoints, make HTTP GET requests asynchronously
 
     Args:
         endpoints (list[str]): List of HTTP GET request endpoints
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
+        headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Returns:
         dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content. If
@@ -44,7 +45,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> d
         errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
-                async with session.get(url) as response:
+                async with session.get(url, headers=headers) as response:
                     return (url,await response.read())
             except aiohttp.client_exceptions.ClientError as error:
                 errors.append(error)
@@ -59,7 +60,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> d
         return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
 
-async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5) -> list[tuple[str,bytes]]:
+async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5, headers: dict = None) -> list[tuple[str,bytes]]:
     """Given a list of HTTP endpoints and a list of payloads, 
     make HTTP POST requests asynchronously
 
@@ -67,6 +68,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         endpoints (list[str]): List of HTTP POST request endpoints
         payloads (list[bytes]): List of HTTP POST request payloads
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
+        headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Returns:
         list[tuple[str,bytes]]: List of HTTP POST request endpoints 
@@ -88,7 +90,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
-                async with session.post(url, data=payload) as response:
+                async with session.post(url, data=payload, headers=headers) as response:
                     return (url,await response.read())
             except aiohttp.client_exceptions.ClientError as error:
                 errors.append(error)
