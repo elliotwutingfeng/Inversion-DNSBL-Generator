@@ -5,7 +5,9 @@ For fetching and scanning URLs from ICANN CZDS
 import asyncio
 import gzip
 import json
+from io import BytesIO
 from collections.abc import AsyncIterator
+from typing import Iterator
 from dotenv import dotenv_values
 from more_itertools import chunked
 from modules.utils.log import init_logger
@@ -78,17 +80,16 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
     'Accept': 'application/json',
     'Authorization': f'Bearer {access_token}'}))[endpoint]
 
-    raw_urls: list[str] = []
+    raw_urls: Iterator[str] = iter(())
     
     if resp != b"{}":
-        decompressed_lines = gzip.decompress(resp).decode().split("\n")
-        raw_urls += [line.split('.\t')[0].lower() for line in decompressed_lines]
+        with gzip.GzipFile(fileobj=BytesIO(resp),mode='rb') as g:
+            raw_urls = (line.decode().split('.\t')[0].lower() for line in g)
+            for batch in chunked(raw_urls, hostname_expression_batch_size):
+                yield generate_hostname_expressions(batch)
     else:
         logger.warning("Failed to retrieve ICANN list %s",endpoint)
-
-    logger.info("Downloading ICANN list %s... [DONE]", endpoint)
-    for batch in chunked(raw_urls, hostname_expression_batch_size):
-        yield generate_hostname_expressions(batch)
+        yield []
 
 class ICANN:
     """
