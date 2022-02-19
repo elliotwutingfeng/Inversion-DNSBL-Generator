@@ -145,7 +145,7 @@ async def _get_cubdomain_page_urls_by_db_filename(num_days: Union[int,None]) -> 
     return cubdomain_page_urls_by_db_filename
 
 
-async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
+async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
     """Download cubdomain.com domains and yields
     all listed URLs from each page_url in `page_urls`.
 
@@ -156,7 +156,7 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
         page_urls (list[str]): Page URLs containing domains registered on date `date_str`
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
     """
     # pylint: disable=broad-except
     page_responses = await get_async(page_urls)
@@ -180,7 +180,7 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
                     yield generate_hostname_expressions(raw_urls)
             except Exception as error:
                 logger.error("%s %s", page_url, error, exc_info=True)
-                yield []
+                yield set()
 
 
 class CubDomain:

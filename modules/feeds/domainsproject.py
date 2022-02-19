@@ -12,14 +12,14 @@ from modules.utils.log import init_logger
 
 logger = init_logger()
 
-async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[list[str]]:
+async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[set[str]]:
     """Yield all listed URLs in batches from local text file.
 
     Args:
         txt_filepath (str): Filepath of local text file containing URLs
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
     """
     try:
         with open(txt_filepath, "r") as file:
@@ -33,7 +33,7 @@ async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[list[str]
             error,
             exc_info=True,
         )
-        yield []
+        yield set()
 
 
 def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[

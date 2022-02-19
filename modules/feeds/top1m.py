@@ -12,11 +12,11 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-async def _get_top1m_url_list() -> AsyncIterator[list[str]]:
+async def _get_top1m_url_list() -> AsyncIterator[set[str]]:
     """Download the Tranco TOP1M dataset and yield all listed URLs in batches.
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
     """
     logger.info("Downloading TOP1M list...")
     with BytesIO() as file:
@@ -36,7 +36,7 @@ async def _get_top1m_url_list() -> AsyncIterator[list[str]]:
                 yield generate_hostname_expressions(batch)
         else:
             logger.warning("Failed to retrieve TOP1M list; yielding empty list")
-            yield []
+            yield set()
 
 
 

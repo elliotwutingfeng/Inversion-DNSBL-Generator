@@ -13,26 +13,26 @@ from modules.utils.types import Vendors
 logger = init_logger()
 
 async def add_urls(
-    url_list_fetcher: Callable[..., AsyncIterator[list[str]]],
+    url_set_fetcher: Callable[..., AsyncIterator[set[str]]],
     update_time: int,
     db_filename: str,
-    url_list_fetcher_args: Optional[Mapping] = None,
+    url_set_fetcher_args: Optional[Mapping] = None,
 ) -> None:
-    """Retrieve a list of URLs and UPSERT URLs into
+    """Retrieve a set of URLs and UPSERT URLs into
     urls table of SQLite database at `db_filename`.db.
     If any given URL already exists in urls table,
     update its lastListed timestamp field to `update_time`.
 
     Args:
-        url_list_fetcher (Callable[..., AsyncIterator[list[str]]]): 
-        Fetches URL list from local or remote sources
+        url_set_fetcher (Callable[..., AsyncIterator[set[str]]]): 
+        Fetches URL set from local or remote sources
         update_time (int): Time when URLs are added to database in UNIX Epoch seconds
         db_filename (str): SQLite database filename
-        url_list_fetcher_args (Optional[Mapping], optional): Arguments for `url_list_fetcher`.
+        url_set_fetcher_args (Optional[Mapping], optional): Arguments for `url_set_fetcher`.
         Defaults to None.
     """
-    urls = url_list_fetcher(
-        **(url_list_fetcher_args if url_list_fetcher_args is not None else {})
+    urls = url_set_fetcher(
+        **(url_set_fetcher_args if url_set_fetcher_args is not None else {})
     )
 
     last_listed = update_time

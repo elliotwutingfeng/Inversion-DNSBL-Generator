@@ -63,7 +63,7 @@ async def _get_approved_endpoints(access_token: str) -> list[str]:
         return []
     return body
 
-async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[list[str]]:
+async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[set[str]]:
     """Download domains from ICANN zone file endpoint and yields all listed URLs in batches.
 
     Args:
@@ -71,7 +71,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
         access_token (str): ICANN CZDS Access Token
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
 
     """
     logger.info("Downloading ICANN list %s...", endpoint)
@@ -90,7 +90,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
                 yield generate_hostname_expressions(batch)
     else:
         logger.warning("Failed to retrieve ICANN list %s",endpoint)
-        yield []
+        yield set()
 
 class ICANN:
     """
