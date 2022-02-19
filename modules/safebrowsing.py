@@ -334,7 +334,7 @@ class SafeBrowsing:
             post_async(endpoints,payloads, max_concurrent_requests = 10)) # type:ignore
         logger.info("Downloading %s malicious URL full hashes...[DONE]", self.vendor)
 
-        threat_matches: Iterator[dict] = flatten([json.loads(x[1]).get('matches',dict()) for x in responses])
+        threat_matches: Iterator[dict] = flatten(json.loads(x[1]).get('matches',dict()) for x in responses)
         fullHashes: Iterator[bytes] = (base64.b64decode(x.get('threat',{}).get('hash','').encode()) 
         for x in threat_matches if x.get('threat',{}).get('hash','') != '')
 
