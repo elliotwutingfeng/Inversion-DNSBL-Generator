@@ -82,7 +82,8 @@ def _create_malicious_url_hashes_tables() -> None:
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS maliciousFullHashes (
                                                 fullHash blob,
-                                                vendor text
+                                                vendor text,
+                                                UNIQUE (fullHash,vendor)
                                                 )"""
                 )
         except Error as error:

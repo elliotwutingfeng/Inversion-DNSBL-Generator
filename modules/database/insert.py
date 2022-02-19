@@ -1,7 +1,7 @@
 """
 SQLite utilities for making INSERT queries
 """
-from typing import Optional
+from typing import Iterator, Optional
 from collections.abc import Callable,Mapping,AsyncIterator
 
 from apsw import Error
@@ -154,12 +154,12 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
             logger.error("vendor:%s %s", vendor, error, exc_info=True)
         conn.close()
 
-def replace_malicious_url_full_hashes(full_hashes: set[bytes], vendor: Vendors) -> None:
+def replace_malicious_url_full_hashes(full_hashes: Iterator[bytes], vendor: Vendors) -> None:
     """Replace maliciousFullHashes table contents with latest malicious URL
     full hashes from Safe Browsing API
 
     Args:
-        full_hashes (set[bytes]): Malicious URL full hashes from Safe Browsing API
+        full_hashes (Iterator[bytes]): Malicious URL full hashes from Safe Browsing API
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
     logger.info("Updating database with %s malicious URL full hashes", vendor)
@@ -173,7 +173,7 @@ def replace_malicious_url_full_hashes(full_hashes: set[bytes], vendor: Vendors) 
                 )
                 cur.executemany(
                     """
-                    INSERT INTO maliciousFullHashes (fullHash,vendor)
+                    INSERT OR IGNORE INTO maliciousFullHashes (fullHash,vendor)
                     VALUES (?, ?)
                     """,
                     (

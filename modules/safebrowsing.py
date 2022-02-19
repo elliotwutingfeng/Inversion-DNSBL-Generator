@@ -296,7 +296,7 @@ class SafeBrowsing:
         logger.info("Downloading %s malicious URL hash prefixes...[DONE]", self.vendor)
         return hash_prefixes
 
-    def get_malicious_url_full_hashes(self, hash_prefixes: set[bytes], url_threatlist_combinations: list[dict]) -> set[bytes]:
+    def get_malicious_url_full_hashes(self, hash_prefixes: set[bytes], url_threatlist_combinations: list[dict]) -> Iterator[bytes]:
         """Download latest malicious URL full hashes from Safe Browsing API.
 
         Args:
@@ -330,10 +330,12 @@ class SafeBrowsing:
         for hashPrefixesBatch in chunked(b64_encoded_hash_prefixes,self.maximum_url_batch_size)]
 
         endpoints: list[str] = [self.fullHashesEndpoint] * len(payloads)
-        responses: list[tuple] = asyncio.get_event_loop().run_until_complete(post_async(endpoints,payloads, max_concurrent_requests = 10)) # type:ignore
+        responses: list[tuple] = asyncio.get_event_loop().run_until_complete(
+            post_async(endpoints,payloads, max_concurrent_requests = 10)) # type:ignore
         logger.info("Downloading %s malicious URL full hashes...[DONE]", self.vendor)
-        logger.info("De-duplicating %s malicious URL full hashes", self.vendor)
+
         threat_matches: Iterator[dict] = flatten([json.loads(x[1]).get('matches',dict()) for x in responses])
-        fullHashes = set(base64.b64decode(x.get('threat',{}).get('hash','').encode()) for x in threat_matches if x.get('threat',{}).get('hash','') != '')
-        logger.info("De-duplicating %s malicious URL full hashes...[DONE]", self.vendor)
+        fullHashes: Iterator[bytes] = (base64.b64decode(x.get('threat',{}).get('hash','').encode()) 
+        for x in threat_matches if x.get('threat',{}).get('hash','') != '')
+
         return fullHashes
