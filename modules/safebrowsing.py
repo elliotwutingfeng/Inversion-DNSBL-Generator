@@ -269,9 +269,9 @@ class SafeBrowsing:
         Returns:
             set[bytes]: Malicious URL hash prefixes from Safe Browsing API
         """
-        logger.info("Downloading %s malicious URL hashes", self.vendor)
+        logger.info("Downloading %s malicious URL hash prefixes", self.vendor)
         if threat_list_updates == {}:
-            logger.info("Downloading %s malicious URL hashes...[DONE:NO THREAT LISTS FOUND]", self.vendor)
+            logger.info("Downloading %s malicious URL hash prefixes...[DONE:NO THREAT LISTS FOUND]", self.vendor)
             return set()
         list_update_responses = threat_list_updates["listUpdateResponses"]
 
@@ -293,7 +293,7 @@ class SafeBrowsing:
                         ]
                 
                 hash_prefixes.update(hashes_list)
-        logger.info("Downloading %s malicious URL hashes...[DONE]", self.vendor)
+        logger.info("Downloading %s malicious URL hash prefixes...[DONE]", self.vendor)
         return hash_prefixes
 
     def get_malicious_url_full_hashes(self, hash_prefixes: set[bytes], url_threatlist_combinations: list[dict]) -> set[bytes]:
@@ -306,6 +306,7 @@ class SafeBrowsing:
         Returns:
             set[bytes]: Malicious URL full hashes from Safe Browsing API
         """
+        logger.info("Downloading %s malicious URL full hashes", self.vendor)
         b64_encoded_hash_prefixes: list[str] = [base64.b64encode(hash_prefix).decode() for hash_prefix in hash_prefixes]
 
         payloads: list[bytes] = [
@@ -330,6 +331,9 @@ class SafeBrowsing:
 
         endpoints: list[str] = [self.fullHashesEndpoint] * len(payloads)
         responses: list[tuple] = asyncio.get_event_loop().run_until_complete(post_async(endpoints,payloads, max_concurrent_requests = 10)) # type:ignore
+        logger.info("Downloading %s malicious URL full hashes...[DONE]", self.vendor)
+        logger.info("De-duplicating %s malicious URL full hashes", self.vendor)
         threat_matches: Iterator[dict] = flatten([json.loads(x[1]).get('matches',dict()) for x in responses])
         fullHashes = set(base64.b64decode(x.get('threat',{}).get('hash','').encode()) for x in threat_matches if x.get('threat',{}).get('hash','') != '')
+        logger.info("De-duplicating %s malicious URL full hashes...[DONE]", self.vendor)
         return fullHashes
