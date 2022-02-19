@@ -104,7 +104,7 @@ class ICANN:
         access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
         endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
         # Temporary workaround: Exclude com.zone as it is too large (~4 GB)
-        endpoints = [endpoint for endpoint in endpoints if endpoint.endswith('/com.zone')] # TODO temporary file for com.zone
+        endpoints = [endpoint for endpoint in endpoints if not endpoint.endswith('/com.zone')] # TODO temporary file for com.zone
 
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
