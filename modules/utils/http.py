@@ -56,7 +56,8 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, head
         return (url,b"{}") # Allow json.loads to parse body if request fails 
 
     # GET request timeout of 1 hour (3600 seconds); extended from API default of 5 minutes to handle large filesizes
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True, timeout=3600) as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=3600)) as session:
         # Only one instance of any duplicate endpoint will be used
         return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
@@ -102,5 +103,6 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         return (url,b"{}") # Allow json.loads to parse body if request fails
 
     # POST request timeout of 5 minutes (300 seconds)
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True, timeout=300) as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=300)) as session:
         return await gather_with_concurrency(max_concurrent_requests, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])
