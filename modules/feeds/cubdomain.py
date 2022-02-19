@@ -175,8 +175,8 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[list[str]]:
                 res = soup.find_all(
                     lambda tag: tag.string is not None
                 )  # Filter out empty tags
-                for raw_urls in chunked((tag.string.strip() for tag in res),
-                hostname_expression_batch_size):
+                for raw_urls in chunked((tag.string.strip().lower() for tag in res),
+                hostname_expression_batch_size): # Ensure that raw_url is always lowercase
                     yield generate_hostname_expressions(raw_urls)
             except Exception as error:
                 logger.error("%s %s", page_url, error, exc_info=True)

@@ -53,11 +53,11 @@ async def _get_approved_endpoints(access_token: str) -> list[str]:
         list[str]: List of zone file endpoints
     """
     links_url = "https://czds-api.icann.org/czds/downloads/links"
-    resp = await get_async([links_url],headers = {'Content-Type': 'application/json',
+    resp = (await get_async([links_url],headers = {'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Authorization': f'Bearer {access_token}'})
+    'Authorization': f'Bearer {access_token}'}))[links_url]
 
-    body = json.loads(resp[links_url])
+    body = json.loads(resp)
     if type(body) != list:
         logger.warning("No user-accessible zone files found.")
         return []
@@ -84,6 +84,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
     
     if resp != b"{}":
         with gzip.GzipFile(fileobj=BytesIO(resp),mode='rb') as g:
+            # Ensure that raw_url is always lowercase
             raw_urls = (line.decode().split('.\t')[0].lower() for line in g)
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)

@@ -44,9 +44,9 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     resp_json = json.loads(resp)
     
     prefixes = resp_json.get("prefixes",[])
-    ip_prefixes_and_regions = [(x['ip_prefix'],x['region'])
+    ip_prefixes_and_regions = ((x['ip_prefix'],x['region'])
     for x in prefixes if x.get('service',"").upper() == 'EC2' 
-    and ('ip_prefix' in x) and ('region' in x)]
+    and ('ip_prefix' in x) and ('region' in x))
 
     region_to_ip_ranges_map = defaultdict(list)
     for ip_prefix,region in ip_prefixes_and_regions:
@@ -66,7 +66,7 @@ async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[
     """
     def _generate_ec2_urls(region: str,ip_ranges: list[str]):
         suffix = f'''.{'compute-1' if region == 'us-east-1'
-        else region+'.compute'}.amazonaws.com'''
+        else region.lower()+'.compute'}.amazonaws.com''' # Ensure that region is always lowercase
         collapsed_ip_ranges = _collapse_cidrs(ip_ranges) # Removes overlapping ip ranges
         for ip_range in collapsed_ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):
