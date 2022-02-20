@@ -7,6 +7,7 @@ from more_itertools import flatten
 import ray
 
 from modules.database.select import (
+    check_for_hashes,
     retrieve_matching_full_hash_urls,
     retrieve_matching_hash_prefix_urls,
     retrieve_malicious_urls,
@@ -69,6 +70,7 @@ def process_flags(parser_args: dict) -> None:
     ipv4 = Ipv4(parser_args)
 
     # Create database files
+    initialise_databases(mode="hashes")
     initialise_databases(domains_db_filenames, mode="domains")
     initialise_databases(ipv4.db_filenames, mode="ips")
 
@@ -81,34 +83,46 @@ def process_flags(parser_args: dict) -> None:
         + domainsproject.jobs
         + ec2.jobs
     )
-    # Insert-Update URLs to database
+    # UPSERT URLs to database
     execute_with_ray(add_urls, domains_jobs)
     execute_with_ray(add_ip_addresses, ipv4.jobs)
 
-    if parser_args["identify"]:
-        malicious_urls = dict()
+    # If `update_hashes` is enabled, download Safe Browsing API Malicious URL hash prefixes 
+    # and update database with hash prefixes
+    if parser_args["update_hashes"]:
         for vendor in parser_args["vendors"]:
             safebrowsing = SafeBrowsing(vendor)
-            url_threatlist_combinations: list[dict] = []
-            threat_list_updates: dict = dict()
-            hash_prefixes: set[bytes] = set()
-            vendor_malicious_urls: list[str] = []
 
-            if not parser_args["use_existing_hashes"]:
-                # Download and Update Safe Browsing API Malicious URL hash prefixes to database
-                url_threatlist_combinations = safebrowsing.retrieve_url_threatlist_combinations()
-                threat_list_updates = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
-                hash_prefixes = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
-                replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
+            url_threatlist_combinations: list[dict] = safebrowsing.retrieve_url_threatlist_combinations()
+            threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
+            hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
+            replace_malicious_url_hash_prefixes(hash_prefixes, vendor)            
 
             if vendor == "Google":
-                if not parser_args["use_existing_hashes"]:
-                    # Download and Update Safe Browsing API Malicious URL full hashes to database
-                    replace_malicious_url_full_hashes(
+                # Download Safe Browsing API Malicious URL full hashes 
+                # and update database with full hashes
+                replace_malicious_url_full_hashes(
                         safebrowsing.get_malicious_url_full_hashes(hash_prefixes, url_threatlist_combinations), 
                         vendor
                         )
 
+    if parser_args["identify"]:
+        malicious_urls = dict()
+        hashes_in_database: dict = dict()
+        for vendor in parser_args["vendors"]:
+            safebrowsing = SafeBrowsing(vendor)
+            vendor_malicious_urls: list[str] = []
+
+            # Skip blocklist generation for this vendor 
+            # if hash prefixes table or full hashes table are empty
+            hashes_in_database[vendor] = check_for_hashes(vendor)
+            if not hashes_in_database[vendor]:
+                logger.warning("No hashes found in database for vendor: %s. "
+                "Skipping blocklist generation for this vendor. "
+                "You will need to run this program again with the `-u` flag to download hashes, "
+                "look up `--help` or `README.md` for instructions",vendor)
+                continue
+            elif vendor == "Google":
                 # Identify URLs in database whose full Hashes match with Malicious URL full hashes
                 logger.info("Identifying %s malicious URLs",vendor)
                 vendor_malicious_urls = list(set(
@@ -151,8 +165,10 @@ def process_flags(parser_args: dict) -> None:
 
         # TODO push blocklist to GitHub
 
-        # Update malicious URL statuses in database
+        # Update malicious URL statuses in database (only for Lookup+Update API method)
         for vendor in parser_args["vendors"]:
+            if not hashes_in_database[vendor]:
+                continue
             if vendor == "Yandex":
                 logger.info("Updating %s malicious URL statuses in database",vendor)
                 execute_with_ray(

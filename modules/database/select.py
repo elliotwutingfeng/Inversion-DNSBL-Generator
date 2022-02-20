@@ -10,7 +10,6 @@ from modules.utils.types import Vendors
 
 logger = init_logger()
 
-
 async def retrieve_matching_hash_prefix_urls(
     db_filename: str, prefix_sizes: list[int], vendor: Vendors
 ) -> list[str]:
@@ -159,7 +158,6 @@ def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> list[int]:
         conn.close()
     return prefix_sizes
 
-
 def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> list[str]:
     """Retrieve URLs from database most recently marked as malicious by Safe Browsing API
     of `vendor`.
@@ -225,3 +223,42 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
         " marked as malicious by %s Safe Browsing API...[DONE]",vendor
     )
     return list(malicious_urls)
+
+def check_for_hashes(vendor: Vendors) -> bool:
+    """Check if database contains hash prefixes or full hashes for a given `vendor`.
+    
+    In the current implementation, Yandex uses Lookup+Update API while Google uses only Update API.
+    Therefore for Yandex, check for presence of hash prefixes, 
+    whereas for Google, check for presence of full hashes.
+
+    Args:
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+
+    Returns:
+        bool: True if database contains hash prefixes or full hashes for a given `vendor`,
+        else False
+    """
+    hashPrefix_count: int = 0
+    fullHash_count: int = 0
+    conn = create_connection("malicious")
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            with conn:
+                # Count hash prefixes
+                cur = cur.execute(
+                    "SELECT COUNT(hashPrefix) FROM maliciousHashPrefixes WHERE vendor = ?",
+                    (vendor,),
+                )
+                hashPrefix_count = cur.fetchall()[0][0]
+                # Count full hashes
+                cur = cur.execute(
+                    "SELECT COUNT(fullHash) FROM maliciousFullHashes WHERE vendor = ?",
+                    (vendor,),
+                )
+                fullHash_count = cur.fetchall()[0][0]
+        except Error as error:
+            logger.error("vendor:%s %s", vendor, error, exc_info=True)
+        conn.close()
+
+    return (hashPrefix_count > 0) if vendor == "Yandex" else (fullHash_count > 0)

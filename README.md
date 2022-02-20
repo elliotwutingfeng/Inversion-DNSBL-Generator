@@ -30,7 +30,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 | <a href="https://developers.google.com/safe-browsing"><img height="100px" src="images/google.svg" alt="Google Safe Browsing API" /></a> | <a href="https://yandex.com/dev/safebrowsing"><img height="100px" src="images/yandex.png" alt="Yandex Safe Browsing API" /></a> |
 | :-------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
 |                                          [Google](https://developers.google.com/safe-browsing)                                          |                                          [Yandex](https://yandex.com/dev/safebrowsing)                                          |
-|                                        [ToS](https://developers.google.com/safe-browsing/terms)                                         |                                      [ToS](https://yandex.ru/legal/yandex_sb_api/?lang=en)                                      |
+|                                        [Terms-of-Service](https://developers.google.com/safe-browsing/terms)                                         |                                      [Terms-of-Service](https://yandex.ru/legal/yandex_sb_api/?lang=en)                                      |
 
 ## Requirements
 
@@ -48,7 +48,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 Once registered, turn off email notifications in the user settings,
 then select `Create New Request` on the Dashboard to request for zone file access.
 
-**ICANN ToS download limit per zone file:** Once every 24 hours
+**ICANN Terms-of-Service download limit per zone file:** Once every 24 hours
 
 ## Setup instructions
 
@@ -79,13 +79,14 @@ Edit `unpack.sh` and remove `combine` from the last line, then run:
 **Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, and generate a blocklist using Google Safe Browsing API
 
 -   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
+-   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
+-   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
 -   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**
 -   :shield: Vendors: **Google**
 
 ```bash
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m top10m --vendors google
+python3 main.py --fetch-urls --update-hashes --identify-malicious-urls --sources top1m top10m --vendors google
 ```
 
 ---
@@ -105,13 +106,14 @@ python3 main.py --fetch-urls --sources top1m
 Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 1TB free space)**
 
 -   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API, and generate a blocklist
+-   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
+-   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
 -   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **ICANN**, **Domains Project**, **Amazon Web Services EC2**, **IPv4 Addresses**
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash
-python3 main.py --fetch-urls --identify-malicious-urls
+python3 main.py --fetch-urls --update-hashes --identify-malicious-urls
 ```
 
 ---
