@@ -17,15 +17,17 @@ async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int)
     """
     await asyncio.sleep(backoff_factor * (2 ** (number_of_retries_made - 1)))
 
-async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> dict[str,bytes]:
+async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, headers: dict = None) -> dict[str,bytes]:
     """Given a list of HTTP endpoints, make HTTP GET requests asynchronously
 
     Args:
         endpoints (list[str]): List of HTTP GET request endpoints
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
+        headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Returns:
-        dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content
+        dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content. If
+        the GET request failed, its HTTP response content will be `b"{}"`
     """
     async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> dict[str,bytes]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
@@ -43,7 +45,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> d
         errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
-                async with session.get(url) as response:
+                async with session.get(url, headers=headers) as response:
                     return (url,await response.read())
             except aiohttp.client_exceptions.ClientError as error:
                 errors.append(error)
@@ -53,12 +55,14 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5) -> d
         logger.error("URL: %s GET request failed! Errors: %s", url, errors)
         return (url,b"{}") # Allow json.loads to parse body if request fails 
 
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True) as session:
+    # GET request timeout of 3 hours (10800 seconds); extended from API default of 5 minutes to handle large filesizes
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=10800)) as session:
         # Only one instance of any duplicate endpoint will be used
         return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
 
-async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5) -> list[tuple[str,bytes]]:
+async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5, headers: dict = None) -> list[tuple[str,bytes]]:
     """Given a list of HTTP endpoints and a list of payloads, 
     make HTTP POST requests asynchronously
 
@@ -66,10 +70,11 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         endpoints (list[str]): List of HTTP POST request endpoints
         payloads (list[bytes]): List of HTTP POST request payloads
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
+        headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Returns:
         list[tuple[str,bytes]]: List of HTTP POST request endpoints 
-        and their HTTP response contents
+        and their HTTP response contents. If a POST request failed, its HTTP response content will be `b"{}"`
     """
     async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> list[tuple[str,bytes]]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
@@ -87,7 +92,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
-                async with session.post(url, data=payload) as response:
+                async with session.post(url, data=payload, headers=headers) as response:
                     return (url,await response.read())
             except aiohttp.client_exceptions.ClientError as error:
                 errors.append(error)
@@ -97,5 +102,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         logger.error("URL: %s POST request failed! Errors: %s", url, errors)
         return (url,b"{}") # Allow json.loads to parse body if request fails
 
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300), raise_for_status=True) as session:
+    # POST request timeout of 5 minutes (300 seconds)
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=300)) as session:
         return await gather_with_concurrency(max_concurrent_requests, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])

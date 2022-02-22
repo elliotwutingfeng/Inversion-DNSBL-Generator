@@ -1,4 +1,6 @@
 .env
+*.ipynb
+*.csv
 .ipynb_checkpoints/
 .mypy_cache/
 .pytest_cache/

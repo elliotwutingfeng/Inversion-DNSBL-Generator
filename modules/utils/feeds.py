@@ -9,7 +9,7 @@ logger = init_logger()
 # UPSERT hostname expressions into database in small batches to reduce RAM usage
 hostname_expression_batch_size: int = 40_000
 
-def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
+def generate_hostname_expressions(raw_urls: list[str]) -> set[str]:
     """Generate Safe Browsing API-compliant hostname expressions
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
 
@@ -18,7 +18,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
         hostname expressions from.
 
     Returns:
-        list[str]: `raw_urls` + Safe Browsing API-compliant hostname expressions of `raw_urls`
+        set[str]: `raw_urls` + Safe Browsing API-compliant hostname expressions of `raw_urls`
     """
     # pylint: disable=broad-except
 
@@ -37,6 +37,8 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
                 parts = ext.subdomain.split(".") + [ext.registered_domain]
 
             # Safe Browsing API-compliant hostname expressions
+            # Include [raw_url] for cases where url has a subdirectory
+            # (e.g. google.com/<subdirectory>)
             hostname_expressions.update(
                 [
                     f"{'.'.join(parts[-i:])}"
@@ -45,4 +47,4 @@ def generate_hostname_expressions(raw_urls: list[str]) -> list[str]:
             )
         except Exception as error:
             logger.error("%s %s", raw_url, error, exc_info=True)
-    return list(hostname_expressions)
+    return hostname_expressions

@@ -14,7 +14,7 @@ https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb9
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 import asyncio
-from typing import Any, Awaitable,Optional
+from typing import Any, Awaitable, Optional
 from collections.abc import Callable,Mapping,Sequence
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
@@ -128,7 +128,7 @@ class ProgressBar:
 def run_task_handler(
         task_handler: Callable[...,Awaitable],
         task_args: tuple,
-        task_obj_store_args: Mapping,
+        object_store_ids: Mapping,
         actor_id: Optional[Any] = None,
     ) -> Any:
     """Runs `task_handler` on `task_args`,
@@ -137,7 +137,7 @@ def run_task_handler(
     Args:
         task_handler (Callable[...,Awaitable]): Asynchronous function to parallelise
         task_args (tuple): Arguments to be passed into `task_handler`
-        task_obj_store_args (Mapping): Serializable object IDs to be passed
+        object_store_ids (Mapping): Serializable object IDs to be passed
         from Ray object store into `task_handler`
         actor_id (Optional[Any], optional): Object reference assigned
         to `ProgressBar` actor. Defaults to None.
@@ -148,12 +148,12 @@ def run_task_handler(
     async def run_task_handler_(
         task_handler: Callable[...,Awaitable],
         task_args: tuple,
-        task_obj_store_args: Mapping,
+        object_store_ids: Mapping,
         actor_id: Optional[Any] = None,
     ) -> Any:
         result = await task_handler(
             *task_args,
-            **{arg: await task_obj_store_args[arg] for arg in task_obj_store_args}
+            **{arg: await object_store_ids[arg] for arg in object_store_ids}
         )
 
         if actor_id is not None:
@@ -164,7 +164,7 @@ def run_task_handler(
     return asyncio.get_event_loop().run_until_complete(run_task_handler_(
         task_handler,
         task_args,
-        task_obj_store_args,
+        object_store_ids,
         actor_id
     ))
 
@@ -172,7 +172,7 @@ def run_task_handler(
 def execute_with_ray(
     task_handler: Callable,
     task_args_list: Sequence[tuple],
-    task_obj_store_objects: Optional[Mapping] = None,
+    object_store: Optional[Mapping] = None,
     progress_bar: bool = True,
 ) -> list:
     """Apply task_handler to list of tasks.
@@ -183,7 +183,7 @@ def execute_with_ray(
         task_handler (Callable): Asynchronous function to parallelise
         task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
-        task_obj_store_objects (Optional[Mapping], optional): Serializable objects, 
+        object_store (Optional[Mapping], optional): Serializable objects, 
         common to all task instances, to be put into 
         Ray object store, if any. Defaults to None.
         progress_bar (bool, optional): If set to True, shows progressbar. Defaults to True.
@@ -192,7 +192,7 @@ def execute_with_ray(
         list: List of returned values from each instance of task_handler
     """
 
-    if len(task_args_list) == 0:
+    if not task_args_list:
         return []
 
     if progress_bar:
@@ -202,14 +202,14 @@ def execute_with_ray(
         actor_id = ray.put(actor)
 
     # Put large serializable objects common to all task instances into Ray object store
-    task_obj_store_args = { key: ray.put(task_obj_store_objects[key]) 
-    for key in task_obj_store_objects} if task_obj_store_objects else {}
+    object_store_ids: dict[str,Any] = { key: ray.put(object_store[key]) 
+    for key in object_store} if object_store else {}
 
-    tasks_pre_launch = [
+    tasks_pre_launch: list[Awaitable] = [
         run_task_handler.remote(
             task_handler,
             task_args,
-            task_obj_store_args,
+            object_store_ids,
             actor_id=actor_id if progress_bar else None,
         )
         for task_args in task_args_list
@@ -221,7 +221,7 @@ def execute_with_ray(
 
     # Processes tasks with pipelining
     results = []
-    while len(tasks_pre_launch) != 0:
+    while tasks_pre_launch:
         done_id, tasks_pre_launch = ray.wait(tasks_pre_launch)
         results.append(ray.get(done_id[0]))
 

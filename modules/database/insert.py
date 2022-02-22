@@ -1,7 +1,7 @@
 """
 SQLite utilities for making INSERT queries
 """
-from typing import Optional
+from typing import Iterator, Optional
 from collections.abc import Callable,Mapping,AsyncIterator
 
 from apsw import Error
@@ -13,26 +13,26 @@ from modules.utils.types import Vendors
 logger = init_logger()
 
 async def add_urls(
-    url_list_fetcher: Callable[..., AsyncIterator[list[str]]],
+    url_set_fetcher: Callable[..., AsyncIterator[set[str]]],
     update_time: int,
     db_filename: str,
-    url_list_fetcher_args: Optional[Mapping] = None,
+    url_set_fetcher_args: Optional[Mapping] = None,
 ) -> None:
-    """Retrieve a list of URLs and UPSERT URLs into
+    """Retrieve a set of URLs and UPSERT URLs into
     urls table of SQLite database at `db_filename`.db.
     If any given URL already exists in urls table,
     update its lastListed timestamp field to `update_time`.
 
     Args:
-        url_list_fetcher (Callable[..., AsyncIterator[list[str]]]): 
-        Fetches URL list from local or remote sources
+        url_set_fetcher (Callable[..., AsyncIterator[set[str]]]): 
+        Fetches URL set from local or remote sources
         update_time (int): Time when URLs are added to database in UNIX Epoch seconds
         db_filename (str): SQLite database filename
-        url_list_fetcher_args (Optional[Mapping], optional): Arguments for `url_list_fetcher`.
+        url_set_fetcher_args (Optional[Mapping], optional): Arguments for `url_set_fetcher`.
         Defaults to None.
     """
-    urls = url_list_fetcher(
-        **(url_list_fetcher_args if url_list_fetcher_args is not None else {})
+    urls = url_set_fetcher(
+        **(url_set_fetcher_args if url_set_fetcher_args is not None else {})
     )
 
     last_listed = update_time
@@ -128,7 +128,7 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
         hash_prefixes (set[bytes]): Malicious URL hash prefixes from Safe Browsing API
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
     """
-    logger.info("Updating database with %s malicious URL hashes", vendor)
+    logger.info("Updating database with %s malicious URL hash prefixes", vendor)
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -148,7 +148,41 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
                     ),
                 )
             logger.info(
-                "Updating database with %s malicious URL hashes...[DONE]", vendor
+                "Updating database with %s malicious URL hash prefixes...[DONE]", vendor
+            )
+        except Error as error:
+            logger.error("vendor:%s %s", vendor, error, exc_info=True)
+        conn.close()
+
+def replace_malicious_url_full_hashes(full_hashes: Iterator[bytes], vendor: Vendors) -> None:
+    """Replace maliciousFullHashes table contents with latest malicious URL
+    full hashes from Safe Browsing API
+
+    Args:
+        full_hashes (Iterator[bytes]): Malicious URL full hashes from Safe Browsing API
+        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+    """
+    logger.info("Updating database with %s malicious URL full hashes", vendor)
+    conn = create_connection("malicious")
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            with conn:
+                cur.execute(
+                    "DELETE FROM maliciousFullHashes WHERE vendor = ?", (vendor,)
+                )
+                cur.executemany(
+                    """
+                    INSERT OR IGNORE INTO maliciousFullHashes (fullHash,vendor)
+                    VALUES (?, ?)
+                    """,
+                    (
+                        (fullHash, vendor)
+                        for fullHash in full_hashes
+                    ),
+                )
+            logger.info(
+                "Updating database with %s malicious URL full hashes...[DONE]", vendor
             )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)

@@ -11,11 +11,11 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-async def _get_top10m_url_list() -> AsyncIterator[list[str]]:
+async def _get_top10m_url_list() -> AsyncIterator[set[str]]:
     """Download the DomCop TOP10M dataset and yield all listed URLs in batches.
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
     """
     logger.info("Downloading TOP10M list...")
     with BytesIO() as file:
@@ -24,8 +24,9 @@ async def _get_top10m_url_list() -> AsyncIterator[list[str]]:
         if resp != b"{}":
             file.write(resp)
             zipfile = ZipFile(file)
+            # Ensure that raw_url is always lowercase
             raw_urls = (
-                x.strip().decode().split(",")[1].replace('"', "")
+                x.strip().decode().split(",")[1].replace('"', "").lower()
                 for x in zipfile.open(zipfile.namelist()[0]).readlines()[1:]
             )
             logger.info("Downloading TOP10M list... [DONE]")
@@ -34,7 +35,7 @@ async def _get_top10m_url_list() -> AsyncIterator[list[str]]:
                 yield generate_hostname_expressions(batch)
         else:
             logger.warning("Failed to retrieve TOP10M list; yielding empty list")
-            yield []
+            yield set()
 
 class Top10M:
     """

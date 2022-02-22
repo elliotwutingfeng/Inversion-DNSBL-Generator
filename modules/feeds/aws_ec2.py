@@ -42,14 +42,18 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
         return defaultdict(list)
 
     resp_json = json.loads(resp)
-    ip_prefixes_and_regions = [(x['ip_prefix'],x['region'])
-    for x in resp_json["prefixes"] if x['service'].upper() == 'EC2']
+    
+    prefixes = resp_json.get("prefixes",[])
+    ip_prefixes_and_regions = ((x['ip_prefix'],x['region'])
+    for x in prefixes if x.get('service',"").upper() == 'EC2' 
+    and ('ip_prefix' in x) and ('region' in x))
+
     region_to_ip_ranges_map = defaultdict(list)
     for ip_prefix,region in ip_prefixes_and_regions:
         region_to_ip_ranges_map[region].append(ip_prefix)
     return region_to_ip_ranges_map
 
-async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[list[str]]:
+async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[set[str]]:
     """Generate Amazon Web Services EC2 URLs located at
     AWS `region` and yields all listed URLs in batches.
 
@@ -58,11 +62,11 @@ async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[
         ip_ranges (list[str]): IP Ranges for aws `region`
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
     """
     def _generate_ec2_urls(region: str,ip_ranges: list[str]):
         suffix = f'''.{'compute-1' if region == 'us-east-1'
-        else region+'.compute'}.amazonaws.com'''
+        else region.lower()+'.compute'}.amazonaws.com''' # Ensure that region is always lowercase
         collapsed_ip_ranges = _collapse_cidrs(ip_ranges) # Removes overlapping ip ranges
         for ip_range in collapsed_ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):

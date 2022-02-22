@@ -11,11 +11,11 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 
 logger = init_logger()
 
-async def _get_r01_domains() -> AsyncIterator[list[str]]:
+async def _get_r01_domains() -> AsyncIterator[set[str]]:
     """Download domains from Registrar R01 and yields all listed URLs in batches.
 
     Yields:
-        AsyncIterator[list[str]]: Batch of URLs as a list
+        AsyncIterator[set[str]]: Batch of URLs as a set
     """
     logger.info("Downloading Registrar R01 lists...")
 
@@ -30,6 +30,7 @@ async def _get_r01_domains() -> AsyncIterator[list[str]]:
     for endpoint,resp in page_responses.items():
         if resp != b"{}":
             decompressed_lines = gzip.decompress(resp).decode().split("\n")
+            # Ensure that raw_url is always lowercase
             raw_urls += [line.split('\t')[0].lower() for line in decompressed_lines]
         else:
             logger.warning("Failed to retrieve Registrar R01 list %s",endpoint)

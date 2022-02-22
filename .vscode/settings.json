@@ -58,7 +58,9 @@
         "aiohttp",
         "cchardet",
         "COULDNT",
+        "CZDS",
         "hostnames",
+        "icann",
         "isasyncgenfunction",
         "isawaitable",
         "iscoroutinefunction",
@@ -70,9 +72,7 @@
         "Referer",
         "rusqlite"
     ],
-    "python.testing.pytestArgs": [
-        "tests"
-    ],
+    "python.testing.pytestArgs": ["tests"],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true
 }
