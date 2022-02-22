@@ -1,6 +1,8 @@
 """
 For generating Safe Browsing API-compliant hostname expressions
 """
+import re
+
 import tldextract  # type: ignore
 from modules.utils.log import init_logger
 
@@ -24,10 +26,12 @@ def generate_hostname_expressions(raw_urls: list[str]) -> set[str]:
 
     hostname_expressions = set()
     for raw_url in raw_urls:
+        # Remove zero width spaces from raw_url
+        url = re.sub(r'[\u200B-\u200D\uFEFF]','',raw_url)
         try:
-            ext = tldextract.extract(raw_url)
+            ext = tldextract.extract(url)
             if ext.registered_domain == "":
-                # No registered_domain recognised -> do not split raw_url into parts
+                # No registered_domain recognised -> do not split url into parts
                 parts = []
             elif ext.subdomain == "":
                 # No subdomains found -> extract registered_domain
@@ -37,14 +41,14 @@ def generate_hostname_expressions(raw_urls: list[str]) -> set[str]:
                 parts = ext.subdomain.split(".") + [ext.registered_domain]
 
             # Safe Browsing API-compliant hostname expressions
-            # Include [raw_url] for cases where url has a subdirectory
+            # Include [url] for cases where url has a subdirectory
             # (e.g. google.com/<subdirectory>)
             hostname_expressions.update(
                 [
                     f"{'.'.join(parts[-i:])}"
                     for i in range(len(parts) if len(parts) < 5 else 5)
-                ] + [raw_url]
+                ] + [url]
             )
         except Exception as error:
-            logger.error("%s %s", raw_url, error, exc_info=True)
+            logger.error("%s %s", url, error, exc_info=True)
     return hostname_expressions
