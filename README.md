@@ -1,13 +1,16 @@
 # Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
 
-[![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
-[![GitHub watchers](https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers)
-[![GitHub forks](https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=social)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)
-![GitHub repo size](https://img.shields.io/github/repo-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)
-[![GitHub issues](https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues)
-[![GitHub license](https://img.shields.io/github/license/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/blob/master/LICENSE)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)
+![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+
+[![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
+[![GitHub watchers](https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers)
+[![GitHub forks](https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)
+[![GitHub issues](https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues)
+[![GitHub license](https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge)](https://github.com/elliotwutingfeng/GlobalAntiScamOrg-blocklist-scraper/blob/main/LICENSE)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)
 
 \
 Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net) by scanning various public URL sources using the Safe Browsing API from [Google](https://developers.google.com/safe-browsing) and/or [Yandex](https://yandex.com/dev/safebrowsing).
