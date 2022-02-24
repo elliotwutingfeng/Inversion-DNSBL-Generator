@@ -70,4 +70,4 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
             logger.info("%d IPv4 addresses written to file: %s",
             len(ip_addresses), ip_addresses_txt_filename)
     
-    await asyncio.gather(*[asyncio.ensure_future(write_hostnames()),asyncio.ensure_future(write_ips())])
+    await asyncio.gather(*[asyncio.create_task(write_hostnames()),asyncio.create_task(write_ips())])
