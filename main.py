@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.vendors = sorted([x.capitalize() for x in args.vendors])
-    if not (args.fetch or args.identify or args.retrieve):
+    if not (args.fetch or args.update_hashes or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
     process_flags(parser_args=vars(args))
