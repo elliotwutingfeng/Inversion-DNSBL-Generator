@@ -16,7 +16,8 @@ def generate_hostname_expressions(raw_urls: list[str]) -> set[str]:
     See: https://developers.google.com/safe-browsing/v4/urls-hashing#suffixprefix-expressions
 
     Args:
-        raw_urls (list[str]): URLs to generate Safe Browsing API-compliant
+        raw_urls (list[str]): URLs, without prefixes (e.g. http:// https:// etc.),
+        to generate Safe Browsing API-compliant
         hostname expressions from.
 
     Returns:

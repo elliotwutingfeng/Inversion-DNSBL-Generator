@@ -3,15 +3,13 @@ For fetching and scanning URLs from ICANN CZDS
 """
 
 import asyncio
-import gzip
 import json
-from io import BytesIO
+import zlib
 from collections.abc import AsyncIterator
-from typing import Iterator
+import aiohttp
 from dotenv import dotenv_values
-from more_itertools import chunked
 from modules.utils.log import init_logger
-from modules.utils.http import get_async, post_async
+from modules.utils.http import get_async, get_async_stream, post_async
 from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
 
@@ -74,23 +72,60 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
         AsyncIterator[set[str]]: Batch of URLs as a set
 
     """
+
     logger.info("Downloading ICANN list %s...", endpoint)
 
-    resp: bytes = (await get_async([endpoint], headers = {'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': f'Bearer {access_token}'}))[endpoint]
+    url_generator = extract_zonefile_urls(endpoint ,headers={'Content-Type': 'application/json',
+    'Cache-Control':'no-cache',
+    'Accept': 'text/event-stream',
+    'Accept-Encoding': 'gzip',
+    'Authorization': f'Bearer {access_token}'})
 
-    raw_urls: Iterator[str] = iter(())
-    
-    if resp != b"{}":
-        with gzip.GzipFile(fileobj=BytesIO(resp),mode='rb') as g:
-            # Ensure that raw_url is always lowercase
-            raw_urls = (line.decode().split('.\t')[0].lower() for line in g)
-            for batch in chunked(raw_urls, hostname_expression_batch_size):
-                yield generate_hostname_expressions(batch)
-    else:
-        logger.warning("Failed to retrieve ICANN list %s",endpoint)
+    try:
+        async for batch in url_generator:
+            yield generate_hostname_expressions(batch)
+    except Exception as error:
+        logger.warning("Failed to retrieve ICANN list %s | %s",endpoint, error)
         yield set()
+    
+
+async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIterator[list[str]]:
+    """Extract URLs from GET request stream of ICANN `txt.gz` zone file
+
+    https://stackoverflow.com/a/68928891
+
+    Args:
+        endpoint (str): HTTP GET request endpoint
+        headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
+
+    Raises:
+        aiohttp.client_exceptions.ClientError: Stream disrupted
+
+    Yields:
+        AsyncIterator[list[str]]: Batch of URLs as a list
+    """
+    d = zlib.decompressobj(zlib.MAX_WBITS|32)
+    last_line: str = ""
+    async for chunk in get_async_stream(endpoint,headers):
+        if chunk is None:
+            raise aiohttp.client_exceptions.ClientError("Stream disrupted")
+        else:
+            # Decompress and decode chunk to `current_chunk_string`
+            current_chunk_string = d.decompress(chunk).decode()
+            # Append `last_line` of previous chunk to front of `current_chunk_string`
+            current_chunk_string = f"{last_line}{current_chunk_string}"
+            # Split to lines
+            lines = current_chunk_string.splitlines()
+            # The last line of `lines` is likely incomplete,
+            # pop it out and cache it as `last_line`
+            last_line = lines.pop()
+            # Yield list of URLs from the cleaned `lines`,
+            # ensuring that all of them are lowercase
+            yield [url for line in lines if (url := line.split('.\t')[0].lower())]
+    # Yield last remaining URL from `last_line`
+    if url := last_line.split('.\t')[0].lower():
+        yield [url]
+
 
 class ICANN:
     """
@@ -103,8 +138,6 @@ class ICANN:
 
         access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
         endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
-        # Temporary workaround: Exclude com.zone as it is too large (~4 GB)
-        endpoints = [endpoint for endpoint in endpoints if not endpoint.endswith('/com.zone')] # TODO temporary file for com.zone
 
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
