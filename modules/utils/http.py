@@ -48,8 +48,8 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, head
             try:
                 async with session.get(url, headers=headers) as response:
                     return (url,await response.read())
-            except aiohttp.client_exceptions.ClientError as error:
-                errors.append(str(error))
+            except Exception as error:
+                errors.append(repr(error))
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
@@ -95,8 +95,8 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
             try:
                 async with session.post(url, data=payload, headers=headers) as response:
                     return (url,await response.read())
-            except aiohttp.client_exceptions.ClientError as error:
-                errors.append(str(error))
+            except Exception as error:
+                errors.append(repr(error))
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
@@ -133,8 +133,8 @@ async def get_async_stream(endpoint: str, headers: dict = None) -> AsyncIterator
                     async for chunk,_ in response.content.iter_chunks():
                         connected = True # Flag to indicate at least one chunk has been extracted
                         yield chunk
-            except aiohttp.client_exceptions.ClientError as error:
-                errors.append(str(error))
+            except Exception as error:
+                errors.append(repr(error))
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if connected:
                     logger.error("%s | Stream disrupted", error, number_of_retries_made + 1)

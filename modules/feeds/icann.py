@@ -10,7 +10,7 @@ import aiohttp
 from dotenv import dotenv_values
 from modules.utils.log import init_logger
 from modules.utils.http import get_async, get_async_stream, post_async
-from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
+from modules.utils.feeds import generate_hostname_expressions
 
 
 logger = init_logger()
