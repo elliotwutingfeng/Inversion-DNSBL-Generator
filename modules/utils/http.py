@@ -4,10 +4,34 @@ HTTP Request Utilities
 from typing import AsyncIterator, Optional
 import aiohttp
 import asyncio
+import socket
 
 from modules.utils.log import init_logger
 
 logger = init_logger()
+
+default_headers: dict = {
+'Content-Type': 'application/json',
+'Connection': 'keep-alive',
+'Cache-Control':'no-cache',
+'Accept': '*/*'}
+
+class KeepAliveClientRequest(aiohttp.client_reqrep.ClientRequest):
+    """Attempt to prevent `Response payload is not completed` error
+    
+    https://github.com/aio-libs/aiohttp/issues/3904#issuecomment-759205696
+
+
+    """
+    async def send(self, conn):
+        """Send keep-alive TCP probes"""
+        sock = conn.protocol.transport.get_extra_info("socket")
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 2)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)
+
+        return (await super().send(conn))
 
 async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int) -> None:
     """Asynchronous time delay that exponentially increases with `number_of_retries_made`
@@ -30,6 +54,9 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, head
         dict[str,bytes]: Mapping of HTTP GET request endpoint to its HTTP response content. If
         the GET request failed, its HTTP response content will be `b"{}"`
     """
+    if headers is None:
+        headers = default_headers
+
     async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> dict[str,bytes]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
 
@@ -58,7 +85,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, head
 
     # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
-     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400)) as session:
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400), request_class=KeepAliveClientRequest) as session:
         # Only one instance of any duplicate endpoint will be used
         return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
@@ -77,6 +104,9 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         list[tuple[str,bytes]]: List of HTTP POST request endpoints 
         and their HTTP response contents. If a POST request failed, its HTTP response content will be `b"{}"`
     """
+    if headers is None:
+        headers = default_headers
+
     async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> list[tuple[str,bytes]]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
 
@@ -105,7 +135,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
 
     # POST request timeout of 5 minutes (300 seconds)
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
-     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=300)) as session:
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=300), request_class=KeepAliveClientRequest) as session:
         return await gather_with_concurrency(max_concurrent_requests, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])
 
 
@@ -120,9 +150,12 @@ async def get_async_stream(endpoint: str, headers: dict = None) -> AsyncIterator
         AsyncIterator[Optional[bytes]]: HTTP response content as a chunked stream, 
         yields a final None if the GET request fails to complete.
     """
+    if headers is None:
+        headers = default_headers
+
     # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
-     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400)) as session:
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400), request_class=KeepAliveClientRequest) as session:
         max_retries: int = 5
         errors: list[str] = []
         connected = False
