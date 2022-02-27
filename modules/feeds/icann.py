@@ -52,6 +52,7 @@ async def _get_approved_endpoints(access_token: str) -> list[str]:
     """
     links_url = "https://czds-api.icann.org/czds/downloads/links"
     resp = (await get_async([links_url],headers = {'Content-Type': 'application/json',
+    'Connection': 'keep-alive',
     'Accept': 'application/json',
     'Authorization': f'Bearer {access_token}'}))[links_url]
 
@@ -76,6 +77,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
     logger.info("Downloading ICANN list %s...", endpoint)
 
     url_generator = extract_zonefile_urls(endpoint ,headers={'Content-Type': 'application/json',
+    'Connection': 'keep-alive',
     'Cache-Control':'no-cache',
     'Accept': 'text/event-stream',
     'Accept-Encoding': 'gzip',
