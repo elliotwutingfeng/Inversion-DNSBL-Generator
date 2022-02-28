@@ -6,6 +6,9 @@ import asyncio
 import json
 import zlib
 from collections.abc import AsyncIterator
+import os
+import tempfile
+
 import aiohttp
 from dotenv import dotenv_values
 from modules.utils.log import init_logger
@@ -106,12 +109,23 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
     Yields:
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
-    d = zlib.decompressobj(zlib.MAX_WBITS|32)
-    last_line: str = ""
-    async for chunk in get_async_stream(endpoint,headers):
-        if chunk is None:
-            raise aiohttp.client_exceptions.ClientError("Stream disrupted")
-        else:
+    # Spill over to secondary memory (i.e. SSD storage)
+    # when size of spooled_tempfile exceeds 1024 ** 3 bytes = 1 GB
+    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=1024 ** 3,mode='w+b',dir=os.getcwd())
+    with spooled_tempfile:
+        # Download compressed zone file to SpooledTemporaryFile
+        async for chunk in get_async_stream(endpoint,headers):
+            if chunk is None:
+                raise aiohttp.client_exceptions.ClientError("Stream disrupted")
+            else:
+                spooled_tempfile.write(chunk)
+        # Seek to beginning of spooled_tempfile
+        spooled_tempfile.seek(0)
+
+        # Decompress and extract URLs from each chunk
+        d = zlib.decompressobj(zlib.MAX_WBITS|32)
+        last_line: str = ""
+        for chunk in spooled_tempfile:
             # Decompress and decode chunk to `current_chunk_string`
             current_chunk_string = d.decompress(chunk).decode()
             # Append `last_line` of previous chunk to front of `current_chunk_string`
@@ -119,14 +133,16 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
             # Split to lines
             lines = current_chunk_string.splitlines()
             # The last line of `lines` is likely incomplete,
-            # pop it out and cache it as `last_line`
+            # the rest of it is at the beginning of the next chunk,
+            # so pop it out and cache it as `last_line`
             last_line = lines.pop()
             # Yield list of URLs from the cleaned `lines`,
             # ensuring that all of them are lowercase
             yield [url for line in lines if (url := line.split('.\t')[0].lower())]
-    # Yield last remaining URL from `last_line`
-    if url := last_line.split('.\t')[0].lower():
-        yield [url]
+
+        # Yield last remaining URL from `last_line`
+        if url := last_line.split('.\t')[0].lower():
+            yield [url]
 
 
 class ICANN:
