@@ -110,8 +110,8 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
     # Spill over to secondary memory (i.e. SSD storage)
-    # when size of spooled_tempfile exceeds 1024 ** 3 bytes = 1 GB
-    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=1024 ** 3,mode='w+b',dir=os.getcwd())
+    # when size of spooled_tempfile exceeds 6 * 1024 ** 3 bytes = 6 GB
+    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=6 * 1024 ** 3,mode='w+b',dir=os.getcwd())
     with spooled_tempfile:
         # Download compressed zone file to SpooledTemporaryFile
         async for chunk in get_async_stream(endpoint,headers):
@@ -125,7 +125,8 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
         # Decompress and extract URLs from each chunk
         d = zlib.decompressobj(zlib.MAX_WBITS|32)
         last_line: str = ""
-        for chunk in spooled_tempfile:
+
+        for chunk in iter(lambda:spooled_tempfile.read(1024 ** 2),b''):
             # Decompress and decode chunk to `current_chunk_string`
             current_chunk_string = d.decompress(chunk).decode()
             # Append `last_line` of previous chunk to front of `current_chunk_string`
