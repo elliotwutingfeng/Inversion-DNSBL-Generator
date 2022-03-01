@@ -1,9 +1,12 @@
 # Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
 
-![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
-![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
-![AIOHTTP](https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white)
-![Ray](https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white)
+[![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://python.org)
+[![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org)
+[![AIOHTTP](https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white)](https://docs.aiohttp.org/en/stable)
+[![Ray](https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white)](https://www.ray.io)
+[![APSW](https://img.shields.io/badge/APSW-000000?style=for-the-badge)](https://rogerbinns.github.io/apsw)
+[![TLDExtract](https://img.shields.io/badge/TLDExtract-000000?style=for-the-badge)](https://github.com/john-kurkowski/tldextract)
+[![BeautifulSoup4](https://img.shields.io/badge/BeautifulSoup4-000000?style=for-the-badge)](https://beautiful-soup-4.readthedocs.io)
 
 [![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
 [![GitHub watchers](https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers)
@@ -148,15 +151,6 @@ python3 main.py --help
 ## Disclaimer
 
 This project is not sponsored, endorsed, or otherwise affiliated with Google and/or Yandex.
-
-## Libraries/Frameworks used
-
--   [SQLite](https://www.sqlite.org)
--   [APSW](https://rogerbinns.github.io/apsw)
--   [Ray](https://www.ray.io)
--   [TLDExtract](https://github.com/john-kurkowski/tldextract)
--   [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io)
--   [AIOHTTP](https://docs.aiohttp.org/en/stable)
 
 ## References
 
