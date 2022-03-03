@@ -24,22 +24,24 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 
 ## URL sources
 
--   Tranco TOP1M (~1 million URLs): <https://tranco-list.eu>
--   DomCop TOP10M (~10 million URLs): <https://www.domcop.com/top-10-million-domains>
--   Registrar R01 (~5.8 million URLs): <https://r01.ru>
--   CubDomain.com (~200 million URLs): <https://cubdomain.com>
--   ICANN CZDS (Centralized Zone Data Service) (~220 million URLs): <https://czds.icann.org>
--   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
--   Amazon Web Services EC2 (~56 million URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
--   OpenINTEL.nl (?): <https://openintel.nl>
--   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
+| Name | URL Count (millions) | Source |
+|-|-|-|
+| Tranco TOP1M | 1 | https://tranco-list.eu |
+| DomCop TOP10M | 10 | https://www.domcop.com/top-10-million-domains |
+| Registrar R01 | 5.9 | https://r01.ru |
+| CubDomain.com | 184 | https://cubdomain.com |
+| ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org |
+| Domains Project    | 2100 | https://domainsproject.org |
+| Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames |
+| OpenINTEL.nl    | 6 | https://openintel.nl |
+| IPv4 Addresses  | 4200 | 0.0.0.0 - 255.255.255.255 |
 
 ## Safe Browsing API vendors
 
 | <a href="https://developers.google.com/safe-browsing"><img height="100px" src="images/google.svg" alt="Google Safe Browsing API" /></a> | <a href="https://yandex.com/dev/safebrowsing"><img height="100px" src="images/yandex.png" alt="Yandex Safe Browsing API" /></a> |
-| :-------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
-|                                          [Google](https://developers.google.com/safe-browsing)                                          |                                          [Yandex](https://yandex.com/dev/safebrowsing)                                          |
-|                                        [Terms-of-Service](https://developers.google.com/safe-browsing/terms)                                         |                                      [Terms-of-Service](https://yandex.ru/legal/yandex_sb_api/?lang=en)                                      |
+|:-:|:-:|
+|[Google](https://developers.google.com/safe-browsing)|[Yandex](https://yandex.com/dev/safebrowsing)|
+|[Terms-of-Service](https://developers.google.com/safe-browsing/terms)|[Terms-of-Service](https://yandex.ru/legal/yandex_sb_api/?lang=en)|
 
 ## Requirements
 
