@@ -97,6 +97,7 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
     """
     # Spill over to secondary memory (i.e. SSD storage)
     # when size of spooled_tempfile exceeds 6 * 1024 ** 3 bytes = 6 GB
+    hostnames: set[str] = set()
     spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=6 * 1024 ** 3,mode='w+b',dir=os.getcwd())
     with spooled_tempfile:
         # Download compressed zone file to SpooledTemporaryFile
@@ -110,13 +111,13 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
 
         with tarfile.open(fileobj=spooled_tempfile, mode='r') as tar:
             for tarinfo in tar:
-                hostnames: set[str] = set()
                 fo = tar.extractfile(tarinfo.name)
                 fields = ('query_name','response_name','soa_mname','soa_rname')
                 for record in reader(fo):
                     hostnames.update(record[f][:-1] if f in record and record[f] is not None else '' for f in fields)
-                hostnames.remove('')
-                yield list(hostnames)
+
+    hostnames.remove('')
+    yield list(hostnames)
 
 
 class OpenINTEL:
