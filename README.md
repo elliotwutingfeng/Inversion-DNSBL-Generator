@@ -31,6 +31,7 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 -   ICANN CZDS (Centralized Zone Data Service) (~220 million URLs): <https://czds.icann.org>
 -   Domains Project (~1.7 billion URLs): <https://domainsproject.org>
 -   Amazon Web Services EC2 (~56 million URLs): <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames>
+-   OpenINTEL.nl (?): <https://openintel.nl>
 -   IPv4 Addresses (~4.2 billion IP Addresses): 0.0.0.0 - 255.255.255.255
 
 ## Safe Browsing API vendors
@@ -117,7 +118,7 @@ Fetch URLs from all sources, insert their contents to local database, and genera
 -   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
 -   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **ICANN**, **Domains Project**, **Amazon Web Services EC2**, **IPv4 Addresses**
+-   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **ICANN**, **Domains Project**, **Amazon Web Services EC2**, **OpenINTEL**, **IPv4 Addresses**
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash

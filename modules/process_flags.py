@@ -34,6 +34,7 @@ from modules.feeds.cubdomain import CubDomain
 from modules.feeds.icann import ICANN
 from modules.feeds.domainsproject import DomainsProject
 from modules.feeds.aws_ec2 import AmazonWebServicesEC2
+from modules.feeds.openintel import OpenINTEL
 from modules.feeds.ipv4 import Ipv4
 
 logger = init_logger()
@@ -56,6 +57,7 @@ def process_flags(parser_args: dict) -> None:
     icann = ICANN(parser_args,update_time)
     domainsproject = DomainsProject(parser_args,update_time)
     ec2 = AmazonWebServicesEC2(parser_args,update_time)
+    openintel = OpenINTEL(parser_args,update_time)
 
     domains_db_filenames = (
         top1m.db_filenames
@@ -65,6 +67,7 @@ def process_flags(parser_args: dict) -> None:
         + icann.db_filenames
         + domainsproject.db_filenames
         + ec2.db_filenames
+        + openintel.db_filenames
     )
 
     ipv4 = Ipv4(parser_args)
@@ -82,6 +85,7 @@ def process_flags(parser_args: dict) -> None:
         + icann.jobs
         + domainsproject.jobs
         + ec2.jobs
+        + openintel.jobs
     )
     # UPSERT URLs to database
     execute_with_ray(add_urls, domains_jobs)

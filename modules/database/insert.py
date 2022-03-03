@@ -100,7 +100,7 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     cur.execute("DELETE FROM urls")
                 with conn:
                     cur.executemany(
-                        """
+                    """
                     INSERT INTO urls (url,hash)
                     VALUES (?,?)
                     """,

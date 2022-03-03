@@ -56,7 +56,7 @@ list[str], list[str]
                 domainsproject_urls_db_filenames.append(f"{file[:-4]}")
                 domainsproject_txt_filepaths.append(os.path.join(root, file))
 
-    # Sort domainsproject_txt_filepaths and domainsproject_urls_db_filenames by ascending filesize
+    # Sort domainsproject_txt_filepaths and domainsproject_urls_db_filenames by descending filesize
     domainsproject_filesizes: list[int] = [
         os.path.getsize(path) for path in domainsproject_txt_filepaths
     ]
@@ -71,7 +71,8 @@ list[str], list[str]
                 domainsproject_filesizes,
                 domainsproject_txt_filepaths,
                 domainsproject_urls_db_filenames,
-            )
+            ),
+            reverse=True
         )
     ]
     return domainsproject_txt_filepaths, domainsproject_urls_db_filenames
