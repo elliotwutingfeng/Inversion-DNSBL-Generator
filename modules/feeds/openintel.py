@@ -107,7 +107,7 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
                 spooled_tempfile.write(chunk)
         # Seek to beginning of spooled_tempfile
         spooled_tempfile.seek(0)
-        logger.info("Download complete") # TODO
+
         with tarfile.open(fileobj=spooled_tempfile, mode='r') as tar:
             for tarinfo in tar:
                 hostnames: set[str] = set()
@@ -116,7 +116,6 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
                 for record in reader(fo):
                     hostnames.update(record[f][:-1] if f in record and record[f] is not None else '' for f in fields)
                 hostnames.remove('')
-                logger.info("%d",len(hostnames)) # TODO
                 yield list(hostnames)
 
 
