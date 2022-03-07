@@ -28,7 +28,7 @@ def current_datetime_str() -> str:
     return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
-async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
+async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str,...]:
     """Split list of urls into hostnames and ip addresses, then write
     hostnames and ip addresses in ascending order to separate .txt files
     with timestamp in filename and store them in `BLOCKLISTS_FOLDER`.
@@ -38,6 +38,9 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
     Args:
         urls (list[str]): List of URLs
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+
+    Returns:
+        tuple[str,...]: Blocklist filenames
     """
     if not os.path.exists(BLOCKLISTS_FOLDER):
         os.mkdir(BLOCKLISTS_FOLDER)
@@ -62,6 +65,7 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
             await outfile.writelines("\n".join(hostnames))
             logger.info("%d hostname URLs written to file: %s",
             len(hostnames), hostnames_txt_filename)
+        return hostnames_txt_filename
 
     async def write_ips():
         ip_addresses_txt_filename = f"{vendor}_ipv4_{current_datetime_str()}.txt"
@@ -69,5 +73,7 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> None:
             await outfile.writelines("\n".join(ip_addresses))
             logger.info("%d IPv4 addresses written to file: %s",
             len(ip_addresses), ip_addresses_txt_filename)
+        return ip_addresses_txt_filename
     
-    await asyncio.gather(*[asyncio.create_task(write_hostnames()),asyncio.create_task(write_ips())])
+    blocklist_filenames = await asyncio.gather(*[asyncio.create_task(write_hostnames()),asyncio.create_task(write_ips())])
+    return tuple(x for x in blocklist_filenames if type(x) is str)

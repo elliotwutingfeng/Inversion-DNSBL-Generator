@@ -23,6 +23,7 @@ from modules.database.insert import (
 from modules.database.update import update_malicious_urls
 
 from modules.filewriter import write_blocklist_txt
+from modules.utils.github import upload_blocklists
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
@@ -165,9 +166,10 @@ def process_flags(parser_args: dict) -> None:
                 raise ValueError('vendor must be "Google" or "Yandex"')
             
             malicious_urls[vendor] = vendor_malicious_urls
-            asyncio.get_event_loop().run_until_complete(write_blocklist_txt(malicious_urls[vendor],vendor))
+            blocklist_filenames: tuple[str,...] = asyncio.get_event_loop().run_until_complete(write_blocklist_txt(malicious_urls[vendor],vendor))
 
-        # TODO push blocklist to GitHub
+            # Push blocklists to GitHub
+            upload_blocklists(vendor,blocklist_filenames)
 
         # Update malicious URL statuses in database (only for Lookup+Update API method)
         for vendor in parser_args["vendors"]:
