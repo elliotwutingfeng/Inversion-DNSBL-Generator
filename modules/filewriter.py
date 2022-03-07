@@ -57,7 +57,7 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str,...
             hostnames.append(url)
 
     hostnames.sort()
-    ip_addresses.sort()
+    ip_addresses.sort(key = ipaddress.IPv4Address)
 
     async def write_hostnames():
         hostnames_txt_filename = f"{vendor}_hostnames_{current_datetime_str()}.txt"
