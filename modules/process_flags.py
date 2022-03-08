@@ -21,22 +21,12 @@ from modules.database.insert import (
     replace_malicious_url_hash_prefixes,
 )
 from modules.database.update import update_malicious_urls
-
 from modules.filewriter import write_blocklist_txt
 from modules.utils.github import upload_blocklists
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
 from modules.safebrowsing import SafeBrowsing
-
-from modules.feeds.top1m import Top1M
-from modules.feeds.top10m import Top10M
-from modules.feeds.registrar_r01 import RegistrarR01
-from modules.feeds.cubdomain import CubDomain
-from modules.feeds.icann import ICANN
-from modules.feeds.domainsproject import DomainsProject
-from modules.feeds.aws_ec2 import AmazonWebServicesEC2
-from modules.feeds.openintel import OpenINTEL
-from modules.feeds.ipv4 import Ipv4
+from modules import feeds
 
 logger = init_logger()
 
@@ -51,43 +41,28 @@ def process_flags(parser_args: dict) -> None:
     ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])
     update_time = int(time.time())  # seconds since UNIX Epoch
 
-    top1m = Top1M(parser_args,update_time)
-    top10m = Top10M(parser_args,update_time)
-    r01 = RegistrarR01(parser_args,update_time)
-    cubdomain = CubDomain(parser_args,update_time)
-    icann = ICANN(parser_args,update_time)
-    domainsproject = DomainsProject(parser_args,update_time)
-    ec2 = AmazonWebServicesEC2(parser_args,update_time)
-    openintel = OpenINTEL(parser_args,update_time)
+    domains_feeds = [_(parser_args,update_time) for _ in (
+    feeds.Top1M,
+    feeds.Top10M,
+    feeds.RegistrarR01,
+    feeds.CubDomain,
+    feeds.ICANN,
+    feeds.DomainsProject,
+    feeds.AmazonWebServicesEC2,
+    feeds.OpenINTEL
+    )]
 
-    domains_db_filenames = (
-        top1m.db_filenames
-        + top10m.db_filenames
-        + r01.db_filenames
-        + cubdomain.db_filenames
-        + icann.db_filenames
-        + domainsproject.db_filenames
-        + ec2.db_filenames
-        + openintel.db_filenames
-    )
+    domains_db_filenames: list[str] = list(flatten(_.db_filenames for _ in domains_feeds))
 
-    ipv4 = Ipv4(parser_args)
+    ipv4 = feeds.Ipv4(parser_args)
 
     # Create database files
     initialise_databases(mode="hashes")
     initialise_databases(domains_db_filenames, mode="domains")
     initialise_databases(ipv4.db_filenames, mode="ips")
 
-    domains_jobs = (
-        top1m.jobs
-        + top10m.jobs
-        + r01.jobs
-        + cubdomain.jobs
-        + icann.jobs
-        + domainsproject.jobs
-        + ec2.jobs
-        + openintel.jobs
-    )
+    domains_jobs = tuple(flatten(_.jobs for _ in domains_feeds))
+
     # UPSERT URLs to database
     execute_with_ray(add_urls, domains_jobs)
     execute_with_ray(add_ip_addresses, ipv4.jobs)
