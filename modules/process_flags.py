@@ -3,6 +3,8 @@ Process flags
 """
 import asyncio
 import time
+import sys
+import inspect
 from more_itertools import flatten
 import ray
 
@@ -41,16 +43,9 @@ def process_flags(parser_args: dict) -> None:
     ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])
     update_time = int(time.time())  # seconds since UNIX Epoch
 
-    domains_feeds = [_(parser_args,update_time) for _ in (
-    feeds.Top1M,
-    feeds.Top10M,
-    feeds.RegistrarR01,
-    feeds.CubDomain,
-    feeds.ICANN,
-    feeds.DomainsProject,
-    feeds.AmazonWebServicesEC2,
-    feeds.OpenINTEL
-    )]
+    domains_feeds = [cls(parser_args,update_time) 
+    for clsname,cls in inspect.getmembers(sys.modules["modules.feeds"], inspect.isclass) 
+    if clsname != 'Ipv4']
 
     domains_db_filenames: list[str] = list(flatten(_.db_filenames for _ in domains_feeds))
 
@@ -76,7 +71,7 @@ def process_flags(parser_args: dict) -> None:
             url_threatlist_combinations: list[dict] = safebrowsing.retrieve_url_threatlist_combinations()
             threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
             hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
-            replace_malicious_url_hash_prefixes(hash_prefixes, vendor)            
+            replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
 
             if vendor == "Google":
                 # Download Safe Browsing API Malicious URL full hashes 
