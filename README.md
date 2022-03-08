@@ -1,26 +1,36 @@
-# Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator
-
 [![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://python.org)
 [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org)
 [![AIOHTTP](https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white)](https://docs.aiohttp.org/en/stable)
 [![Ray](https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white)](https://www.ray.io)
-[![APSW](https://img.shields.io/badge/APSW-000000?style=for-the-badge)](https://rogerbinns.github.io/apsw)
-[![TLDExtract](https://img.shields.io/badge/TLDExtract-000000?style=for-the-badge)](https://github.com/john-kurkowski/tldextract)
-[![BeautifulSoup4](https://img.shields.io/badge/BeautifulSoup4-000000?style=for-the-badge)](https://beautiful-soup-4.readthedocs.io)
 
 [![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
 [![GitHub watchers](https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers)
 [![GitHub forks](https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)
-![GitHub repo size](https://img.shields.io/github/repo-size/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)
 [![GitHub issues](https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues)
 [![GitHub license](https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge)](https://github.com/elliotwutingfeng/GlobalAntiScamOrg-blocklist-scraper/blob/main/LICENSE)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)
 
-\
-Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list) applications like [pfBlockerNG](https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl) or [Pi-hole](https://pi-hole.net) by scanning various public URL sources using the Safe Browsing API from [Google](https://developers.google.com/safe-browsing) and/or [Yandex](https://yandex.com/dev/safebrowsing).
+<br />
+<div align="center">
+  <h3 align="center">Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator</h3>
+
+  <p align="center">
+    Generate malicious URL blocklists for <a href="https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list">DNSBL</a> applications like <a href="https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl">pfBlockerNG</a> or <a href="https://pi-hole.net">Pi-hole</a> by scanning various public URL sources using the Safe Browsing API from <a href="https://developers.google.com/safe-browsing">Google</a> and/or <a href="https://yandex.com/dev/safebrowsing">Yandex</a>.
+    <br />
+    <br />
+    <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists/issues">Request Feature</a>
+  </p>
+</div>
 
 ---
+
+## Blocklists available for download
+
+![Total Blocklist URLs](https://img.shields.io/tokei/lines/github/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
+
+You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists#blocklists)
 
 ## URL sources
 
@@ -45,31 +55,47 @@ Generate malicious URL blocklists for [DNSBL](https://en.wikipedia.org/wiki/Doma
 
 ## Requirements
 
+### System (mandatory)
+
 -   Linux or macOS
 -   Python >= 3.9.10
 -   Multi-core x86-64 CPU; for Python Ray support
 -   RAM: At least 8GB
--   SSD Drive Space: At least 1TB required to process all URL sources
--   [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
--   [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
--   [Sign up for a ICANN CZDS account](https://czds.icann.org)
+-   SSD Drive Space: At least 600GB required to process all URL sources
 
-## Additional instructions for ICANN CZDS
+### Safe Browsing API Access (mandatory)
 
-Once registered, turn off email notifications in the user settings,
+Choose at least one
+-   Google: [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
+-   Yandex: [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
+
+### URL feed access (optional)
+
+-   ICANN Zone Files: [Sign up for a ICANN CZDS account](https://czds.icann.org)
+    - Once registered, turn off email notifications in the user settings,
 then select `Create New Request` on the Dashboard to request for zone file access.
 
-**ICANN Terms-of-Service download limit per zone file:** Once every 24 hours
+    - **ICANN Terms-of-Service download limit per zone file:** Once every 24 hours
+
+### Others (optional)
+
+-   GitHub API (for uploading blocklists to GitHub): [Create a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
 ## Setup instructions
 
 `git clone` and `cd` into the project directory, then run the following
 
 ```bash
+# You will need at least one of the following environment variables
 echo "GOOGLE_API_KEY=<your-google-api-key-here>" >> .env
 echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
+
+# These environment variables are optional
 echo "ICANN_ACCOUNT_USERNAME=<your-icann-account-username-here>" >> .env
 echo "ICANN_ACCOUNT_PASSWORD=<your-icann-account-password-here>" >> .env
+echo "GITHUB_ACCESS_TOKEN=<your-github-personal-access-token-here>" >> .env
+echo "BLOCKLIST_REPOSITORY_NAME=<your-blocklist-repository-name-here>" >> .env
+
 pip3 install -r requirements.txt
 
 # Optional (dataset size ~49Gb): Download Domains Project URLs (https://domainsproject.org)
@@ -87,7 +113,7 @@ Edit `unpack.sh` and remove `combine` from the last line, then run:
 
 ## Usage Examples
 
-**Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, and generate a blocklist using Google Safe Browsing API
+**Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API
 
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
@@ -114,7 +140,7 @@ python3 main.py --fetch-urls --sources top1m
 
 ---
 
-Fetch URLs from all sources, insert their contents to local database, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 1TB free space)**
+Fetch URLs from all sources, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 600GB free space)**
 
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
@@ -129,7 +155,7 @@ python3 main.py --fetch-urls --update-hashes --identify-malicious-urls
 
 ---
 
-Generate a (potentially outdated) blocklist from local database using malicious URL statuses attained from past scans
+Generate a blocklist from local database using malicious URL statuses attained from past scans
 
 -   :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate a blocklist
 -   :memo: Sources: **DomCop TOP10M**, **Domains Project**
@@ -153,7 +179,13 @@ python3 main.py --help
 
 ## Disclaimer
 
-This project is not sponsored, endorsed, or otherwise affiliated with Google and/or Yandex.
+- This project is not sponsored, endorsed, or otherwise affiliated with Google and/or Yandex.
+
+- Google works to provide the most accurate and up-to-date information about unsafe web resources. However, Google cannot guarantee that its information is comprehensive and error-free: some risky sites may not be identified, and some safe sites may be identified in error.
+
+- URLs detected with the Safe Browsing API usually have a malicious validity period of about 5 minutes. As the blocklists are updated only once every 24 hours, the blocklists must not be used to display user warnings.
+
+**More information on Google Safe Browsing API usage limits:** https://developers.google.com/safe-browsing/v4/usage-limits
 
 ## References
 
