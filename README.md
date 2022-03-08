@@ -1,16 +1,3 @@
-[![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://python.org)
-[![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org)
-[![AIOHTTP](https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white)](https://docs.aiohttp.org/en/stable)
-[![Ray](https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white)](https://www.ray.io)
-
-[![GitHub stars](https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers)
-[![GitHub watchers](https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers)
-[![GitHub forks](https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members)
-[![GitHub issues](https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues)
-[![GitHub license](https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge)](https://github.com/elliotwutingfeng/GlobalAntiScamOrg-blocklist-scraper/blob/main/LICENSE)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge)](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)
-
-<br />
 <div align="center">
   <h3 align="center">Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator</h3>
 
@@ -22,6 +9,23 @@
     ·
     <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists/issues">Request Feature</a>
   </p>
+
+  <p align="center">
+  <a href="https://python.org"><img src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue" alt="Python"/></a>
+  <a href="https://www.sqlite.org"><img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite"/></a>
+  <a href="https://docs.aiohttp.org/en/stable"><img src="https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white" alt="AIOHTTP"/></a>
+  <a href="https://www.ray.io"><img src="https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white" alt="Ray"/></a>
+  </p>
+
+  <p align="center">
+  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers"><img src="https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub stars"/></a>
+  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers"><img src="https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub watchers"/></a>
+  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members"><img src="https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub forks"/></a>
+  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues"><img src="https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub issues"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge" alt="GitHub license"/></a>
+  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)"><img src="https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub commit activity"/></a>
+  </p>
+
 </div>
 
 ---
