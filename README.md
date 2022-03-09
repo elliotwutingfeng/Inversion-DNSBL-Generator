@@ -34,7 +34,7 @@
 
 ![Total Blocklist URLs](https://img.shields.io/tokei/lines/github/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
 
-You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists#blocklists)
+You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists#safe-browsing-dnsbl-domain-name-system-based-blackhole-list-blocklists)
 
 ## URL sources
 
@@ -47,8 +47,9 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-
 | ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org |
 | Domains Project    | 2100 | https://domainsproject.org |
 | Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames |
-| OpenINTEL.nl    | 6 | https://openintel.nl |
-| IPv4 Addresses  | 4200 | 0.0.0.0 - 255.255.255.255 |
+| OpenINTEL.nl | 6 | https://openintel.nl |
+| Switch.ch | 3.3 | https://switch.ch/open-data |
+| IPv4 Addresses | 4200 | 0.0.0.0 - 255.255.255.255 |
 
 ## Safe Browsing API vendors
 
@@ -150,7 +151,7 @@ Fetch URLs from all sources, insert their contents to local database, download S
 -   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
 -   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
 -   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**, **Registrar R01**, **CubDomain.com**, **ICANN**, **Domains Project**, **Amazon Web Services EC2**, **OpenINTEL**, **IPv4 Addresses**
+-   :memo: Sources: Everything
 -   :shield: Vendors: **Google**, **Yandex**
 
 ```bash

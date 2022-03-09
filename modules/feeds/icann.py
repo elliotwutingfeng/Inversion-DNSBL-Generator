@@ -139,10 +139,10 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
             last_line = lines.pop()
             # Yield list of URLs from the cleaned `lines`,
             # ensuring that all of them are lowercase
-            yield [url for line in lines if (url := line.split('.\t')[0].lower())]
+            yield [url for line in lines if (url := line.split()[0].lower().rstrip("."))]
 
         # Yield last remaining URL from `last_line`
-        if url := last_line.split('.\t')[0].lower():
+        if url := last_line.split()[0].lower().rstrip("."):
             yield [url]
 
 
