@@ -38,18 +38,18 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-
 
 ## URL sources
 
-| Name | URL Count (millions) | Source |
-|-|-|-|
-| Tranco TOP1M | 1 | https://tranco-list.eu |
-| DomCop TOP10M | 10 | https://www.domcop.com/top-10-million-domains |
-| Registrar R01 | 5.9 | https://r01.ru |
-| CubDomain.com | 184 | https://cubdomain.com |
-| ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org |
-| Domains Project    | 2100 | https://domainsproject.org |
-| Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames |
-| OpenINTEL.nl | 6 | https://openintel.nl |
-| Switch.ch | 3.3 | https://switch.ch/open-data |
-| IPv4 Addresses | 4200 | 0.0.0.0 - 255.255.255.255 |
+| Name | URL Count (millions) | Source | Description |
+|-|-|-|-|
+| Tranco TOP1M | 1 | https://tranco-list.eu | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
+| DomCop TOP10M | 10 | https://www.domcop.com/top-10-million-domains | Top 10 million domains Based on Open PageRank data |
+| Registrar R01 | 5.9 | https://r01.ru | Zone files for .ru .su .rf domains |
+| CubDomain.com | 184 | https://cubdomain.com | Aggregator that tracks newly registered domains daily |
+| ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
+| Domains Project | 2100 | https://domainsproject.org | World’s single largest Internet domains dataset |
+| Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames | Amazon Elastic Compute Cloud hostnames |
+| OpenINTEL.nl | 6 | https://openintel.nl | The OpenINTEL project aims to perform a comprehensive active measurement of the global Domain Name System (DNS), to track long-term developments on the Internet. |
+| Switch.ch | 3.3 | https://switch.ch/open-data | Zone files for .ch .li domains |
+| IPv4 Addresses | 4200 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
 
 ## Safe Browsing API vendors
 
