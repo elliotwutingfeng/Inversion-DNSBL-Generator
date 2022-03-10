@@ -70,17 +70,17 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, max_
         return dict([await f for f in asyncio.as_completed(tasklist)])
 
     async def get(url, session):
-        errors: list[str] = []
+        # errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
                 async with session.get(url, headers=headers) as response:
                     return (url,await response.read())
             except Exception as error:
-                errors.append(repr(error))
+                # errors.append(repr(error))
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
-        logger.error("URL: %s GET request failed! Errors: %s", url, errors)
+        logger.error("URL: %s GET request failed!", url)
         return (url,b"{}") # Allow json.loads to parse body if request fails 
 
     # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
@@ -120,17 +120,17 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         return [await f for f in asyncio.as_completed(tasklist)]
 
     async def post(url, payload, session):
-        errors: list[str] = []
+        # errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
                 async with session.post(url, data=payload, headers=headers) as response:
                     return (url,await response.read())
             except Exception as error:
-                errors.append(repr(error))
+                # errors.append(repr(error))
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
-        logger.error("URL: %s POST request failed! Errors: %s", url, errors)
+        logger.error("URL: %s POST request failed!", url)
         return (url,b"{}") # Allow json.loads to parse body if request fails
 
     # POST request timeout of 5 minutes (300 seconds)
@@ -157,7 +157,7 @@ async def get_async_stream(endpoint: str, max_retries:int = 5, headers: dict = N
     # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
      raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400), request_class=KeepAliveClientRequest) as session:
-        errors: list[str] = []
+        # errors: list[str] = []
         connected = False
         completed = False
         for number_of_retries_made in range(max_retries):
@@ -167,10 +167,10 @@ async def get_async_stream(endpoint: str, max_retries:int = 5, headers: dict = N
                         connected = True # Flag to indicate at least one chunk has been extracted
                         yield chunk
             except Exception as error:
-                errors.append(repr(error))
+                # errors.append(repr(error))
                 logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if connected:
-                    logger.error("%s | Stream disrupted", error, number_of_retries_made + 1)
+                    logger.error("URL: %s | Stream disrupted", endpoint)
                     break
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
@@ -178,5 +178,5 @@ async def get_async_stream(endpoint: str, max_retries:int = 5, headers: dict = N
                 completed = True # Flag to indicate GET request successful completion
                 break
         if not completed:
-            logger.error("URL: %s GET request failed! Errors: %s", endpoint, errors)
+            logger.error("URL: %s GET request failed!", endpoint)
             yield None
