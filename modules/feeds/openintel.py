@@ -101,7 +101,7 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
     spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=6 * 1024 ** 3,mode='w+b',dir=os.getcwd())
     with spooled_tempfile:
         # Download compressed zone file to SpooledTemporaryFile
-        async for chunk in get_async_stream(endpoint,headers):
+        async for chunk in get_async_stream(endpoint,headers=headers):
             if chunk is None:
                 raise aiohttp.client_exceptions.ClientError("Stream disrupted")
             else:
