@@ -1,5 +1,5 @@
 """
-For fetching and scanning URLs from Afnic.fr
+For fetching and scanning URLs from AFNIC.fr
 """
 from itertools import groupby, count
 from collections.abc import AsyncIterator
@@ -119,13 +119,13 @@ def ocr_extract(image_data:bytes, tld: str) -> list[str]:
     return urls
 
 async def get_afnic_domains(tld: str, num_days: Union[int, None]) -> AsyncIterator[set[str]]:
-    """Download and extract domains from Afnic.fr PNG files for a given `tld`
+    """Download and extract domains from AFNIC.fr PNG files for a given `tld`
     and yield all listed URLs in batches.
 
     Args:
-        tld (str): Afnic.fr tld
+        tld (str): AFNIC.fr tld
         num_days (int, optional): Counting back from current date, 
-        the number of days of Afnic.fr data to fetch and/or analyse. If set to `None`,
+        the number of days of AFNIC.fr data to fetch and/or analyse. If set to `None`,
         all available data dating back to 1 February 2021 will be considered.
 
     Yields:
@@ -152,7 +152,7 @@ async def get_afnic_domains(tld: str, num_days: Union[int, None]) -> AsyncIterat
 
 class AFNIC:
     """
-    For fetching and scanning URLs from Afnic.fr
+    For fetching and scanning URLs from AFNIC.fr
     """
     # pylint: disable=too-few-public-methods
     def __init__(self,parser_args: dict, update_time: int):
@@ -165,6 +165,6 @@ class AFNIC:
         if "afnic" in parser_args["sources"]:
             self.db_filenames = [f"afnic_{tld}" for tld in tlds]
             if parser_args["fetch"]:
-                # Download and Add Afnic.fr URLs to database
+                # Download and Add AFNIC.fr URLs to database
                 self.jobs = [(get_afnic_domains, update_time, db_filename, {'tld':tld,'num_days': self.num_days})
                 for db_filename,tld in zip(self.db_filenames,tlds)]

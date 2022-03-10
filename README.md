@@ -117,6 +117,12 @@ Edit `unpack.sh` and remove `combine` from the last line, then run:
 ./unpack.sh
 ```
 
+### Install Tesseract OCR (optional)
+
+This is necessary for feeds like `AFNIC.fr` which utilise optical character recognition (OCR)
+
+See https://tesseract-ocr.github.io/tessdoc/Installation.html for detailed instructions
+
 ## Usage Examples
 
 **Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API
