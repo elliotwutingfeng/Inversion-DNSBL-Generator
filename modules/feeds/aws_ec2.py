@@ -55,7 +55,7 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
 
 async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[set[str]]:
     """Generate Amazon Web Services EC2 URLs located at
-    AWS `region` and yields all listed URLs in batches.
+    AWS `region` and yield all listed URLs in batches.
 
     Args:
         region (str): AWS region

@@ -63,7 +63,7 @@ async def get_latest_tarball_url() -> str:
     return endpoint
 
 async def _get_openintel_url_list() -> AsyncIterator[set[str]]:
-    """Download domains from OpenINTEL.nl endpoint and yields all listed URLs in batches.
+    """Download domains from OpenINTEL.nl endpoint and yield all listed URLs in batches.
 
     Yields:
         AsyncIterator[set[str]]: Batch of URLs as a set

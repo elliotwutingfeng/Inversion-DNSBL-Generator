@@ -42,12 +42,13 @@ async def backoff_delay_async(backoff_factor: float,number_of_retries_made: int)
     """
     await asyncio.sleep(backoff_factor * (2 ** (number_of_retries_made - 1)))
 
-async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, headers: dict = None) -> dict[str,bytes]:
+async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, max_retries: int = 5, headers: dict = None) -> dict[str,bytes]:
     """Given a list of HTTP endpoints, make HTTP GET requests asynchronously
 
     Args:
         endpoints (list[str]): List of HTTP GET request endpoints
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
+        max_retries (int, optional): Maximum HTTP request retries. Defaults to 5.
         headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Returns:
@@ -69,7 +70,6 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, head
         return dict([await f for f in asyncio.as_completed(tasklist)])
 
     async def get(url, session):
-        max_retries: int = 5
         errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
@@ -90,7 +90,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, head
         return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
 
-async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5, headers: dict = None) -> list[tuple[str,bytes]]:
+async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_requests: int = 5, max_retries:int = 5, headers: dict = None) -> list[tuple[str,bytes]]:
     """Given a list of HTTP endpoints and a list of payloads, 
     make HTTP POST requests asynchronously
 
@@ -98,6 +98,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         endpoints (list[str]): List of HTTP POST request endpoints
         payloads (list[bytes]): List of HTTP POST request payloads
         max_concurrent_requests (int, optional): Maximum number of concurrent async HTTP requests. Defaults to 5.
+        max_retries (int, optional): Maximum HTTP request retries. Defaults to 5.
         headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Returns:
@@ -119,7 +120,6 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         return [await f for f in asyncio.as_completed(tasklist)]
 
     async def post(url, payload, session):
-        max_retries: int = 5
         errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
@@ -139,16 +139,17 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
         return await gather_with_concurrency(max_concurrent_requests, *[post(url, payload, session) for url,payload in zip(endpoints,payloads)])
 
 
-async def get_async_stream(endpoint: str, headers: dict = None) -> AsyncIterator[Optional[bytes]]:
+async def get_async_stream(endpoint: str, max_retries:int = 5, headers: dict = None) -> AsyncIterator[Optional[bytes]]:
     """Given a HTTP endpoint, make a HTTP GET request asynchronously and stream the response chunks
 
     Args:
         endpoint (str): HTTP GET request endpoint
+        max_retries (int, optional): Maximum HTTP request retries. Defaults to 5.
         headers (dict, optional): HTTP Headers to send with every request. Defaults to None.
 
     Yields:
         AsyncIterator[Optional[bytes]]: HTTP response content as a chunked stream, 
-        yields a final None if the GET request fails to complete.
+        yield a final None if the GET request fails to complete.
     """
     if headers is None:
         headers = default_headers
@@ -156,7 +157,6 @@ async def get_async_stream(endpoint: str, headers: dict = None) -> AsyncIterator
     # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
      raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400), request_class=KeepAliveClientRequest) as session:
-        max_retries: int = 5
         errors: list[str] = []
         connected = False
         completed = False

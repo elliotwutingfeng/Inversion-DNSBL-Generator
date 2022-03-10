@@ -146,7 +146,7 @@ async def _get_cubdomain_page_urls_by_db_filename(num_days: Union[int,None]) -> 
 
 
 async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
-    """Download cubdomain.com domains and yields
+    """Download cubdomain.com domains and yield
     all listed URLs from each page_url in `page_urls`.
 
     Each listed domain is encapsulated in this tag

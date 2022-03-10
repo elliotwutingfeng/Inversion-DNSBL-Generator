@@ -66,7 +66,7 @@ async def _get_approved_endpoints(access_token: str) -> list[str]:
     return body
 
 async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[set[str]]:
-    """Download domains from ICANN zone file endpoint and yields all listed URLs in batches.
+    """Download domains from ICANN zone file endpoint and yield all listed URLs in batches.
 
     Args:
         endpoint (str): ICANN zone file endpoint

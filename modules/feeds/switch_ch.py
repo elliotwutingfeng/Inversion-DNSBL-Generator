@@ -13,10 +13,10 @@ from modules.utils.feeds import hostname_expression_batch_size,generate_hostname
 logger = init_logger()
 
 async def get_switch_ch_domains(tld: str, key: str) -> AsyncIterator[set[str]]:
-    """Download and extract domains from Switch.ch zonefiles and yields all listed URLs in batches.
+    """Download and extract domains from Switch.ch zonefiles and yield all listed URLs in batches.
 
     Args:
-        tld (str): Switch.ch tld (either 'ch' or 'li')
+        tld (str): Switch.ch Top Level Domain (either 'ch' or 'li')
         key (str): TSIG key for doing a DNS zone transfer (AXFR) from zonedata.switch.ch
 
     Yields:

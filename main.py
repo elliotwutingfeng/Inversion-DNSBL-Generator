@@ -86,7 +86,7 @@ if __name__ == "__main__":
         """,
     )
 
-    sources = ["top1m", "top10m", "r01", "cubdomain", "icann", "domainsproject", "ec2", "openintel", "switch_ch", "ipv4"]
+    sources = ["top1m", "top10m", "r01", "cubdomain", "icann", "domainsproject", "ec2", "openintel", "switch_ch", "afnic", "ipv4"]
     parser.add_argument(
         "-s",
         "--sources",
@@ -106,6 +106,7 @@ if __name__ == "__main__":
         ec2 -> Amazon Web Services EC2 public hostnames
         openintel -> OpenINTEL.nl (.nu .se .ee .gov .fed.us)
         switch_ch -> Switch.ch (.ch .li)
+        afnic -> Afnic.fr (.fr .re .pm .tf .wf .yt)
         ipv4 -> ipv4 addresses
         """,
         default=sources,

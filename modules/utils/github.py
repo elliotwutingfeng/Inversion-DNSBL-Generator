@@ -24,7 +24,7 @@ def upload_blocklists(vendor: Vendors, blocklist_filenames:tuple[str,...]) -> No
     """
     try:
         path_list = [f"{BLOCKLISTS_FOLDER}{os.sep}{original_filename}" for original_filename in blocklist_filenames]
-        file_names = [f"{vendor}_{original_filename.split('_')[1]}.txt"for original_filename in blocklist_filenames]
+        file_names = [f"{vendor}_{original_filename.split('_')[1]}.txt" for original_filename in blocklist_filenames]
 
         access_token = dotenv_values(".env")["GITHUB_ACCESS_TOKEN"]
         repo_name = dotenv_values(".env")["BLOCKLIST_REPOSITORY_NAME"]
