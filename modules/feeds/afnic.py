@@ -4,7 +4,7 @@ For fetching and scanning URLs from Afnic.fr
 from itertools import groupby, count
 from collections.abc import AsyncIterator
 from datetime import datetime,timedelta
-from typing import Any, Iterator
+from typing import Any
 
 import cv2
 import pytesseract

@@ -49,6 +49,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-
 | Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames | Amazon Elastic Compute Cloud hostnames |
 | OpenINTEL.nl | 6 | https://openintel.nl | The OpenINTEL project aims to perform a comprehensive active measurement of the global Domain Name System (DNS), to track long-term developments on the Internet. |
 | Switch.ch | 3.3 | https://switch.ch/open-data | Zone files for .ch .li domains |
+| AFNIC.fr | 1 | https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data | Daily newly registered .fr .re .pm .tf .wf .yt domains |
 | IPv4 Addresses | 4200 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
 
 ## Safe Browsing API vendors
