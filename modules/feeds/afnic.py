@@ -4,7 +4,7 @@ For fetching and scanning URLs from Afnic.fr
 from itertools import groupby, count
 from collections.abc import AsyncIterator
 from datetime import datetime,timedelta
-from typing import Any
+from typing import Any,Union
 
 import cv2
 import pytesseract
@@ -19,6 +19,8 @@ from modules.utils.parallel_compute import execute_with_ray
 
 
 logger = init_logger()
+
+DATE_STR_FORMAT: str = "{dt:%Y}{dt:%m}{dt:%d}"
 
 async def deflank(img: np.ndarray) -> np.ndarray:
     """Remove excess left/right flank whitespace 
@@ -116,23 +118,28 @@ def ocr_extract(image_data:bytes, tld: str) -> list[str]:
     
     return urls
 
-async def get_afnic_domains(tld: str) -> AsyncIterator[set[str]]:
+async def get_afnic_domains(tld: str, num_days: Union[int, None]) -> AsyncIterator[set[str]]:
     """Download and extract domains from Afnic.fr PNG files for a given `tld`
     and yield all listed URLs in batches.
 
     Args:
         tld (str): Afnic.fr tld
+        num_days (int, optional): Counting back from current date, 
+        the number of days of Afnic.fr data to fetch and/or analyse. If set to `None`,
+        all available data dating back to 1 February 2021 will be considered.
 
     Yields:
         Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
     """
+    now = datetime.now()
+    if num_days is None:
+        num_days = (now - datetime.strptime("1 February 2021", "%d %B %Y")).days
+    dates = [now - timedelta(days=x) for x in range(num_days)]
 
     # Download PNG files to memory
-    start = datetime(2021,2,1) # 1 February 2021
-    end = datetime.today()
-    date_list = [(start + timedelta(days=x)).strftime("%Y%m%d") for x in range((end-start).days)]
-    links: list[str] = [f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{date}_CREA_{tld}.png"
-    for date in date_list]
+    links: list[str] = [
+        f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{DATE_STR_FORMAT}_CREA_{tld}.png".format(dt=date)
+    for date in dates]
     images: dict[str,bytes] = await get_async(links, max_concurrent_requests=1, max_retries=2)
 
     # Extract URLs from each PNG file
@@ -151,6 +158,7 @@ class AFNIC:
     def __init__(self,parser_args: dict, update_time: int):
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
+        self.num_days: Union[int,None] = parser_args["afnic_num_days"]
 
         tlds: tuple[str,...] = ("fr", "re", "pm", "tf", "wf", "yt")
 
@@ -158,5 +166,5 @@ class AFNIC:
             self.db_filenames = [f"afnic_{tld}" for tld in tlds]
             if parser_args["fetch"]:
                 # Download and Add Afnic.fr URLs to database
-                self.jobs = [(get_afnic_domains, update_time, db_filename, {'tld':tld})
+                self.jobs = [(get_afnic_domains, update_time, db_filename, {'tld':tld,'num_days': self.num_days})
                 for db_filename,tld in zip(self.db_filenames,tlds)]

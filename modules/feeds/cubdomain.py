@@ -32,7 +32,6 @@ def _generate_dates_and_root_urls(num_days: Union[int,None]) -> tuple[list[datet
     Returns:
         tuple[list[datetime], list[str]]: (Dates,Root URLs for each date)
     """
-    #
     now = datetime.now()
     if num_days is None:
         num_days = (now - datetime.strptime("25 June 2017", "%d %B %Y")).days

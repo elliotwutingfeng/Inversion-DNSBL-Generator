@@ -129,6 +129,21 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--afnic-num-days",
+        required=False,
+        help="""
+        (OPTIONAL: Omit this flag to fetch and/or analyse the entire Afnic.fr dataset)
+        Counting back from current date, the number of days of Afnic.fr
+        data to fetch and/or analyse. By default all available data
+        dating back to 1 February 2021 will be considered.
+        If 'afnic' is not enabled in `--sources`, this flag will be silently ignored.
+        """,
+        default=None,
+        type=int,
+        action=MinimumOneAction,
+    )
+
+    parser.add_argument(
         "-v",
         "--vendors",
         nargs="+",
