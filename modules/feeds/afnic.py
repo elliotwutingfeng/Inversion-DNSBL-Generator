@@ -60,8 +60,13 @@ async def extract_text_string(image: np.ndarray) -> list[str]:
     Returns:
         list[str]: List of text lines detected in `image`
     """
-    return pytesseract.image_to_string(image,
-    config=r'--oem 0 --psm 7 -c load_system_dawg=0 -c load_freq_dawg=0').splitlines()
+    try:
+        pytesseract_results = pytesseract.image_to_string(image,
+        config=r'--oem 0 --psm 7 -c load_system_dawg=0 -c load_freq_dawg=0')
+        return pytesseract_results.splitlines()
+    except pytesseract.pytesseract.TesseractError as error:
+        logger.warning(error)
+        return []
 
 def ocr_extract(image_data:bytes, tld: str) -> list[str]:
     """Scan for all valid URLs from a given `image_data` bytes string
