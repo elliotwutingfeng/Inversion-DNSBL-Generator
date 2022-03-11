@@ -206,7 +206,7 @@ def execute_with_ray(
     for key in object_store} if object_store else {}
 
     tasks_pre_launch: list[Awaitable] = [
-        run_task_handler.remote(
+        run_task_handler.remote( # type:ignore
             task_handler,
             task_args,
             object_store_ids,
