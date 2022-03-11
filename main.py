@@ -174,6 +174,15 @@ if __name__ == "__main__":
         action=MinimumOneAction,
     )
 
+    parser.add_argument(
+        "--include-dashboard",
+        action="store_true",
+        help="""
+        Whether or not to start the Ray dashboard,
+        which displays the status of the Ray cluster.
+        """,
+    )
+
     args = parser.parse_args()
     args.vendors = sorted([x.capitalize() for x in args.vendors])
     if not (args.fetch or args.update_hashes or args.identify or args.retrieve):

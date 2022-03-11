@@ -40,7 +40,7 @@ def process_flags(parser_args: dict) -> None:
         parser_args (dict): Flags set by user; see `main.py` for more details
     """
     ray.shutdown()
-    ray.init(include_dashboard=True, num_cpus=parser_args["num_cpus"])
+    ray.init(include_dashboard=parser_args["include_dashboard"], num_cpus=parser_args["num_cpus"])
     update_time = int(time.time())  # seconds since UNIX Epoch
 
     domains_feeds = [cls(parser_args,update_time) 

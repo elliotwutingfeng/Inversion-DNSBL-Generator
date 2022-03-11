@@ -20,6 +20,6 @@ pytest==7.0.1
 pytest-cov==3.0.0
 pytest-mock==3.7.0
 python-dotenv==0.19.2
-ray[default]==1.10.0
+ray[default]==1.11.0
 tldextract==3.2.0
 tqdm==4.63.0
