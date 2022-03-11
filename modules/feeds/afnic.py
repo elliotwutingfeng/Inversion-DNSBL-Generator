@@ -86,7 +86,7 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     # Read image as grayscale
     main_img = cv2.imdecode(np.asarray(bytearray(image_data), dtype="uint8"), cv2.IMREAD_GRAYSCALE)
     # Enlarge image
-    main_img = cv2.resize(main_img, None, fx=10, fy=10, interpolation=cv2.INTER_LANCZOS4)
+    main_img = cv2.resize(main_img, None, fx=4, fy=4, interpolation=cv2.INTER_LANCZOS4)
     # Convert to black and white
     (_,main_img) = cv2.threshold(main_img, 210, 255, cv2.THRESH_BINARY)
     
