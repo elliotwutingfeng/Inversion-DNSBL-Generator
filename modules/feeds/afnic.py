@@ -149,15 +149,15 @@ async def get_afnic_domains(tld: str, num_days: Union[int, None]) -> AsyncIterat
         num_days = (now - datetime.strptime("1 February 2021", "%d %B %Y")).days
     dates = [now - timedelta(days=x) for x in range(num_days)]
 
-    # Download PNG files to memory
     links: list[str] = [
         f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{DATE_STR_FORMAT}_CREA_{tld}.png".format(dt=date)
     for date in dates]
-    images: dict[str,bytes] = await get_async(links, max_concurrent_requests=1, max_retries=2)
 
-    # Extract URLs from each PNG file
-    for link,image_data in images.items():
+    for link in links:
+        # Download PNG file to memory
+        image_data: bytes = (await get_async(links, max_concurrent_requests=1, max_retries=2))[link]
         if image_data != b"{}":
+            # Extract URLs from PNG file
             raw_urls: list[str] = ocr_extract(image_data,link,tld)
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
