@@ -3,8 +3,8 @@ For fetching and scanning URLs from AFNIC.fr
 """
 from itertools import groupby, count
 from collections.abc import AsyncIterator
-from datetime import datetime,timedelta
-from typing import Any,Union
+from datetime import datetime, timedelta
+from typing import Any, Iterator, Union
 # import secrets
 
 import cv2
@@ -15,7 +15,7 @@ from more_itertools import chunked,flatten
 from modules.utils.http import get_async
 
 from modules.utils.log import init_logger
-from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
+from modules.utils.feeds import hostname_expression_batch_size, generate_hostname_expressions
 from modules.utils.parallel_compute import execute_with_ray
 
 
@@ -99,17 +99,19 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
 
     # Horizontal pixel lines at which to split main_img will be the extremes of each
     # of these index ranges
-    lines_to_split_at: list[int] = list(flatten(ranges))
+    lines_to_split_at: Iterator[int] = flatten(ranges)
 
-    # Split img vertically at each line of lines_to_split_at, exclude purely white line_imgs
+    # Split img vertically at each line, exclude purely white line_imgs
     # Remove whitespace on left and right flanks of each line_img
-    line_imgs = execute_with_ray(deflank,[(line_img,) for line_img in np.split(main_img,lines_to_split_at) 
+
+    line_imgs_before_deflank: list[tuple] = [(line_img,) for line_img in 
+                np.split(main_img, list(lines_to_split_at)) 
                 if bool((line_img != 255).any()) # line_img must have at least 1 black pixel
                 and all(line_img.shape) # line_img cannot be empty
-                                         ], progress_bar=False)
-    
+                                         ]
     del main_img
-
+    line_imgs = execute_with_ray(deflank,line_imgs_before_deflank, progress_bar=False)
+    
     # Extract text from each line_img
     text_lines: list[str] = list(flatten(execute_with_ray(extract_text_string,
     [(image,) for image in line_imgs], object_store={"link":link} , progress_bar=False)))

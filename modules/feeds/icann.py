@@ -155,13 +155,12 @@ class ICANN:
         username = str(dotenv_values('.env').get('ICANN_ACCOUNT_USERNAME',""))
         password = str(dotenv_values('.env').get('ICANN_ACCOUNT_PASSWORD',""))
 
-        access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
-        endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
-
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
         
         if "icann" in parser_args["sources"]:
+            access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
+            endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
             self.db_filenames = [f"icann_{url.rsplit('/', 1)[-1].rsplit('.')[-2]}" for url in endpoints]
             if parser_args["fetch"]:
                 # Download and Add ICANN URLs to database
