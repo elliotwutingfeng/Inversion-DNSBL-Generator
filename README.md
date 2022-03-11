@@ -47,10 +47,11 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-
 | ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
 | Domains Project | 2100 | https://domainsproject.org | World’s single largest Internet domains dataset |
 | Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames | Amazon Elastic Compute Cloud hostnames |
-| OpenINTEL.nl | 6 | https://openintel.nl | The OpenINTEL project aims to perform a comprehensive active measurement of the global Domain Name System (DNS), to track long-term developments on the Internet. |
+| OpenINTEL.nl | 6 | https://openintel.nl | Zone files for .se .nu .ee domains |
 | Switch.ch | 3.3 | https://switch.ch/open-data | Zone files for .ch .li domains |
 | AFNIC.fr | 1 | https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data | Daily newly registered .fr .re .pm .tf .wf .yt domains |
-| Internet.ee | 0.1 | https://www.internet.ee/domains/ee-zone-file | Estonian Internet Foundation |
+| Internet.ee | 0.1 | https://www.internet.ee/domains/ee-zone-file | Estonian Internet Foundation (.ee) |
+| SK-NIC.sk | 0.4 | https://sk-nic.sk/subory/domains.txt | Domain Registry of the Slovak Republic (.sk) |
 | IPv4 Addresses | 4200 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
 
 ## Safe Browsing API vendors
@@ -206,3 +207,4 @@ python3 main.py --help
 -   <https://yandex.com/dev/safebrowsing>
 -   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>
 -   <https://github.com/icann/czds-api-client-python>
+-   <https://jpmens.net/2021/05/18/dns-open-zone-data>

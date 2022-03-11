@@ -9,4 +9,5 @@ from modules.feeds.openintel import OpenINTEL
 from modules.feeds.switch_ch import SwitchCH
 from modules.feeds.afnic import AFNIC
 from modules.feeds.internet_ee import InternetEE
+from modules.feeds.sk_nic import SKNIC
 from modules.feeds.ipv4 import Ipv4
