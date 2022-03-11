@@ -5,6 +5,7 @@ from itertools import groupby, count
 from collections.abc import AsyncIterator
 from datetime import datetime,timedelta
 from typing import Any,Union
+# import secrets
 
 import cv2
 import pytesseract
@@ -39,7 +40,7 @@ async def deflank(img: np.ndarray) -> np.ndarray:
     
     # Group these indexes together to index ranges
     groups: groupby[Any,int] = groupby(L, key=lambda item, c=count():item-next(c)) # type:ignore
-    ranges: list[tuple[int,int]] = [(h[0],h[-1]) for k, g in groups if (h:= list(g))]
+    ranges: list[tuple[int,int]] = [(h[0],h[-1]) for _, g in groups if (h:= list(g))]
     
     # Vertical pixel lines at which to split image will be the extremes of each
     # of these index ranges
@@ -51,28 +52,32 @@ async def deflank(img: np.ndarray) -> np.ndarray:
     # Pad image with 5 pixel thick white border
     return np.pad(img[:,start:end], pad_width=5, mode='constant', constant_values=255)
 
-async def extract_text_string(image: np.ndarray) -> list[str]:
+async def extract_text_string(image: np.ndarray, link: str) -> list[str]:
     """Scan and extract text from `image` numpy array with Google Tesseract
 
     Args:
         image (np.ndarray): To be scanned for text
+        link (str): URL source of image to be scanned
 
     Returns:
         list[str]: List of text lines detected in `image`
     """
     try:
         pytesseract_results = pytesseract.image_to_string(image,
-        config=r'--oem 0 --psm 7 -c load_system_dawg=0 -c load_freq_dawg=0')
+        config=r'--oem 0 --psm 7 -c load_system_dawg=0 -c load_freq_dawg=0 -c min_characters_to_try=4')
         return pytesseract_results.splitlines()
     except pytesseract.pytesseract.TesseractError as error:
-        logger.warning(error)
+        # with open(f'{link.replace("/","")}_{secrets.token_urlsafe(16)}.npy','wb') as f:
+        #    np.save(f,image)
+        logger.warning("%s %s", error, image.shape)
         return []
 
-def ocr_extract(image_data:bytes, tld: str) -> list[str]:
+def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     """Scan for all valid URLs from a given `image_data` bytes string
 
     Args:
         image_data (bytes): Bytes string of image to be scanned
+        link (str): URL source of image to be scanned
         tld (str): Top Level Domain to scan for
 
     Returns:
@@ -83,14 +88,14 @@ def ocr_extract(image_data:bytes, tld: str) -> list[str]:
     # Enlarge image
     main_img = cv2.resize(main_img, None, fx=10, fy=10, interpolation=cv2.INTER_LANCZOS4)
     # Convert to black and white
-    (_,main_img) = cv2.threshold(main_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    (_,main_img) = cv2.threshold(main_img, 210, 255, cv2.THRESH_BINARY)
     
     # Find all indexes of horizontal pixel lines that are completely white (255)
     L = [idx for (idx,row) in enumerate(main_img) if 0 not in row]
 
     # Group these indexes together to index ranges
     groups: groupby[Any,int] = groupby(L, key=lambda item, c=count():item-next(c)) # type:ignore
-    ranges: list[tuple[int,int]] = [(h[0],h[-1]) for k, g in groups if (h:= list(g))]
+    ranges: list[tuple[int,int]] = [(h[0],h[-1]) for _, g in groups if (h:= list(g))]
 
     # Horizontal pixel lines at which to split main_img will be the extremes of each
     # of these index ranges
@@ -106,7 +111,8 @@ def ocr_extract(image_data:bytes, tld: str) -> list[str]:
     del main_img
 
     # Extract text from each line_img
-    text_lines: list[str] = list(flatten(execute_with_ray(extract_text_string,[(image,) for image in line_imgs], progress_bar=False)))
+    text_lines: list[str] = list(flatten(execute_with_ray(extract_text_string,
+    [(image,) for image in line_imgs], object_store={"link":link} , progress_bar=False)))
     
     # Filter away lines with '#', remove spaces, replace '’', "'", "`" with i, I with l
     text_lines = [text_line
@@ -148,9 +154,9 @@ async def get_afnic_domains(tld: str, num_days: Union[int, None]) -> AsyncIterat
     images: dict[str,bytes] = await get_async(links, max_concurrent_requests=1, max_retries=2)
 
     # Extract URLs from each PNG file
-    for image_data in images.values():
+    for link,image_data in images.items():
         if image_data != b"{}":
-            raw_urls: list[str] = ocr_extract(image_data,tld)
+            raw_urls: list[str] = ocr_extract(image_data,link,tld)
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
 
