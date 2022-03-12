@@ -172,7 +172,7 @@ async def get_afnic_daily_updates(tld: str, num_days: Union[int, None]) -> Async
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
 
-async def get_afnic_archives() -> AsyncIterator[set[str]]:
+async def get_afnic_monthly_archives() -> AsyncIterator[set[str]]:
     """Download and extract domains from AFNIC.fr monthly archives
     and yield all listed URLs in batches.
 
@@ -220,10 +220,10 @@ class AFNIC:
 
         if "afnic" in parser_args["sources"]:
             tlds: tuple[str,...] = ("fr", "re", "pm", "tf", "wf", "yt")
-            self.db_filenames = [f"afnic_{tld}" for tld in tlds] + ["afnic_archive"]
+            self.db_filenames = [f"afnic_{tld}" for tld in tlds] + ["afnic_monthly_archive"]
             if parser_args["fetch"]:
                 # Download and Add AFNIC.fr URLs to database
                 self.jobs = [(get_afnic_daily_updates, update_time, db_filename,
                  {'tld':tld,'num_days': self.num_days})
                 for db_filename,tld in zip(self.db_filenames,tlds)] + \
-                [(get_afnic_archives,update_time,self.db_filenames[-1])] # type:ignore
+                [(get_afnic_monthly_archives,update_time,self.db_filenames[-1])] # type:ignore
