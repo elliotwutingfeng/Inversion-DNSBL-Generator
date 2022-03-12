@@ -134,13 +134,13 @@ async def _get_cubdomain_page_urls_by_db_filename(num_days: Union[int,None]) -> 
     Returns:
         dict: Mapping of db_filename to page_urls
     """
-    logger.info("Creating list of all cubdomain.com pages")
+
     cubdomain_page_urls_by_date_str = await _get_page_urls_by_date_str(num_days)
     cubdomain_page_urls_by_db_filename = {
             f"cubdomain_{date_str}": page_urls
             for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
         }
-    logger.info("Creating list of all cubdomain.com pages...[DONE]")
+
     return cubdomain_page_urls_by_db_filename
 
 

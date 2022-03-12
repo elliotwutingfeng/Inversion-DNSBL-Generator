@@ -77,8 +77,6 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
 
     """
 
-    logger.info("Downloading ICANN list %s...", endpoint)
-
     url_generator = extract_zonefile_urls(endpoint ,headers={'Content-Type': 'application/json',
     'Connection': 'keep-alive',
     'Cache-Control':'no-cache',

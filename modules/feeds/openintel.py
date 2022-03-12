@@ -71,8 +71,6 @@ async def _get_openintel_url_list() -> AsyncIterator[set[str]]:
     """
     endpoint = await get_latest_tarball_url()
 
-    logger.info("Downloading OpenINTEL.nl list %s...", endpoint)
-
     url_generator = extract_openintel_urls(endpoint)
 
     try:

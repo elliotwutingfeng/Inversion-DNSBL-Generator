@@ -17,7 +17,6 @@ async def _get_top10m_url_list() -> AsyncIterator[set[str]]:
     Yields:
         AsyncIterator[set[str]]: Batch of URLs as a set
     """
-    logger.info("Downloading TOP10M list...")
     with BytesIO() as file:
         endpoint: str = "https://www.domcop.com/files/top/top10milliondomains.csv.zip"
         resp = (await get_async([endpoint]))[endpoint]
@@ -29,7 +28,6 @@ async def _get_top10m_url_list() -> AsyncIterator[set[str]]:
                 x.strip().decode().split(",")[1].replace('"', "").lower()
                 for x in zfile.open(zfile.namelist()[0]).readlines()[1:]
             )
-            logger.info("Downloading TOP10M list... [DONE]")
 
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)

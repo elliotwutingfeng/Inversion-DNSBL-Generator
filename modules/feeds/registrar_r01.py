@@ -17,7 +17,6 @@ async def _get_r01_domains() -> AsyncIterator[set[str]]:
     Yields:
         AsyncIterator[set[str]]: Batch of URLs as a set
     """
-    logger.info("Downloading Registrar R01 lists...")
 
     endpoints = ["https://partner.r01.ru/zones/ru_domains.gz",
                 "https://partner.r01.ru/zones/su_domains.gz",
@@ -35,7 +34,6 @@ async def _get_r01_domains() -> AsyncIterator[set[str]]:
         else:
             logger.warning("Failed to retrieve Registrar R01 list %s",endpoint)
 
-    logger.info("Downloading Registrar R01 lists... [DONE]")
     for batch in chunked(raw_urls, hostname_expression_batch_size):
         yield generate_hostname_expressions(batch)
 

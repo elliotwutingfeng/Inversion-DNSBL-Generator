@@ -18,7 +18,6 @@ async def _get_top1m_url_list() -> AsyncIterator[set[str]]:
     Yields:
         AsyncIterator[set[str]]: Batch of URLs as a set
     """
-    logger.info("Downloading TOP1M list...")
     with BytesIO() as file:
         endpoint: str = "https://tranco-list.eu/top-1m.csv.zip"
         resp = (await get_async([endpoint]))[endpoint]
@@ -30,7 +29,6 @@ async def _get_top1m_url_list() -> AsyncIterator[set[str]]:
                 x.strip().decode().split(",")[1].lower()
                 for x in zfile.open(zfile.namelist()[0]).readlines()
             )
-            logger.info("Downloading TOP1M list... [DONE]")
 
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
