@@ -77,7 +77,7 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, max_
                     return (url,await response.read())
             except Exception as error:
                 # errors.append(repr(error))
-                logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
+                # logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
         logger.error("URL: %s GET request failed!", url)
@@ -127,7 +127,7 @@ async def post_async(endpoints: list[str], payloads: list[bytes],max_concurrent_
                     return (url,await response.read())
             except Exception as error:
                 # errors.append(repr(error))
-                logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
+                # logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1: # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
         logger.error("URL: %s POST request failed!", url)
@@ -168,7 +168,7 @@ async def get_async_stream(endpoint: str, max_retries:int = 5, headers: dict = N
                         yield chunk
             except Exception as error:
                 # errors.append(repr(error))
-                logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
+                # logger.warning("%s | Attempt %d failed", error, number_of_retries_made + 1)
                 if connected:
                     logger.error("URL: %s | Stream disrupted", endpoint)
                     break

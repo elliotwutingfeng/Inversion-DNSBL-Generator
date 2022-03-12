@@ -63,6 +63,7 @@
         "clsname",
         "COULDNT",
         "CZDS",
+        "dateutil",
         "dawg",
         "dtype",
         "fastavro",
@@ -94,7 +95,8 @@
         "rusqlite",
         "Tesseract",
         "TSIG",
-        "WBITS"
+        "WBITS",
+        "zfile"
     ],
     "python.testing.pytestArgs": ["tests"],
     "python.testing.unittestEnabled": false,

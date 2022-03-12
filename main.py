@@ -134,10 +134,11 @@ if __name__ == "__main__":
         "--afnic-num-days",
         required=False,
         help="""
-        (OPTIONAL: Omit this flag to fetch and/or analyse the entire AFNIC.fr dataset)
+        (OPTIONAL: Omit this flag to fetch only monthly archives and not fetch AFNIC.fr daily updates)
         Counting back from current date, the number of days of AFNIC.fr
-        data to fetch and/or analyse. By default all available data
-        dating back to 1 February 2021 will be considered.
+        daily updates to fetch and/or analyse. By default only monthly archives will be fetched,
+        and no daily updates will be fetched,
+        .
         If 'afnic' is not enabled in `--sources`, this flag will be silently ignored.
         """,
         default=None,

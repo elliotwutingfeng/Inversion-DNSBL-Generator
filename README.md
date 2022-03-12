@@ -49,10 +49,10 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-
 | Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames | Amazon Elastic Compute Cloud hostnames |
 | OpenINTEL.nl | 6 | https://openintel.nl | Zone files for .se .nu .ee domains |
 | Switch.ch | 3.3 | https://switch.ch/open-data | Zone files for .ch .li domains |
-| AFNIC.fr | 1 | https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data | Daily newly registered .fr .re .pm .tf .wf .yt domains |
+| AFNIC.fr | 7 | https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data | Daily newly registered .fr .re .pm .tf .wf .yt domains |
 | Internet.ee | 0.1 | https://www.internet.ee/domains/ee-zone-file | Estonian Internet Foundation (.ee) |
 | SK-NIC.sk | 0.4 | https://sk-nic.sk/subory/domains.txt | Domain Registry of the Slovak Republic (.sk) |
-| IPv4 Addresses | 4200 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
+| IPv4 Addresses | 4294 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
 
 ## Safe Browsing API vendors
 
@@ -69,7 +69,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-
 -   Python >= 3.9.10
 -   Multi-core x86-64 CPU; for Python Ray support
 -   RAM: At least 8GB
--   SSD Drive Space: At least 600GB required to process all URL sources
+-   SSD Drive Space: At least 700GB required to process all URL sources
 
 ### Safe Browsing API Access (mandatory)
 
@@ -83,11 +83,14 @@ Choose at least one
     - Once registered, turn off email notifications in the user settings,
 then select `Create New Request` on the Dashboard to request for zone file access.
 
-    - **ICANN Terms-of-Service download limit per zone file:** Once every 24 hours
-
 ### Others (optional)
 
 -   GitHub API (for uploading blocklists to GitHub): [Create a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+
+### Download limits
+
+- **ICANN CZDS (Centralized Zone Data Service):** Once every 24 hours per zone file
+- **Switch.ch:** Once every 24 hours per zone file
 
 ## Setup instructions
 
@@ -119,11 +122,12 @@ Edit `unpack.sh` and remove `combine` from the last line, then run:
 ./unpack.sh
 ```
 
-### Install Tesseract OCR (optional)
+### Install OpenCV and Tesseract OCR (optional)
 
 This is necessary for feeds like `AFNIC.fr` which utilise optical character recognition (OCR)
 
-See https://tesseract-ocr.github.io/tessdoc/Installation.html for detailed instructions
+[OpenCV install instructions (Ubuntu)](https://www.itsfoss.net/how-to-install-and-configure-opencv-on-ubuntu-20-04)
+[Tesseract install instructions](https://tesseract-ocr.github.io/tessdoc/Installation.html)
 
 ## Usage Examples
 
@@ -154,7 +158,7 @@ python3 main.py --fetch-urls --sources top1m
 
 ---
 
-Fetch URLs from all sources, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 600GB free space)**
+Fetch URLs from all sources, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 700GB free space)**
 
 -   :heavy_check_mark: Download/Extract URLs to local database
 -   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database

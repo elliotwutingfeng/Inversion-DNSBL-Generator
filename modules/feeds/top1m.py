@@ -24,11 +24,11 @@ async def _get_top1m_url_list() -> AsyncIterator[set[str]]:
         resp = (await get_async([endpoint]))[endpoint]
         if resp != b"{}":
             file.write(resp)
-            zipfile = ZipFile(file)
+            zfile = ZipFile(file)
             # Ensure that raw_url is always lowercase
             raw_urls = (
                 x.strip().decode().split(",")[1].lower()
-                for x in zipfile.open(zipfile.namelist()[0]).readlines()
+                for x in zfile.open(zfile.namelist()[0]).readlines()
             )
             logger.info("Downloading TOP1M list... [DONE]")
 

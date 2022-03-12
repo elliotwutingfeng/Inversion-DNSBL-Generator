@@ -3,8 +3,13 @@ For fetching and scanning URLs from AFNIC.fr
 """
 from itertools import groupby, count
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta
+from datetime import date
 from typing import Any, Iterator, Union
+from io import BytesIO
+from zipfile import ZipFile
+import csv
+from io import TextIOWrapper
+from dateutil.relativedelta import relativedelta
 # import secrets
 
 import cv2
@@ -21,7 +26,8 @@ from modules.utils.parallel_compute import execute_with_ray
 
 logger = init_logger()
 
-DATE_STR_FORMAT: str = "{dt:%Y}{dt:%m}{dt:%d}"
+YYYYMMDD_STR_FORMAT: str = "{dt:%Y}{dt:%m}{dt:%d}"
+YYYYMM_STR_FORMAT : str = "{dt:%Y}{dt:%m}"
 
 async def deflank(img: np.ndarray) -> np.ndarray:
     """Remove excess left/right flank whitespace 
@@ -131,37 +137,76 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     
     return urls
 
-async def get_afnic_domains(tld: str, num_days: Union[int, None]) -> AsyncIterator[set[str]]:
-    """Download and extract domains from AFNIC.fr PNG files for a given `tld`
+async def get_afnic_daily_updates(tld: str, num_days: Union[int, None]) -> AsyncIterator[set[str]]:
+    """Download and extract domains from AFNIC.fr daily updates (PNG files) for a given `tld`
     and yield all listed URLs in batches.
 
     Args:
         tld (str): AFNIC.fr tld
         num_days (int, optional): Counting back from current date, 
-        the number of days of AFNIC.fr data to fetch and/or analyse. If set to `None`,
-        all available data dating back to 1 February 2021 will be considered.
+        the number of days of AFNIC.fr daily updates to fetch and/or analyse. If set to `None`,
+        `num days` will be set to 0.
 
     Yields:
         Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
     """
-    now = datetime.now()
+    raw_urls: list[str] = []
+
+    today = date.today()
+
     if num_days is None:
-        num_days = (now - datetime.strptime("1 February 2021", "%d %B %Y")).days
-    dates = [now - timedelta(days=x) for x in range(num_days)]
+        num_days = 0
+    days = [today + relativedelta(days=-x) for x in range(num_days)]
 
     links: list[str] = [
-        f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{DATE_STR_FORMAT}_CREA_{tld}.png".format(dt=date)
-    for date in dates]
+        "https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/"
+        f"{YYYYMMDD_STR_FORMAT}_CREA_{tld}.png".format(dt=date)
+    for date in days]
 
     for link in links:
         # Download PNG file to memory
         image_data: bytes = (await get_async(links, max_concurrent_requests=1, max_retries=2))[link]
         if image_data != b"{}":
             # Extract URLs from PNG file
-            raw_urls: list[str] = ocr_extract(image_data,link,tld)
+            raw_urls = ocr_extract(image_data,link,tld)
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
 
+async def get_afnic_archives() -> AsyncIterator[set[str]]:
+    """Download and extract domains from AFNIC.fr monthly archives
+    and yield all listed URLs in batches.
+
+    Yields:
+        Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
+    """
+    raw_urls: list[str] = []
+
+    today = date.today()
+
+    # Archives files are only kept for the past 24 months, we only need the latest version
+    months = [today + relativedelta(months=-x) for x in range(24)]
+
+    # AFNIC.fr monthly archive files
+    endpoints: list[str] = ["https://www.afnic.fr/wp-media/ftp/documentsOpenData/"
+    f"{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip"
+    .format(dt=date) for date in months]
+    
+    for endpoint in endpoints:
+        with BytesIO() as file:
+            resp = (await get_async([endpoint], max_concurrent_requests=1, max_retries=2))[endpoint]
+            if resp != b"{}":
+                file.write(resp)
+                file.seek(0)
+                zfile = ZipFile(file)
+                csv_filename = [filename for filename in zfile.namelist() if filename.endswith(".csv")][0]
+                with zfile.open(csv_filename) as csvfile:
+                    reader = csv.reader(TextIOWrapper(csvfile, 'ISO-8859-1'), delimiter=';')
+                    next(reader, None)  # skip the headers
+                    for row in reader:
+                        raw_urls.append(row[0])
+                for batch in chunked(raw_urls, hostname_expression_batch_size):
+                    yield generate_hostname_expressions(batch)
+                break # we only need the first accessible archive
 
 class AFNIC:
     """
@@ -173,11 +218,12 @@ class AFNIC:
         self.jobs: list[tuple] = []
         self.num_days: Union[int,None] = parser_args["afnic_num_days"]
 
-        tlds: tuple[str,...] = ("fr", "re", "pm", "tf", "wf", "yt")
-
         if "afnic" in parser_args["sources"]:
-            self.db_filenames = [f"afnic_{tld}" for tld in tlds]
+            tlds: tuple[str,...] = ("fr", "re", "pm", "tf", "wf", "yt")
+            self.db_filenames = [f"afnic_{tld}" for tld in tlds] + ["afnic_archive"]
             if parser_args["fetch"]:
                 # Download and Add AFNIC.fr URLs to database
-                self.jobs = [(get_afnic_domains, update_time, db_filename, {'tld':tld,'num_days': self.num_days})
-                for db_filename,tld in zip(self.db_filenames,tlds)]
+                self.jobs = [(get_afnic_daily_updates, update_time, db_filename,
+                 {'tld':tld,'num_days': self.num_days})
+                for db_filename,tld in zip(self.db_filenames,tlds)] + \
+                [(get_afnic_archives,update_time,self.db_filenames[-1])] # type:ignore
