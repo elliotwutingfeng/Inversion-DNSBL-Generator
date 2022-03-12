@@ -27,7 +27,9 @@ async def get_switch_ch_domains(tld: str, key: str) -> AsyncIterator[set[str]]:
         subprocess.call(["dig", "-y", key, "@zonedata.switch.ch",
                         "+noall", "+answer", "+noidnout", "+onesoa", "AXFR", f"{tld}."], stdout=spooled_tempfile)
         spooled_tempfile.seek(0)
-        raw_urls: list[str] = [line.split()[0].lower().rstrip(".") for line in spooled_tempfile.read().splitlines()]
+        raw_urls: list[str] = [splitted_line[0].lower().rstrip(".") for line in spooled_tempfile.read().splitlines()
+        if (splitted_line := line.split()) # if splitted_line has a length of at least 1
+        ]
 
         for batch in chunked(raw_urls, hostname_expression_batch_size):
             yield generate_hostname_expressions(batch)

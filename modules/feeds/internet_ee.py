@@ -22,7 +22,9 @@ async def get_ee_domains() -> AsyncIterator[set[str]]:
     with spooled_tempfile:
         subprocess.call(["dig", "@zone.internet.ee", "+noall", "+answer", "+noidnout", "+onesoa", "AXFR", "ee."], stdout=spooled_tempfile)
         spooled_tempfile.seek(0)
-        raw_urls: list[str] = [line.split()[0].lower().rstrip(".") for line in spooled_tempfile.read().splitlines()]
+        raw_urls: list[str] = [splitted_line[0].lower().rstrip(".") for line in spooled_tempfile.read().splitlines()
+        if (splitted_line := line.split()) # if splitted_line has a length of at least 1
+        ]
 
         for batch in chunked(raw_urls, hostname_expression_batch_size):
             yield generate_hostname_expressions(batch)

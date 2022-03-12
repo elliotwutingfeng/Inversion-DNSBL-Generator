@@ -1,13 +1,15 @@
 <div align="center">
-  <h3 align="center">Safe Browsing DNSBL (Domain Name System-based blackhole list) Generator</h3>
+
+  <h3 align="center">Inversion DNSBL (Domain Name System-based blackhole list) Generator</h3>
+  <img src="images/inversion_logo.svg" alt="Logo" width="200" height="200">
 
   <p align="center">
     Generate malicious URL blocklists for <a href="https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list">DNSBL</a> applications like <a href="https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl">pfBlockerNG</a> or <a href="https://pi-hole.net">Pi-hole</a> by scanning various public URL sources using the Safe Browsing API from <a href="https://developers.google.com/safe-browsing">Google</a> and/or <a href="https://yandex.com/dev/safebrowsing">Yandex</a>.
     <br />
     <br />
-    <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists/issues">Report Bug</a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/issues">Report Bug</a>
     ·
-    <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists/issues">Request Feature</a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/issues">Request Feature</a>
   </p>
 
   <p align="center">
@@ -18,12 +20,12 @@
   <a href="https://opencv.org"><img src="https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV"/></a>
   </p>
   <p align="center">
-  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/stargazers"><img src="https://img.shields.io/github/stars/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub stars"/></a>
-  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/watchers"><img src="https://img.shields.io/github/watchers/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub watchers"/></a>
-  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/network/members"><img src="https://img.shields.io/github/forks/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub forks"/></a>
-  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/issues"><img src="https://img.shields.io/github/issues/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub issues"/></a>
+  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/stargazers"><img src="https://img.shields.io/github/stars/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub stars"/></a>
+  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/watchers"><img src="https://img.shields.io/github/watchers/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub watchers"/></a>
+  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/network/members"><img src="https://img.shields.io/github/forks/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub forks"/></a>
+  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/issues"><img src="https://img.shields.io/github/issues/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub issues"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge" alt="GitHub license"/></a>
-  <a href="https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Generator/commits/master)"><img src="https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Safe-Browsing-DNSBL-Generator?style=for-the-badge" alt="GitHub commit activity"/></a>
+  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/commits/master)"><img src="https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub commit activity"/></a>
   </p>
 
 </div>
@@ -32,9 +34,9 @@
 
 ## Blocklists available for download
 
-![Total Blocklist URLs](https://img.shields.io/tokei/lines/github/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
+![Total Blocklist URLs](https://img.shields.io/tokei/lines/github/elliotwutingfeng/Inversion-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
 
-You may download the blocklists [here](https://github.com/elliotwutingfeng/Safe-Browsing-DNSBL-Blocklists#safe-browsing-dnsbl-domain-name-system-based-blackhole-list-blocklists)
+You may download the blocklists [here](https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists#inversion-dnsbl-domain-name-system-based-blackhole-list-blocklists)
 
 ## URL sources
 

@@ -94,9 +94,9 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
     # Spill over to secondary memory (i.e. SSD storage)
-    # when size of spooled_tempfile exceeds 6 * 1024 ** 3 bytes = 6 GB
+    # when size of spooled_tempfile exceeds 1 * 1024 ** 3 bytes = 1 GB
     hostnames: set[str] = set()
-    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=6 * 1024 ** 3,mode='w+b',dir=os.getcwd())
+    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=1 * 1024 ** 3,mode='w+b',dir=os.getcwd())
     with spooled_tempfile:
         # Download compressed zone file to SpooledTemporaryFile
         async for chunk in get_async_stream(endpoint,headers=headers):

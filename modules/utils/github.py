@@ -20,7 +20,6 @@ def upload_blocklists(vendor: Vendors, blocklist_filenames:tuple[str,...]) -> No
     Args:
         vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
         blocklist_filenames (tuple[str,...]): Blocklists to be uploaded to GitHub
-        repo_name (str, optional): GitHub Blocklist Repository name. Defaults to 'Safe-Browsing-DNSBL-Blocklists'.
     """
     try:
         path_list = [f"{BLOCKLISTS_FOLDER}{os.sep}{original_filename}" for original_filename in blocklist_filenames]

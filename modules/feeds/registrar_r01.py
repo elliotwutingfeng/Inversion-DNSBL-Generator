@@ -30,7 +30,9 @@ async def _get_r01_domains() -> AsyncIterator[set[str]]:
         if resp != b"{}":
             decompressed_lines = gzip.decompress(resp).decode().split("\n")
             # Ensure that raw_url is always lowercase
-            raw_urls += [line.split()[0].lower() for line in decompressed_lines]
+            raw_urls += [splitted_line[0].lower() for line in decompressed_lines 
+            if (splitted_line := line.split()) # if splitted_line has a length of at least 1
+            ]
         else:
             logger.warning("Failed to retrieve Registrar R01 list %s",endpoint)
 

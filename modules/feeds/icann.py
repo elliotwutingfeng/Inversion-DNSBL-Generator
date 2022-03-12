@@ -108,8 +108,8 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
     # Spill over to secondary memory (i.e. SSD storage)
-    # when size of spooled_tempfile exceeds 6 * 1024 ** 3 bytes = 6 GB
-    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=6 * 1024 ** 3,mode='w+b',dir=os.getcwd())
+    # when size of spooled_tempfile exceeds 1 * 1024 ** 3 bytes = 1 GB
+    spooled_tempfile = tempfile.SpooledTemporaryFile(max_size=1 * 1024 ** 3,mode='w+b',dir=os.getcwd())
     with spooled_tempfile:
         # Download compressed zone file to SpooledTemporaryFile
         async for chunk in get_async_stream(endpoint,headers=headers):
@@ -137,10 +137,13 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
             last_line = lines.pop()
             # Yield list of URLs from the cleaned `lines`,
             # ensuring that all of them are lowercase
-            yield [url for line in lines if (url := line.split()[0].lower().rstrip("."))]
+            yield [url for line in lines 
+            if (splitted_line := line.split()) 
+            and (url := splitted_line[0].lower().rstrip("."))]
 
         # Yield last remaining URL from `last_line`
-        if url := last_line.split()[0].lower().rstrip("."):
+        # if splitted_line has a length of at least 1
+        if (splitted_line := last_line.split()) and (url := splitted_line[0].lower().rstrip(".")):
             yield [url]
 
 
