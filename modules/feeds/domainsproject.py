@@ -5,14 +5,19 @@ import os
 import pathlib
 from collections.abc import AsyncIterator
 
-from more_itertools.more import chunked, sort_together
-
-from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
+from modules.utils.feeds import (
+    generate_hostname_expressions,
+    hostname_expression_batch_size,
+)
 from modules.utils.log import init_logger
+from more_itertools.more import chunked, sort_together
 
 logger = init_logger()
 
-async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[set[str]]:
+
+async def _get_local_file_url_list(
+    txt_filepath: str,
+) -> AsyncIterator[set[str]]:
     """Yield all listed URLs in batches from local text file.
 
     Args:
@@ -23,8 +28,10 @@ async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[set[str]]
     """
     try:
         with open(txt_filepath, "r") as file:
-            for raw_urls in chunked((_.strip() for _ in file.readlines()),
-            hostname_expression_batch_size):
+            for raw_urls in chunked(
+                (_.strip() for _ in file.readlines()),
+                hostname_expression_batch_size,
+            ):
                 yield generate_hostname_expressions(raw_urls)
     except OSError as error:
         logger.error(
@@ -37,7 +44,7 @@ async def _get_local_file_url_list(txt_filepath: str) -> AsyncIterator[set[str]]
 
 
 def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[
-list[str], list[str]
+    list[str], list[str]
 ]:
     """Scan for Domains Project .txt source files and generate filepaths
     to .txt source files, and database filenames for each .txt source file.
@@ -46,7 +53,8 @@ list[str], list[str]
         tuple[list[str], list[str]]: (Filepaths to .txt source files,
         Database filenames for each .txt source file)
     """
-    # Scan Domains Project's "domains" directory for domainsproject_urls_db_filenames
+    # Scan Domains Project's "domains" directory for
+    # domainsproject_urls_db_filenames
     domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
     domainsproject_txt_filepaths: list[str] = []
     domainsproject_urls_db_filenames: list[str] = []
@@ -56,7 +64,8 @@ list[str], list[str]
                 domainsproject_urls_db_filenames.append(f"{file[:-4]}")
                 domainsproject_txt_filepaths.append(os.path.join(root, file))
 
-    # Sort domainsproject_txt_filepaths and domainsproject_urls_db_filenames by descending filesize
+    # Sort domainsproject_txt_filepaths and
+    # domainsproject_urls_db_filenames by descending filesize
     domainsproject_filesizes: list[int] = [
         os.path.getsize(path) for path in domainsproject_txt_filepaths
     ]
@@ -72,23 +81,26 @@ list[str], list[str]
                 domainsproject_txt_filepaths,
                 domainsproject_urls_db_filenames,
             ),
-            reverse=True
+            reverse=True,
         )
     ]
     return domainsproject_txt_filepaths, domainsproject_urls_db_filenames
+
 
 class DomainsProject:
     """
     For fetching and scanning URLs from Domains Project
     """
-    # pylint: disable=too-few-public-methods
-    def __init__(self,parser_args: dict, update_time: int):
+
+    def __init__(self, parser_args: dict, update_time: int):
         self.txt_filepaths: list[str] = []
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
         if "domainsproject" in parser_args["sources"]:
-            (self.txt_filepaths, self.db_filenames) \
-            = _retrieve_domainsproject_txt_filepaths_and_db_filenames()
+            (
+                self.txt_filepaths,
+                self.db_filenames,
+            ) = _retrieve_domainsproject_txt_filepaths_and_db_filenames()
             if parser_args["fetch"]:
                 # Extract and Add Domains Project URLs to database
                 self.jobs = [

@@ -4,13 +4,17 @@ For fetching and scanning URLs from Tranco TOP1M
 from collections.abc import AsyncIterator
 from io import BytesIO
 from zipfile import ZipFile
-from more_itertools import chunked
-from modules.utils.log import init_logger
-from modules.utils.http import get_async
-from modules.utils.feeds import hostname_expression_batch_size,generate_hostname_expressions
 
+from modules.utils.feeds import (
+    generate_hostname_expressions,
+    hostname_expression_batch_size,
+)
+from modules.utils.http import get_async
+from modules.utils.log import init_logger
+from more_itertools import chunked
 
 logger = init_logger()
+
 
 async def _get_top1m_url_list() -> AsyncIterator[set[str]]:
     """Download the Tranco TOP1M dataset and yield all listed URLs in batches.
@@ -34,17 +38,18 @@ async def _get_top1m_url_list() -> AsyncIterator[set[str]]:
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
         else:
-            logger.warning("Failed to retrieve TOP1M list; yielding empty list")
+            logger.warning(
+                "Failed to retrieve TOP1M list; yielding empty list"
+            )
             yield set()
-
 
 
 class Top1M:
     """
     For fetching and scanning URLs from Tranco TOP1M
     """
-    # pylint: disable=too-few-public-methods
-    def __init__(self,parser_args: dict, update_time: int):
+
+    def __init__(self, parser_args: dict, update_time: int):
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
         if "top1m" in parser_args["sources"]:

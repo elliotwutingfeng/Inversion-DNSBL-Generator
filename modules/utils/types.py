@@ -2,6 +2,5 @@
 """
 from typing import Literal
 
-
-Vendors = Literal["Google","Yandex"]
-DatabaseTableModes = Literal["hashes","domains","ips"]
+Vendors = Literal["Google", "Yandex"]
+DatabaseTableModes = Literal["hashes", "domains", "ips"]

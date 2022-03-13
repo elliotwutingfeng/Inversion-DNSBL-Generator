@@ -1,16 +1,17 @@
 """
 SQLite utilities for making INSERT queries
 """
+from collections.abc import AsyncIterator, Callable, Mapping
 from typing import Iterator, Optional
-from collections.abc import Callable,Mapping,AsyncIterator
 
 from apsw import Error
-from modules.utils.log import init_logger
 from modules.database.connect import create_connection
-from modules.database.hash import compute_url_hash,int_addr_to_ip_and_hash
+from modules.database.hash import compute_url_hash, int_addr_to_ip_and_hash
+from modules.utils.log import init_logger
 from modules.utils.types import Vendors
 
 logger = init_logger()
+
 
 async def add_urls(
     url_set_fetcher: Callable[..., AsyncIterator[set[str]]],
@@ -24,11 +25,13 @@ async def add_urls(
     update its lastListed timestamp field to `update_time`.
 
     Args:
-        url_set_fetcher (Callable[..., AsyncIterator[set[str]]]): 
+        url_set_fetcher (Callable[..., AsyncIterator[set[str]]]):
         Fetches URL set from local or remote sources
-        update_time (int): Time when URLs are added to database in UNIX Epoch seconds
+        update_time (int): Time when URLs are added to database in
+        UNIX Epoch seconds
         db_filename (str): SQLite database filename
-        url_set_fetcher_args (Optional[Mapping], optional): Arguments for `url_set_fetcher`.
+        url_set_fetcher_args (Optional[Mapping], optional): Arguments
+        for `url_set_fetcher`.
         Defaults to None.
     """
     urls = url_set_fetcher(
@@ -42,7 +45,8 @@ async def add_urls(
             cur = conn.cursor()
             with conn:
                 logger.info(
-                    "Performing INSERT-UPDATE URLs to urls table of %s...", db_filename
+                    "Performing INSERT-UPDATE URLs to urls table of %s...",
+                    db_filename,
                 )
 
                 async for url_batch in urls:
@@ -60,7 +64,8 @@ async def add_urls(
                     )
 
                 logger.info(
-                    "Performing INSERT-UPDATE URLs to urls table of %s...[DONE]",
+                    "Performing INSERT-UPDATE URLs to "
+                    "urls table of %s...[DONE]",
                     db_filename,
                 )
         except Error as error:
@@ -69,7 +74,8 @@ async def add_urls(
 
 
 async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
-    """For a given `first_octet`, INSERT all 2 ** 24 ipv4 addresses and their sha256 hashes
+    """For a given `first_octet`, INSERT all 2 ** 24 ipv4 addresses
+    and their sha256 hashes
     into urls table of SQLite database at `db_filename`.db.
 
     Example: if `first_octet` == 42,
@@ -100,18 +106,21 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     cur.execute("DELETE FROM urls")
                 with conn:
                     cur.executemany(
-                    """
+                        """
                     INSERT INTO urls (url,hash)
                     VALUES (?,?)
                     """,
                         (
-                            int_addr_to_ip_and_hash(int_addr + (2 ** 24) * first_octet)
+                            int_addr_to_ip_and_hash(
+                                int_addr + (2 ** 24) * first_octet
+                            )
                             for int_addr in range(ips_to_generate)
                         ),
                     )
 
                     logger.info(
-                        "INSERT %d ipv4 addresses to urls table of %s...[DONE]",
+                        "INSERT %d ipv4 addresses to "
+                        "urls table of %s...[DONE]",
                         ips_to_generate,
                         db_filename,
                     )
@@ -120,26 +129,34 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         conn.close()
 
 
-def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendors) -> None:
+def replace_malicious_url_hash_prefixes(
+    hash_prefixes: set[bytes], vendor: Vendors
+) -> None:
     """Replace maliciousHashPrefixes table contents with latest malicious URL
     hash prefixes from Safe Browsing API
 
     Args:
-        hash_prefixes (set[bytes]): Malicious URL hash prefixes from Safe Browsing API
-        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        hash_prefixes (set[bytes]): Malicious URL hash prefixes
+        from Safe Browsing API
+        vendor (Vendors): Safe Browsing API vendor name
+        (e.g. "Google", "Yandex" etc.)
     """
-    logger.info("Updating database with %s malicious URL hash prefixes", vendor)
+    logger.info(
+        "Updating database with %s malicious URL hash prefixes", vendor
+    )
     conn = create_connection("malicious")
     if conn is not None:
         try:
             cur = conn.cursor()
             with conn:
                 cur.execute(
-                    "DELETE FROM maliciousHashPrefixes WHERE vendor = ?", (vendor,)
+                    "DELETE FROM maliciousHashPrefixes WHERE vendor = ?",
+                    (vendor,),
                 )
                 cur.executemany(
                     """
-                    INSERT INTO maliciousHashPrefixes (hashPrefix,prefixSize,vendor)
+                    INSERT INTO
+                    maliciousHashPrefixes (hashPrefix,prefixSize,vendor)
                     VALUES (?, ?, ?)
                     """,
                     (
@@ -148,19 +165,26 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
                     ),
                 )
             logger.info(
-                "Updating database with %s malicious URL hash prefixes...[DONE]", vendor
+                "Updating database with %s "
+                "malicious URL hash prefixes...[DONE]",
+                vendor,
             )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)
         conn.close()
 
-def replace_malicious_url_full_hashes(full_hashes: Iterator[bytes], vendor: Vendors) -> None:
+
+def replace_malicious_url_full_hashes(
+    full_hashes: Iterator[bytes], vendor: Vendors
+) -> None:
     """Replace maliciousFullHashes table contents with latest malicious URL
     full hashes from Safe Browsing API
 
     Args:
-        full_hashes (Iterator[bytes]): Malicious URL full hashes from Safe Browsing API
-        vendor (Vendors): Safe Browsing API vendor name (e.g. "Google", "Yandex" etc.)
+        full_hashes (Iterator[bytes]): Malicious URL full hashes
+        from Safe Browsing API
+        vendor (Vendors): Safe Browsing API vendor name
+        (e.g. "Google", "Yandex" etc.)
     """
     logger.info("Updating database with %s malicious URL full hashes", vendor)
     conn = create_connection("malicious")
@@ -169,20 +193,19 @@ def replace_malicious_url_full_hashes(full_hashes: Iterator[bytes], vendor: Vend
             cur = conn.cursor()
             with conn:
                 cur.execute(
-                    "DELETE FROM maliciousFullHashes WHERE vendor = ?", (vendor,)
+                    "DELETE FROM maliciousFullHashes WHERE vendor = ?",
+                    (vendor,),
                 )
                 cur.executemany(
                     """
                     INSERT OR IGNORE INTO maliciousFullHashes (fullHash,vendor)
                     VALUES (?, ?)
                     """,
-                    (
-                        (fullHash, vendor)
-                        for fullHash in full_hashes
-                    ),
+                    ((fullHash, vendor) for fullHash in full_hashes),
                 )
             logger.info(
-                "Updating database with %s malicious URL full hashes...[DONE]", vendor
+                "Updating database with %s malicious URL full hashes...[DONE]",
+                vendor,
             )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)

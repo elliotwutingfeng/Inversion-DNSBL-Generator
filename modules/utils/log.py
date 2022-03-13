@@ -1,8 +1,8 @@
 """
 Logger Utilities
 """
-import os
 import logging
+import os
 
 
 def init_logger(logs_folder: str = "logs") -> logging.Logger:
@@ -19,20 +19,23 @@ def init_logger(logs_folder: str = "logs") -> logging.Logger:
     if not os.path.exists(logs_folder):
         os.mkdir(logs_folder)
 
-    # Add information like timestamp, filename, and line number to logging messages
+    # Add information like timestamp, filename,
+    # and line number to logging messages
     logging.basicConfig(
         handlers=[
-            logging.FileHandler(f"{logs_folder}{os.sep}progress.log", mode="a"),
+            logging.FileHandler(
+                f"{logs_folder}{os.sep}progress.log", mode="a"
+            ),
             logging.StreamHandler(),
         ],
-        format="""
-        %(asctime)s %(levelname)-4s [%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s
-        """,
+        format="%(asctime)s %(levelname)-4s "
+        "[%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s",
         level=logging.INFO,
         datefmt="%d-%m-%Y %H:%M:%S",
     )
 
-    # (Temporarily disabled) Prevents tldextract library's filelock-related messages from cluttering the logs
+    # (Temporarily disabled) Prevents tldextract library's
+    # filelock-related messages from cluttering the logs
     # logging.getLogger("filelock").setLevel(logging.WARNING)
 
     logger = logging.getLogger()

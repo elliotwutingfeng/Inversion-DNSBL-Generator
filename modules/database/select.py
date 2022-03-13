@@ -2,6 +2,7 @@
 SQLite utilities for making SELECT queries
 """
 import os
+
 from apsw import Error
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
@@ -9,6 +10,7 @@ from modules.utils.parallel_compute import execute_with_ray
 from modules.utils.types import Vendors
 
 logger = init_logger()
+
 
 async def retrieve_matching_hash_prefix_urls(
     db_filename: str, prefix_sizes: list[int], vendor: Vendors
@@ -31,9 +33,7 @@ async def retrieve_matching_hash_prefix_urls(
         try:
             cur = conn.cursor()
             with conn:
-                cur = cur.execute(
-                    f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
-                )
+                cur = cur.execute(f"ATTACH database 'databases{os.sep}malicious.db' as malicious")
                 cur = cur.execute(
                     """
                     CREATE TEMPORARY TABLE IF NOT EXISTS vendorHashPrefixes
@@ -66,6 +66,7 @@ async def retrieve_matching_hash_prefix_urls(
 
     return urls
 
+
 async def retrieve_matching_full_hash_urls(
     update_time: int, db_filename: str, vendor: Vendors
 ) -> list[str]:
@@ -84,13 +85,13 @@ async def retrieve_matching_full_hash_urls(
         any of the malicious URL full hashes in `malicious`.db database
     """
     vendor_to_update_query = {
-        "Google":   """
+        "Google": """
                     UPDATE urls
                     SET lastGoogleMalicious = ?
                     WHERE hash IN vendorFullHashes
                     RETURNING url
                     """,
-        "Yandex":   """
+        "Yandex": """
                     UPDATE urls
                     SET lastYandexMalicious = ?
                     WHERE hash IN vendorFullHashes
@@ -105,9 +106,7 @@ async def retrieve_matching_full_hash_urls(
         try:
             cur = conn.cursor()
             with conn:
-                cur = cur.execute(
-                    f"ATTACH database 'databases{os.sep}malicious.db' as malicious"
-                )
+                cur = cur.execute(f"ATTACH database 'databases{os.sep}malicious.db' as malicious")
                 cur = cur.execute(
                     """
                     CREATE TEMPORARY TABLE IF NOT EXISTS vendorFullHashes
@@ -130,6 +129,7 @@ async def retrieve_matching_full_hash_urls(
         conn.close()
 
     return urls
+
 
 def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> list[int]:
     """Retrieve from database hash prefix sizes for a given `vendor`.
@@ -158,6 +158,7 @@ def retrieve_vendor_hash_prefix_sizes(vendor: Vendors) -> list[int]:
         conn.close()
     return prefix_sizes
 
+
 def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> list[str]:
     """Retrieve URLs from database most recently marked as malicious by Safe Browsing API
     of `vendor`.
@@ -172,7 +173,8 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
     """
     logger.info(
         "Retrieving URLs from database most recently "
-        "marked as malicious by %s Safe Browsing API",vendor
+        "marked as malicious by %s Safe Browsing API",
+        vendor,
     )
 
     async def retrieve_malicious_urls_(urls_db_filename: str, vendor: Vendors) -> set[str]:
@@ -198,11 +200,11 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
                         cur.execute("SELECT MAX(lastYandexMalicious) FROM urls")
                         last_yandex_malicious = [x[0] for x in cur.fetchall()][0]
                         cur.execute(
-                        """
+                            """
                         SELECT url FROM urls
                         WHERE lastYandexMalicious = ?
                         """,
-                            ( last_yandex_malicious,),
+                            (last_yandex_malicious,),
                         )
                     else:
                         raise ValueError('vendor must be "Google" or "Yandex"')
@@ -215,20 +217,23 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
 
     malicious_urls = set().union(
         *execute_with_ray(
-            retrieve_malicious_urls_, [(filename,vendor) for filename in urls_db_filenames]
+            retrieve_malicious_urls_,
+            [(filename, vendor) for filename in urls_db_filenames],
         )
     )
     logger.info(
         "Retrieving URLs from database most recently"
-        " marked as malicious by %s Safe Browsing API...[DONE]",vendor
+        " marked as malicious by %s Safe Browsing API...[DONE]",
+        vendor,
     )
     return list(malicious_urls)
 
+
 def check_for_hashes(vendor: Vendors) -> bool:
     """Check if database contains hash prefixes or full hashes for a given `vendor`.
-    
+
     In the current implementation, Yandex uses Lookup+Update API while Google uses only Update API.
-    Therefore for Yandex, check for presence of hash prefixes, 
+    Therefore for Yandex, check for presence of hash prefixes,
     whereas for Google, check for presence of full hashes.
 
     Args:

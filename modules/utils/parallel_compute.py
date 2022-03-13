@@ -1,24 +1,30 @@
 """
 Ray Utilities
 
-Ray is an open source project that makes it simple to scale any compute-intensive Python workload.
+Ray is an open source project that makes it simple
+to scale any compute-intensive Python workload.
 
-These utility classes and functions enable parallel execution of multiple instances of any function,
-provided that data transferred between workers and nodes can be serialized/deserialized
+These utility classes and functions enable parallel
+execution of multiple instances of any function,
+provided that data transferred between workers
+and nodes can be serialized/deserialized
 by Apache Arrow's Plasma object store.
 
-Pipelining is used to maximise throughput and an optional tqdm progressbar can be displayed.
+Pipelining is used to maximise throughput
+and an optional tqdm progressbar can be displayed.
 
 Inspired by:
 https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 import asyncio
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Awaitable, Optional
-from collections.abc import Callable,Mapping,Sequence
+
+import ray
 from ray.actor import ActorHandle
 from tqdm import tqdm  # type: ignore
-import ray
+
 
 @ray.remote
 class ProgressBarActor:
@@ -53,7 +59,8 @@ class ProgressBarActor:
         `wait_for_update`, and the total number of completed items.
 
         Returns:
-            tuple[int, int]: (Number of updates since the last call to `wait_for_update`,
+            tuple[int, int]: (Number of updates since
+            the last call to `wait_for_update`,
             Total number of completed items)
         """
         await self.event.wait()
@@ -92,7 +99,6 @@ class ProgressBar:
             description (str, optional): Text description to display
             before progressbar in console. Defaults to "".
         """
-        # pylint: disable=no-member
         self.progress_actor = ProgressBarActor.remote()  # type: ignore
         self.total = total
         self.description = description
@@ -114,9 +120,14 @@ class ProgressBar:
         Do this after starting a series of remote Ray tasks, to which you've
         passed the actor handle. Each of them calls `update` on the actor.
         When the progress meter reaches 100%, this method will return.
+
+        See
+        https://stackoverflow.com/questions/41707229/tqdm-printing-to-newline
         """
-        # See https://stackoverflow.com/questions/41707229/tqdm-printing-to-newline
-        pbar = tqdm(desc=self.description, total=self.total, position=0, leave=True)
+
+        pbar = tqdm(
+            desc=self.description, total=self.total, position=0, leave=True
+        )
         while True:
             delta, counter = ray.get(self.actor.wait_for_update.remote())
             pbar.update(delta)
@@ -124,18 +135,23 @@ class ProgressBar:
                 pbar.close()
                 return
 
+
 @ray.remote
 def run_task_handler(
-        task_handler: Callable[...,Awaitable],
-        task_args: tuple,
-        object_store_ids: Mapping,
-        actor_id: Optional[Any] = None,
-    ) -> Any:
+    task_handler: Callable[..., Awaitable],
+    task_args: tuple,
+    object_store_ids: Mapping,
+    actor_id: Optional[Any] = None,
+) -> Any:
     """Runs `task_handler` on `task_args`,
     update progressbar and return the value returned by `task_handler`
 
+    Reference
+    https://docs.ray.io/en/latest/async_api.html#asyncio-for-remote-tasks
+
     Args:
-        task_handler (Callable[...,Awaitable]): Asynchronous function to parallelise
+        task_handler (Callable[...,Awaitable]): Asynchronous
+        function to parallelise
         task_args (tuple): Arguments to be passed into `task_handler`
         object_store_ids (Mapping): Serializable object IDs to be passed
         from Ray object store into `task_handler`
@@ -145,8 +161,9 @@ def run_task_handler(
     Returns:
         Any: Value returned by `task_handler`
     """
+
     async def run_task_handler_(
-        task_handler: Callable[...,Awaitable],
+        task_handler: Callable[..., Awaitable],
         task_args: tuple,
         object_store_ids: Mapping,
         actor_id: Optional[Any] = None,
@@ -159,14 +176,10 @@ def run_task_handler(
         if actor_id is not None:
             actor_id.update.remote(1)  # type: ignore
         return result
-    
-    # Reference: https://docs.ray.io/en/latest/async_api.html#asyncio-for-remote-tasks
-    return asyncio.get_event_loop().run_until_complete(run_task_handler_(
-        task_handler,
-        task_args,
-        object_store_ids,
-        actor_id
-    ))
+
+    return asyncio.get_event_loop().run_until_complete(
+        run_task_handler_(task_handler, task_args, object_store_ids, actor_id)
+    )
 
 
 def execute_with_ray(
@@ -183,10 +196,11 @@ def execute_with_ray(
         task_handler (Callable): Asynchronous function to parallelise
         task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
-        object_store (Optional[Mapping], optional): Serializable objects, 
-        common to all task instances, to be put into 
+        object_store (Optional[Mapping], optional): Serializable objects,
+        common to all task instances, to be put into
         Ray object store, if any. Defaults to None.
-        progress_bar (bool, optional): If set to True, shows progressbar. Defaults to True.
+        progress_bar (bool, optional): If set to True, shows progressbar.
+        Defaults to True.
 
     Returns:
         list: List of returned values from each instance of task_handler
@@ -201,12 +215,16 @@ def execute_with_ray(
         actor = pbar.actor
         actor_id = ray.put(actor)
 
-    # Put large serializable objects common to all task instances into Ray object store
-    object_store_ids: dict[str,Any] = { key: ray.put(object_store[key]) 
-    for key in object_store} if object_store else {}
+    # Put large serializable objects common to
+    # all task instances into Ray object store
+    object_store_ids: dict[str, Any] = (
+        {key: ray.put(object_store[key]) for key in object_store}
+        if object_store
+        else {}
+    )
 
     tasks_pre_launch: list[Awaitable] = [
-        run_task_handler.remote( # type:ignore
+        run_task_handler.remote(  # type:ignore
             task_handler,
             task_args,
             object_store_ids,

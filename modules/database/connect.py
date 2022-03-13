@@ -1,8 +1,9 @@
 """
 SQLite utilities for connecting to databases
 """
-from typing import Optional
 import os
+from typing import Optional
+
 import apsw  # type: ignore
 from apsw import Error
 from modules.utils.log import init_logger
@@ -40,7 +41,9 @@ def create_connection(db_filename: str) -> Optional[type[apsw.Connection]]:
         cur.execute(
             "PRAGMA temp_store = MEMORY"
         )  # https://www.sqlite.org/pragma.html#pragma_temp_store
-        cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
+        cur.execute(
+            "PRAGMA journal_mode = WAL"
+        )  # https://www.sqlite.org/wal.html
     except Error as error:
         logger.error("filename:%s %s", db_filename, error, exc_info=True)
     return conn

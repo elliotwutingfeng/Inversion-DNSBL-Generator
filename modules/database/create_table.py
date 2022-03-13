@@ -2,14 +2,15 @@
 SQLite utilities for making CREATE TABLE queries
 """
 from typing import Optional
-from apsw import Error
 
-from modules.utils.log import init_logger
+from apsw import Error
 from modules.database.connect import create_connection
+from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
 from modules.utils.types import DatabaseTableModes
 
 logger = init_logger()
+
 
 async def _create_ips_table(db_filename: str) -> None:
     """Create SQLite table for storing ipv4 addresses
@@ -64,7 +65,9 @@ async def _create_urls_table(db_filename: str) -> None:
         conn.close()
 
 
-def _create_malicious_url_hashes_tables(db_filename: str = "malicious") -> None:
+def _create_malicious_url_hashes_tables(
+    db_filename: str = "malicious",
+) -> None:
     """Create SQLite tables for storing malicious URL hash prefixes and full hashes
     at `malicious`.db database.
 
@@ -95,22 +98,29 @@ def _create_malicious_url_hashes_tables(db_filename: str = "malicious") -> None:
         conn.close()
 
 
-def initialise_databases(db_filenames: Optional[list[str]] = None, mode: DatabaseTableModes = "hashes") -> None:
-    """If `mode` is set to "domains" or "ips", create database for each db_filename in `db_filenames` 
+def initialise_databases(
+    db_filenames: Optional[list[str]] = None,
+    mode: DatabaseTableModes = "hashes",
+) -> None:
+    """If `mode` is set to "domains" or "ips", create database for
+    each db_filename in `db_filenames`
     list if any of them do not exist yet.
-    If `mode` is set to "hashes", create database for storing malicious 
+    If `mode` is set to "hashes", create database for storing malicious
     URL hash prefixes and full hashes.
 
     Args:
-        db_filenames (Optional[list[str]]): SQLite database filenames. Defaults to None.
-        mode (DatabaseTableModes): If "hashes", create databases for malicious URL 
-        hash prefixes and full hashes, if "domains", create databases for non-ipv4 URLs,
-        if "ips", create databases for ipv4 addresses. Defaults to "hashes".
+        db_filenames (Optional[list[str]]): SQLite database filenames.
+        Defaults to None.
+        mode (DatabaseTableModes): If "hashes", create databases for
+        malicious URL hash prefixes and full hashes,
+        if "domains", create databases for non-ipv4 URLs,
+        if "ips", create databases for ipv4 addresses.
+        Defaults to "hashes".
 
     Raises:
         ValueError: `mode` must be "hashes" or "domains" or "ips"
     """
-    if mode not in ('hashes','domains','ips'):
+    if mode not in ("hashes", "domains", "ips"):
         raise ValueError('mode must be "hashes" or "domains" or "ips"')
 
     if mode == "hashes":
@@ -121,7 +131,8 @@ def initialise_databases(db_filenames: Optional[list[str]] = None, mode: Databas
     logger.info(
         "Initialising %d %s .db %s",
         len(db_filenames),
-        mode,"files" if len(db_filenames) > 1 else "file"
+        mode,
+        "files" if len(db_filenames) > 1 else "file",
     )
     if mode == "hashes":
         _create_malicious_url_hashes_tables(db_filenames[0])
