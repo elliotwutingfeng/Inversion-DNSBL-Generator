@@ -25,8 +25,9 @@ async def _get_top10m_url_list() -> AsyncIterator[set[str]]:
             zfile = ZipFile(file)
             # Ensure that raw_url is always lowercase
             raw_urls = (
-                x.strip().decode().split(",")[1].replace('"', "").lower()
-                for x in zfile.open(zfile.namelist()[0]).readlines()[1:]
+                splitted_line[1].replace('"', "").lower()
+                for line in zfile.open(zfile.namelist()[0]).readlines()[1:]
+                if len(splitted_line := line.strip().decode().split(",")) >= 2
             )
 
             for batch in chunked(raw_urls, hostname_expression_batch_size):

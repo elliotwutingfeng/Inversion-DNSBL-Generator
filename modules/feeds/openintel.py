@@ -5,6 +5,7 @@ import os
 import tempfile
 import tarfile
 from collections.abc import AsyncIterator
+from typing import Optional
 
 import aiohttp
 from fastavro import reader
@@ -39,7 +40,11 @@ async def get_latest_tarball_url() -> str:
         lambda tag: tag.string is not None
     )  # Filter out empty tags
 
-    latest_year: int = sorted(int(x.string.replace('/','')) for x in res)[-1]
+    latest_year: Optional[int] = years[-1] if (years := 
+    sorted(int(content.string.strip('/')) for content in res)) else None
+
+    if latest_year is None:
+        raise ValueError("No year folders found")
 
     openintel_year_url = f"{openintel_url}/{latest_year}"
     openintel_year_url_content = (await get_async([openintel_year_url]))[openintel_year_url]
@@ -57,7 +62,11 @@ async def get_latest_tarball_url() -> str:
         lambda tag: tag.string is not None
     )  # Filter out empty tags
 
-    latest_tarball: str = sorted(x.get("href") for x in res)[-1]
+    latest_tarball: Optional[str] = tarballs[-1] if (tarballs := 
+    sorted(tag_attrs.get("href") for tag_attrs in res)) else None
+
+    if latest_tarball is None:
+        raise ValueError("No tarballs found")
 
     endpoint = f"{openintel_year_url}/{latest_tarball}"
     return endpoint
@@ -69,11 +78,9 @@ async def _get_openintel_url_list() -> AsyncIterator[set[str]]:
         AsyncIterator[set[str]]: Batch of URLs as a set
 
     """
-    endpoint = await get_latest_tarball_url()
-
-    url_generator = extract_openintel_urls(endpoint)
-
     try:
+        endpoint = await get_latest_tarball_url()
+        url_generator = extract_openintel_urls(endpoint)
         async for batch in url_generator:
             yield generate_hostname_expressions(batch)
     except Exception as error:

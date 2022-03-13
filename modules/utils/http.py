@@ -83,9 +83,9 @@ async def get_async(endpoints: list[str], max_concurrent_requests: int = 5, max_
         logger.error("URL: %s GET request failed!", url)
         return (url,b"{}") # Allow json.loads to parse body if request fails 
 
-    # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
+    # GET request timeout of 3 hours (10800 seconds); extended from API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
-     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400), request_class=KeepAliveClientRequest) as session:
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=10800), request_class=KeepAliveClientRequest) as session:
         # Only one instance of any duplicate endpoint will be used
         return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
@@ -154,9 +154,9 @@ async def get_async_stream(endpoint: str, max_retries:int = 5, headers: dict = N
     if headers is None:
         headers = default_headers
 
-    # GET request timeout of 24 hours (86400 seconds); extended from API default of 5 minutes to handle large filesizes
+    # GET request timeout of 3 hours (10800 seconds); extended from API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
-     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=86400), request_class=KeepAliveClientRequest) as session:
+     raise_for_status=True, timeout=aiohttp.ClientTimeout(total=10800), request_class=KeepAliveClientRequest) as session:
         # errors: list[str] = []
         connected = False
         completed = False

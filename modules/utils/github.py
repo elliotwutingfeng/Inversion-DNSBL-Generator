@@ -30,7 +30,7 @@ def upload_blocklists(vendor: Vendors, blocklist_filenames:tuple[str,...]) -> No
         if access_token is None:
             raise ValueError("Access Token missing from environment file")
         if repo_name is None:
-            raise ValueError("Blocklist Repository Name missing from environment file")    
+            raise ValueError("Blocklist Repository Name missing from environment file")
     
         g = github.Github(access_token)
         repo = g.get_user().get_repo(repo_name)

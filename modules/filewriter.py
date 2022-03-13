@@ -76,4 +76,4 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str,...
         return ip_addresses_txt_filename
     
     blocklist_filenames = await asyncio.gather(*[asyncio.create_task(write_hostnames()),asyncio.create_task(write_ips())])
-    return tuple(x for x in blocklist_filenames if type(x) is str)
+    return tuple(filename for filename in blocklist_filenames if type(filename) is str)

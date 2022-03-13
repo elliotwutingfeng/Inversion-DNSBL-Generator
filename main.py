@@ -8,6 +8,7 @@ from argparse import (
     RawTextHelpFormatter,
     ArgumentDefaultsHelpFormatter,
 )
+import os
 from modules.process_flags import process_flags
 
 
@@ -37,7 +38,7 @@ if __name__ == "__main__":
     """,
         formatter_class=CustomFormatter,
         allow_abbrev=False # Disallows long options to be abbreviated if the abbreviation is unambiguous
-    )
+        )
 
     parser.add_argument(
         "-f",
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         Fetch URL datasets from local and/or remote sources, 
         and update database with URL datasets
         """,
-    )
+        )
 
     parser.add_argument(
         "-u",
@@ -59,7 +60,7 @@ if __name__ == "__main__":
         database with full hashes.
         (WARNING: Enabling this flag will cost more than 5000 Safe Browsing API calls)
         """,
-    )
+        )
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -73,7 +74,7 @@ if __name__ == "__main__":
         and update database with these malicious URLs
         (this flag cannot be enabled together with '--retrieve-known-malicious-urls')
         """,
-    )
+        )
     group.add_argument(
         "-r",
         "--retrieve-known-malicious-urls",
@@ -85,35 +86,38 @@ if __name__ == "__main__":
         (this flag cannot be enabled together with '--identify-malicious-urls')
         """,
     )
+    
+    sources = {
+        "top1m": "Tranco TOP1M",
+        "top10m": "DomCop TOP10M",
+        "r01": "Registrar R01 (.ru, .su, .rf)",
+        "cubdomain": "CubDomain.com",
+        "icann": "ICANN zone files (ICANN Terms-of-Service download limit per zone file: Once every 24 hours)",
+        "domainsproject": "domainsproject.org",
+        "ec2": "Amazon Web Services EC2 public hostnames",
+        "openintel": "OpenINTEL.nl (.nu .se .ee .gov .fed.us)",
+        "switch_ch": "Switch.ch (.ch .li)",
+        "afnic": "AFNIC.fr (.fr .re .pm .tf .wf .yt)",
+        "internet_ee": "Internet.ee (.ee)",
+        "sknic": "SK-NIC.sk (.sk)",
+        "ipv4": "ipv4 addresses"
+        }
 
-    sources = ["top1m", "top10m", "r01", "cubdomain", "icann", "domainsproject", "ec2", "openintel", "switch_ch", "afnic", "internet_ee", "sknic", "ipv4"]
     parser.add_argument(
         "-s",
         "--sources",
         nargs="+",
         required=False,
-        choices=sources,
-        help="""
+        choices=list(sources.keys()),
+        help=f"""
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
         ----------------------------
-        top1m -> Tranco TOP1M
-        top10m -> DomCop TOP10M
-        r01 -> Registrar R01 (.ru, .su, .rf)
-        cubdomain -> CubDomain.com
-        icann -> ICANN zone files (ICANN Terms-of-Service download limit per zone file: Once every 24 hours)
-        domainsproject -> domainsproject.org
-        ec2 -> Amazon Web Services EC2 public hostnames
-        openintel -> OpenINTEL.nl (.nu .se .ee .gov .fed.us)
-        switch_ch -> Switch.ch (.ch .li)
-        afnic -> AFNIC.fr (.fr .re .pm .tf .wf .yt)
-        internet_ee -> Internet.ee (.ee)
-        sknic -> SK-NIC.sk (.sk)
-        ipv4 -> ipv4 addresses
+        {os.linesep.join(f"{name} -> {description}" for name,description in sources.items())}
         """,
-        default=sources,
+        default=list(sources.keys()),
         type=str,
-    )
+        )
 
     parser.add_argument(
         "--cubdomain-num-days",
@@ -128,7 +132,7 @@ if __name__ == "__main__":
         default=None,
         type=int,
         action=MinimumOneAction,
-    )
+        )
 
     parser.add_argument(
         "--afnic-num-days",
@@ -144,24 +148,28 @@ if __name__ == "__main__":
         default=None,
         type=int,
         action=MinimumOneAction,
-    )
+        )
+
+    choices = {
+        "google":"Google Safe Browsing API",
+        "yandex":"Yandex Safe Browsing API"
+        }
 
     parser.add_argument(
         "-v",
         "--vendors",
         nargs="+",
         required=False,
-        choices=["google", "yandex"],
-        help="""
+        choices=list(choices.keys()),
+        help=f"""
         (OPTIONAL: Omit this flag to use all Safe Browsing API vendors)
         Choose 1 or more URL sources
         ----------------------------
-        google -> Google Safe Browsing API
-        yandex -> Yandex Safe Browsing API  
+        {os.linesep.join(f"{name} -> {description}" for name,description in choices.items())}  
         """,
-        default=["google", "yandex"],
+        default=list(choices.keys()),
         type=str,
-    )
+        )
 
     parser.add_argument(
         "-n",
@@ -175,7 +183,7 @@ if __name__ == "__main__":
         default=None,
         type=int,
         action=MinimumOneAction,
-    )
+        )
 
     parser.add_argument(
         "--include-dashboard",
@@ -184,10 +192,10 @@ if __name__ == "__main__":
         Whether or not to start the Ray dashboard,
         which displays the status of the Ray cluster.
         """,
-    )
+        )
 
     args = parser.parse_args()
-    args.vendors = sorted([x.capitalize() for x in args.vendors])
+    args.vendors = sorted([vendor.capitalize() for vendor in args.vendors])
     if not (args.fetch or args.update_hashes or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
