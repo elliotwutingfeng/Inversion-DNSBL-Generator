@@ -312,7 +312,7 @@ class SafeBrowsing:
                 )
 
                 hashes_list = [
-                    raw_hash_prefixes[i : i + prefix_size]
+                    raw_hash_prefixes[i : i + prefix_size]  # noqa: E203
                     for i in range(0, len(raw_hash_prefixes), prefix_size)
                 ]
 

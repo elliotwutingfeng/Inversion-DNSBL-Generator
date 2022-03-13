@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 from datetime import date
 from io import BytesIO, TextIOWrapper
 from itertools import count, groupby
-from typing import Any, Iterator, Union
+from typing import Any, Iterator, Optional
 from zipfile import ZipFile
 
 import cv2
@@ -168,7 +168,7 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     return urls
 
 
-async def get_afnic_daily_updates(tld: str, num_days: Union[int, None]) -> AsyncIterator[set[str]]:
+async def get_afnic_daily_updates(tld: str, num_days: Optional[int]) -> AsyncIterator[set[str]]:
     """Download and extract domains from AFNIC.fr daily updates (PNG files) for a given `tld`
     and yield all listed URLs in batches.
 
@@ -254,25 +254,29 @@ class AFNIC:
     def __init__(self, parser_args: dict, update_time: int):
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
-        self.num_days: Union[int, None] = parser_args["afnic_num_days"]
+        self.num_days: Optional[int] = parser_args["afnic_num_days"]
 
         if "afnic" in parser_args["sources"]:
             tlds: tuple[str, ...] = ("fr", "re", "pm", "tf", "wf", "yt")
             self.db_filenames = [f"afnic_{tld}" for tld in tlds] + ["afnic_monthly_archive"]
             if parser_args["fetch"]:
                 # Download and Add AFNIC.fr URLs to database
-                self.jobs = [
-                    (
-                        get_afnic_daily_updates,
-                        update_time,
-                        db_filename,
-                        {"tld": tld, "num_days": self.num_days},
-                    )
-                    for db_filename, tld in zip(self.db_filenames, tlds)
-                ] + [
-                    (
-                        get_afnic_monthly_archives,
-                        update_time,
-                        self.db_filenames[-1],
-                    )
-                ]
+                # Use list() otherwise mypy will complain about list invariance
+                self.jobs = list(
+                    [
+                        (
+                            get_afnic_daily_updates,
+                            update_time,
+                            db_filename,
+                            {"tld": tld, "num_days": self.num_days},
+                        )
+                        for db_filename, tld in zip(self.db_filenames, tlds)
+                    ]
+                    + [
+                        (
+                            get_afnic_monthly_archives,
+                            update_time,
+                            self.db_filenames[-1],
+                        )  # type:ignore
+                    ]
+                )
