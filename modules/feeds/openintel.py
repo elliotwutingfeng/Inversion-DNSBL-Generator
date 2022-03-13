@@ -6,10 +6,11 @@ from collections.abc import AsyncIterator
 from typing import Optional
 
 from bs4 import BeautifulSoup, SoupStrainer
-from fastavro import reader
 from modules.utils.feeds import generate_hostname_expressions
 from modules.utils.http_requests import get_async, get_async_stream
 from modules.utils.log import init_logger
+from spavro.datafile import DataFileReader
+from spavro.io import FastDatumReader
 
 logger = init_logger()
 
@@ -113,7 +114,7 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
             for tarinfo in tar:
                 fo = tar.extractfile(tarinfo.name)
                 hostnames = set()
-                for record in reader(fo):
+                for record in DataFileReader(fo, FastDatumReader()):
                     hostnames.update(
                         record[f][:-1] if f in record and record[f] is not None else ""
                         for f in fields
