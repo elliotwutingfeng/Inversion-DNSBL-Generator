@@ -12,7 +12,7 @@ from more_itertools import flatten
 from more_itertools.more import chunked
 from tqdm import tqdm  # type: ignore
 
-from modules.utils.http import get_async, post_async
+from modules.utils.http_requests import get_async, post_async
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
 

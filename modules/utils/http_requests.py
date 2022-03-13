@@ -2,8 +2,10 @@
 HTTP Request Utilities
 """
 import asyncio
+import os
 import socket
-from typing import AsyncIterator, Optional
+import tempfile
+from typing import Optional
 
 import aiohttp
 from modules.utils.log import init_logger
@@ -37,9 +39,7 @@ class KeepAliveClientRequest(aiohttp.client_reqrep.ClientRequest):
         return await super().send(conn)
 
 
-async def backoff_delay_async(
-    backoff_factor: float, number_of_retries_made: int
-) -> None:
+async def backoff_delay_async(backoff_factor: float, number_of_retries_made: int) -> None:
     """Asynchronous time delay that exponentially increases
     with `number_of_retries_made`
 
@@ -76,9 +76,7 @@ async def get_async(
     if headers is None:
         headers = default_headers
 
-    async def gather_with_concurrency(
-        max_concurrent_requests: int, *tasks
-    ) -> dict[str, bytes]:
+    async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> dict[str, bytes]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
 
         async def sem_task(task):
@@ -99,9 +97,7 @@ async def get_async(
                 # errors.append(repr(error))
                 # logger.warning("%s | Attempt %d failed",
                 #  error, number_of_retries_made + 1)
-                if (
-                    number_of_retries_made != max_retries - 1
-                ):  # No delay if final attempt fails
+                if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
         logger.error("URL: %s GET request failed!", url)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
@@ -116,8 +112,7 @@ async def get_async(
     ) as session:
         # Only one instance of any duplicate endpoint will be used
         return await gather_with_concurrency(
-            max_concurrent_requests,
-            *[get(url, session) for url in set(endpoints)]
+            max_concurrent_requests, *[get(url, session) for url in set(endpoints)]
         )
 
 
@@ -166,17 +161,13 @@ async def post_async(
         # errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
-                async with session.post(
-                    url, data=payload, headers=headers
-                ) as response:
+                async with session.post(url, data=payload, headers=headers) as response:
                     return (url, await response.read())
             except Exception as error:
                 # errors.append(repr(error))
                 # logger.warning("%s | Attempt %d failed",
                 # error, number_of_retries_made + 1)
-                if (
-                    number_of_retries_made != max_retries - 1
-                ):  # No delay if final attempt fails
+                if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
         logger.error("URL: %s POST request failed!", url)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
@@ -190,18 +181,16 @@ async def post_async(
     ) as session:
         return await gather_with_concurrency(
             max_concurrent_requests,
-            *[
-                post(url, payload, session)
-                for url, payload in zip(endpoints, payloads)
-            ]
+            *[post(url, payload, session) for url, payload in zip(endpoints, payloads)]
         )
 
 
 async def get_async_stream(
     endpoint: str, max_retries: int = 5, headers: dict = None
-) -> AsyncIterator[Optional[bytes]]:
+) -> Optional[tempfile.SpooledTemporaryFile]:
     """Given a HTTP endpoint, make a HTTP GET request
-    asynchronously and stream the response chunks
+    asynchronously, stream the response chunks to a
+    SpooledTemporaryFile, then return it as a file object
 
     Args:
         endpoint (str): HTTP GET request endpoint
@@ -210,48 +199,53 @@ async def get_async_stream(
         headers (dict, optional): HTTP Headers to
         send with every request. Defaults to None.
 
-    Yields:
-        AsyncIterator[Optional[bytes]]: HTTP response content
-        as a chunked stream,
-        yield a final None if the GET request fails to complete.
+    Raises:
+        aiohttp.client_exceptions.ClientError: Stream disrupted
+
+    Returns:
+        Optional[tempfile.SpooledTemporaryFile]: Temporary file object
+        containing HTTP response contents. Returns None if GET request
+        fails to complete after `max_retries`
     """
     if headers is None:
         headers = default_headers
 
-    # GET request timeout of 3 hours (10800 seconds);
-    # extended from API default of 5 minutes to handle large filesizes
-    async with aiohttp.ClientSession(
-        connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
-        raise_for_status=True,
-        timeout=aiohttp.ClientTimeout(total=10800),
-        request_class=KeepAliveClientRequest,
-    ) as session:
-        # errors: list[str] = []
-        connected = False
-        completed = False
-        for number_of_retries_made in range(max_retries):
+    # errors: list[str] = []
+
+    for number_of_retries_made in range(max_retries):
+        # GET request timeout of 3 hours (10800 seconds);
+        # extended from API default of 5 minutes to handle large filesizes
+        async with aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
+            raise_for_status=True,
+            timeout=aiohttp.ClientTimeout(total=10800),
+            request_class=KeepAliveClientRequest,
+        ) as session:
             try:
+                # Spill over to secondary memory (i.e. SSD storage)
+                # when size of spooled_tempfile exceeds
+                # 1 * 1024 ** 3 bytes = 1 GB
+                spooled_tempfile = tempfile.SpooledTemporaryFile(
+                    max_size=1 * 1024 ** 3, mode="w+b", dir=os.getcwd()
+                )
                 async with session.get(endpoint, headers=headers) as response:
                     async for chunk, _ in response.content.iter_chunks():
-                        # Flag to indicate at least 1 chunk has been extracted
-                        connected = True
-                        yield chunk
+                        if chunk is None:
+                            raise aiohttp.client_exceptions.ClientError("Stream disrupted")
+                        else:
+                            spooled_tempfile.write(chunk)
             except Exception as error:
                 # errors.append(repr(error))
                 # logger.warning("%s | Attempt %d failed",
                 # error, number_of_retries_made + 1)
-                if connected:
-                    logger.error("URL: %s | Stream disrupted", endpoint)
-                    break
-                if (
-                    number_of_retries_made != max_retries - 1
-                ):  # No delay if final attempt fails
+                spooled_tempfile.close()
+                logger.warning("URL: %s | %s", endpoint, error)
+                if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
             else:
-                completed = (
-                    True  # Flag to indicate GET request successful completion
-                )
-                break
-        if not completed:
-            logger.error("URL: %s GET request failed!", endpoint)
-            yield None
+                # Seek to beginning of spooled_tempfile
+                spooled_tempfile.seek(0)
+                return spooled_tempfile
+
+    logger.error("URL: %s GET request failed!", endpoint)
+    return None

@@ -8,7 +8,7 @@ from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
 )
-from modules.utils.http import get_async
+from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
 from more_itertools import chunked
 
@@ -39,14 +39,10 @@ async def _get_r01_domains() -> AsyncIterator[set[str]]:
             raw_urls += [
                 splitted_line[0].lower()
                 for line in decompressed_lines
-                if (
-                    splitted_line := line.split()
-                )  # if splitted_line has a length of at least 1
+                if (splitted_line := line.split())  # if splitted_line has a length of at least 1
             ]
         else:
-            logger.warning(
-                "Failed to retrieve Registrar R01 list %s", endpoint
-            )
+            logger.warning("Failed to retrieve Registrar R01 list %s", endpoint)
 
     for batch in chunked(raw_urls, hostname_expression_batch_size):
         yield generate_hostname_expressions(batch)

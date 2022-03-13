@@ -8,7 +8,7 @@ from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
 )
-from modules.utils.http import get_async
+from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
 from more_itertools import chunked
 
@@ -32,17 +32,13 @@ async def _get_sknic_urls() -> AsyncIterator[set[str]]:
                 first_item
                 for row in file.read().decode().splitlines()
                 if (not row.startswith("-"))
-                and (first_item := row.strip().split(";")[0].lower()).endswith(
-                    ".sk"
-                )
+                and (first_item := row.strip().split(";")[0].lower()).endswith(".sk")
             )
 
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
         else:
-            logger.warning(
-                "Failed to retrieve SK-NIC.sk domains; yielding empty list"
-            )
+            logger.warning("Failed to retrieve SK-NIC.sk domains; yielding empty list")
             yield set()
 
 
