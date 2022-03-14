@@ -172,11 +172,12 @@ async def post_async(
         logger.error("URL: %s POST request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
 
-    # POST request timeout of 5 minutes (300 seconds)
+    # POST request timeout of 1 hour (3600 seconds); extended from
+    # API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(
         connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
         raise_for_status=True,
-        timeout=aiohttp.ClientTimeout(total=300),
+        timeout=aiohttp.ClientTimeout(total=3600),
         request_class=KeepAliveClientRequest,
     ) as session:
         return await gather_with_concurrency(
