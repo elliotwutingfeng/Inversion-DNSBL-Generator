@@ -111,9 +111,7 @@ async def get_async(
         request_class=KeepAliveClientRequest,
     ) as session:
         # Only one instance of any duplicate endpoint will be used
-        return await gather_with_concurrency(
-            max_concurrent_requests, *[get(url, session) for url in set(endpoints)]
-        )
+        return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
 
 
 async def post_async(
@@ -144,9 +142,7 @@ async def post_async(
     if headers is None:
         headers = default_headers
 
-    async def gather_with_concurrency(
-        max_concurrent_requests: int, *tasks
-    ) -> list[tuple[str, bytes]]:
+    async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> list[tuple[str, bytes]]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
 
         async def sem_task(task):
@@ -181,14 +177,11 @@ async def post_async(
         request_class=KeepAliveClientRequest,
     ) as session:
         return await gather_with_concurrency(
-            max_concurrent_requests,
-            *[post(url, payload, session) for url, payload in zip(endpoints, payloads)]
+            max_concurrent_requests, *[post(url, payload, session) for url, payload in zip(endpoints, payloads)]
         )
 
 
-async def get_async_stream(
-    endpoint: str, max_retries: int = 5, headers: dict = None
-) -> Optional[IO]:
+async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict = None) -> Optional[IO]:
     """Given a HTTP endpoint, make a HTTP GET request
     asynchronously, stream the response chunks to a
     TemporaryFile, then return it as a file object

@@ -91,7 +91,7 @@
     "editor.suggestSelection": "first",
     "prettier.tabWidth": 4,
     "python.formatting.blackArgs": [
-      "--line-length=100"
+      "--line-length=140"
     ],
     "python.formatting.provider": "black",
     "python.linting.banditArgs": [
@@ -99,7 +99,7 @@
     ],
     "python.linting.banditEnabled": true,
     "python.linting.flake8Args": [
-      "--max-line-length=100"
+      "--max-line-length=140"
      ],
     "python.linting.flake8Enabled": true,
     "python.linting.mypyEnabled": true,

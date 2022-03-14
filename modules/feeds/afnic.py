@@ -190,8 +190,9 @@ async def get_afnic_daily_updates(tld: str, num_days: Optional[int]) -> AsyncIte
     days = [today + relativedelta(days=-x) for x in range(num_days)]
 
     links: list[str] = [
-        "https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/"
-        f"{YYYYMMDD_STR_FORMAT}_CREA_{tld}.png".format(dt=date)
+        f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{YYYYMMDD_STR_FORMAT}_CREA_{tld}.png".format(
+            dt=date
+        )
         for date in days
     ]
 
@@ -221,8 +222,9 @@ async def get_afnic_monthly_archives() -> AsyncIterator[set[str]]:
 
     # AFNIC.fr monthly archive files
     endpoints: list[str] = [
-        "https://www.afnic.fr/wp-media/ftp/documentsOpenData/"
-        f"{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip".format(dt=date)
+        f"https://www.afnic.fr/wp-media/ftp/documentsOpenData/{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip".format(
+            dt=date
+        )
         for date in months
     ]
 

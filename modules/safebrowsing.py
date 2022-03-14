@@ -55,8 +55,7 @@ class SafeBrowsing:
         self.threatListsEndpoint = (
             f"{endpoint_prefixes[vendor]}threatLists?key={SAFEBROWSING_API_KEYS[vendor]}"
         )
-        self.threatListUpdatesEndpoint = f"{endpoint_prefixes[vendor]}"
-        f"threatListUpdates:fetch?key={SAFEBROWSING_API_KEYS[vendor]}"
+        self.threatListUpdatesEndpoint = f"{endpoint_prefixes[vendor]}threatListUpdates:fetch?key={SAFEBROWSING_API_KEYS[vendor]}"
         self.fullHashesEndpoint = (
             f"{endpoint_prefixes[vendor]}fullHashes:find?key={SAFEBROWSING_API_KEYS[vendor]}"
         )

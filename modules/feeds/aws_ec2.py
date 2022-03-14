@@ -27,11 +27,7 @@ def _collapse_cidrs(list_of_cidr_nets: list[str]) -> list[str]:
     Returns:
         list[str]: IP ranges with overlaps removed
     """
-    nets = (
-        ip
-        for _ip in list_of_cidr_nets
-        if (ip := ipaddress.ip_network(_ip)) and isinstance(ip, ipaddress.IPv4Network)
-    )
+    nets = (ip for _ip in list_of_cidr_nets if (ip := ipaddress.ip_network(_ip)) and isinstance(ip, ipaddress.IPv4Network))
     ip_ranges = [str(ip_range) for ip_range in ipaddress.collapse_addresses(nets)]
     return ip_ranges
 
@@ -55,9 +51,7 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
 
     prefixes = resp_json.get("prefixes", [])
     ip_prefixes_and_regions = (
-        (x["ip_prefix"], x["region"])
-        for x in prefixes
-        if x.get("service", "").upper() == "EC2" and ("ip_prefix" in x) and ("region" in x)
+        (x["ip_prefix"], x["region"]) for x in prefixes if x.get("service", "").upper() == "EC2" and ("ip_prefix" in x) and ("region" in x)
     )
 
     region_to_ip_ranges_map = defaultdict(list)
@@ -80,8 +74,7 @@ async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[
 
     def _generate_ec2_urls(region: str, ip_ranges: list[str]):
         # Ensure that region is always lowercase
-        suffix = f""".{'compute-1' if region == 'us-east-1'
-        else region.lower()+'.compute'}.amazonaws.com"""
+        suffix = f".{'compute-1' if region == 'us-east-1' else region.lower() + '.compute'}.amazonaws.com"
         collapsed_ip_ranges = _collapse_cidrs(ip_ranges)  # Removes overlapping ip ranges
         for ip_range in collapsed_ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):
@@ -121,7 +114,5 @@ class AmazonWebServicesEC2:
                         db_filename,
                         {"region": region, "ip_ranges": ip_ranges},
                     )
-                    for db_filename, region, ip_ranges in zip(
-                        self.db_filenames, regions, ip_ranges_per_region
-                    )
+                    for db_filename, region, ip_ranges in zip(self.db_filenames, regions, ip_ranges_per_region)
                 ]
