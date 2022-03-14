@@ -29,10 +29,8 @@ async def get_switch_ch_domains(tld: str, key: str) -> AsyncIterator[set[str]]:
     Yields:
         Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
     """
-    spooled_tempfile = tempfile.SpooledTemporaryFile(
-        max_size=1 * 1024 ** 3, mode="w+", dir=os.getcwd()
-    )
-    with spooled_tempfile:
+    temp_file = tempfile.TemporaryFile(mode="w+", dir=os.getcwd())
+    with temp_file:
         subprocess.call(
             [
                 "dig",
@@ -46,15 +44,13 @@ async def get_switch_ch_domains(tld: str, key: str) -> AsyncIterator[set[str]]:
                 "AXFR",
                 f"{tld}.",
             ],
-            stdout=spooled_tempfile,
+            stdout=temp_file,
         )
-        spooled_tempfile.seek(0)
+        temp_file.seek(0)
         raw_urls: list[str] = [
             splitted_line[0].lower().rstrip(".")
-            for line in spooled_tempfile.read().splitlines()
-            if (
-                splitted_line := line.split()
-            )  # if splitted_line has a length of at least 1
+            for line in temp_file.read().splitlines()
+            if (splitted_line := line.split())  # if splitted_line has a length of at least 1
         ]
 
         for batch in chunked(raw_urls, hostname_expression_batch_size):
@@ -91,7 +87,5 @@ class SwitchCH:
                         db_filename,
                         {"tld": tld, "key": key},
                     )
-                    for db_filename, (tld, key) in zip(
-                        self.db_filenames, tlds.items()
-                    )
+                    for db_filename, (tld, key) in zip(self.db_filenames, tlds.items())
                 ]

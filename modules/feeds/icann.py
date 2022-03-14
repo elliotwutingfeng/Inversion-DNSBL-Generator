@@ -127,18 +127,16 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
     Yields:
         AsyncIterator[list[str]]: Batch of URLs as a list
     """
-    spooled_tempfile = await get_async_stream(endpoint, headers=headers)
-    if spooled_tempfile is None:
+    temp_file = await get_async_stream(endpoint, headers=headers)
+    if temp_file is None:
         yield []
     else:
-        with spooled_tempfile:
+        with temp_file:
             # Decompress and extract URLs from each chunk
             d = zlib.decompressobj(zlib.MAX_WBITS | 32)
             last_line: str = ""
 
-            for chunk in iter(
-                lambda: spooled_tempfile.read(1024 ** 2) if spooled_tempfile else lambda: b"", b""
-            ):
+            for chunk in iter(lambda: temp_file.read(1024 ** 2) if temp_file else lambda: b"", b""):
                 # Decompress and decode chunk to `current_chunk_string`
                 current_chunk_string = d.decompress(chunk).decode()
                 # Append `last_line` of previous chunk to

@@ -5,7 +5,7 @@ import asyncio
 import os
 import socket
 import tempfile
-from typing import Optional
+from typing import IO, Optional
 
 import aiohttp
 from modules.utils.log import init_logger
@@ -88,18 +88,18 @@ async def get_async(
         return dict([await f for f in asyncio.as_completed(tasklist)])
 
     async def get(url, session):
-        # errors: list[str] = []
+        errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
                 async with session.get(url, headers=headers) as response:
                     return (url, await response.read())
             except Exception as error:
-                # errors.append(repr(error))
+                errors.append(error)
                 # logger.warning("%s | Attempt %d failed",
                 #  error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
-        logger.error("URL: %s GET request failed!", url)
+        logger.error("URL: %s GET request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
 
     # GET request timeout of 3 hours (10800 seconds); extended from
@@ -158,18 +158,18 @@ async def post_async(
         return [await f for f in asyncio.as_completed(tasklist)]
 
     async def post(url, payload, session):
-        # errors: list[str] = []
+        errors: list[str] = []
         for number_of_retries_made in range(max_retries):
             try:
                 async with session.post(url, data=payload, headers=headers) as response:
                     return (url, await response.read())
             except Exception as error:
-                # errors.append(repr(error))
+                errors.append(error)
                 # logger.warning("%s | Attempt %d failed",
                 # error, number_of_retries_made + 1)
                 if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
-        logger.error("URL: %s POST request failed!", url)
+        logger.error("URL: %s POST request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
 
     # POST request timeout of 5 minutes (300 seconds)
@@ -187,10 +187,10 @@ async def post_async(
 
 async def get_async_stream(
     endpoint: str, max_retries: int = 5, headers: dict = None
-) -> Optional[tempfile.SpooledTemporaryFile]:
+) -> Optional[IO]:
     """Given a HTTP endpoint, make a HTTP GET request
     asynchronously, stream the response chunks to a
-    SpooledTemporaryFile, then return it as a file object
+    TemporaryFile, then return it as a file object
 
     Args:
         endpoint (str): HTTP GET request endpoint
@@ -203,7 +203,7 @@ async def get_async_stream(
         aiohttp.client_exceptions.ClientError: Stream disrupted
 
     Returns:
-        Optional[tempfile.SpooledTemporaryFile]: Temporary file object
+        Optional[IO]: Temporary file object
         containing HTTP response contents. Returns None if GET request
         fails to complete after `max_retries`
     """
@@ -222,30 +222,25 @@ async def get_async_stream(
             request_class=KeepAliveClientRequest,
         ) as session:
             try:
-                # Spill over to secondary memory (i.e. SSD storage)
-                # when size of spooled_tempfile exceeds
-                # 1 * 1024 ** 3 bytes = 1 GB
-                spooled_tempfile = tempfile.SpooledTemporaryFile(
-                    max_size=1 * 1024 ** 3, mode="w+b", dir=os.getcwd()
-                )
+                temp_file = tempfile.TemporaryFile(mode="w+b", dir=os.getcwd())
                 async with session.get(endpoint, headers=headers) as response:
                     async for chunk, _ in response.content.iter_chunks():
                         if chunk is None:
                             raise aiohttp.client_exceptions.ClientError("Stream disrupted")
                         else:
-                            spooled_tempfile.write(chunk)
+                            temp_file.write(chunk)
             except Exception as error:
                 # errors.append(repr(error))
                 # logger.warning("%s | Attempt %d failed",
                 # error, number_of_retries_made + 1)
-                spooled_tempfile.close()
+                temp_file.close()
                 logger.warning("URL: %s | %s", endpoint, error)
                 if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
             else:
-                # Seek to beginning of spooled_tempfile
-                spooled_tempfile.seek(0)
-                return spooled_tempfile
+                # Seek to beginning of temp_file
+                temp_file.seek(0)
+                return temp_file
 
     logger.error("URL: %s GET request failed!", endpoint)
     return None

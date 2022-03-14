@@ -23,10 +23,8 @@ async def get_ee_domains() -> AsyncIterator[set[str]]:
     Yields:
         Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
     """
-    spooled_tempfile = tempfile.SpooledTemporaryFile(
-        max_size=1 * 1024 ** 3, mode="w+", dir=os.getcwd()
-    )
-    with spooled_tempfile:
+    temp_file = tempfile.TemporaryFile(mode="w+", dir=os.getcwd())
+    with temp_file:
         subprocess.call(
             [
                 "dig",
@@ -38,15 +36,13 @@ async def get_ee_domains() -> AsyncIterator[set[str]]:
                 "AXFR",
                 "ee.",
             ],
-            stdout=spooled_tempfile,
+            stdout=temp_file,
         )
-        spooled_tempfile.seek(0)
+        temp_file.seek(0)
         raw_urls: list[str] = [
             splitted_line[0].lower().rstrip(".")
-            for line in spooled_tempfile.read().splitlines()
-            if (
-                splitted_line := line.split()
-            )  # if splitted_line has a length of at least 1
+            for line in temp_file.read().splitlines()
+            if (splitted_line := line.split())  # if splitted_line has a length of at least 1
         ]
 
         for batch in chunked(raw_urls, hostname_expression_batch_size):
@@ -65,6 +61,4 @@ class InternetEE:
             self.db_filenames = ["internet_ee"]
             if parser_args["fetch"]:
                 # Download and Add internet.ee URLs to database
-                self.jobs = [
-                    (get_ee_domains, update_time, self.db_filenames[0])
-                ]
+                self.jobs = [(get_ee_domains, update_time, self.db_filenames[0])]

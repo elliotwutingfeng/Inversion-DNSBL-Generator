@@ -108,9 +108,9 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
         "soa_rname",
     )
 
-    spooled_tempfile = await get_async_stream(endpoint, headers=headers)
-    if spooled_tempfile:
-        with spooled_tempfile, tarfile.open(fileobj=spooled_tempfile, mode="r") as tar:
+    temp_file = await get_async_stream(endpoint, headers=headers)
+    if temp_file:
+        with temp_file, tarfile.open(fileobj=temp_file, mode="r") as tar:
             for tarinfo in tar:
                 fo = tar.extractfile(tarinfo.name)
                 hostnames = set()
