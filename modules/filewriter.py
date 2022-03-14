@@ -28,9 +28,7 @@ def current_datetime_str() -> str:
     return datetime.utcnow().strftime("%d_%b_%Y_%H_%M_%S-UTC")
 
 
-async def write_blocklist_txt(
-    urls: list[str], vendor: Vendors
-) -> tuple[str, ...]:
+async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ...]:
     """Split list of urls into hostnames and ip addresses, then write
     hostnames and ip addresses in ascending order to separate .txt files
     with timestamp in filename and store them in `BLOCKLISTS_FOLDER`.
@@ -63,9 +61,7 @@ async def write_blocklist_txt(
     ip_addresses.sort(key=ipaddress.IPv4Address)
 
     async def write_hostnames():
-        hostnames_txt_filename = (
-            f"{vendor}_hostnames_{current_datetime_str()}.txt"
-        )
+        hostnames_txt_filename = f"{vendor}_hostnames_{current_datetime_str()}.txt"
         async with aiofiles.open(
             f"{BLOCKLISTS_FOLDER}{os.sep}{hostnames_txt_filename}", "a"
         ) as outfile:
@@ -78,9 +74,7 @@ async def write_blocklist_txt(
         return hostnames_txt_filename
 
     async def write_ips():
-        ip_addresses_txt_filename = (
-            f"{vendor}_ipv4_{current_datetime_str()}.txt"
-        )
+        ip_addresses_txt_filename = f"{vendor}_ipv4_{current_datetime_str()}.txt"
         async with aiofiles.open(
             f"{BLOCKLISTS_FOLDER}{os.sep}{ip_addresses_txt_filename}", "a"
         ) as outfile:
@@ -98,6 +92,4 @@ async def write_blocklist_txt(
             asyncio.create_task(write_ips()),
         ]
     )
-    return tuple(
-        filename for filename in blocklist_filenames if type(filename) is str
-    )
+    return tuple(filename for filename in blocklist_filenames if isinstance(filename, str))

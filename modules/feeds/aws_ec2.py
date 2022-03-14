@@ -27,7 +27,11 @@ def _collapse_cidrs(list_of_cidr_nets: list[str]) -> list[str]:
     Returns:
         list[str]: IP ranges with overlaps removed
     """
-    nets = (ipaddress.ip_network(_ip) for _ip in list_of_cidr_nets)
+    nets = (
+        ip
+        for _ip in list_of_cidr_nets
+        if (ip := ipaddress.ip_network(_ip)) and isinstance(ip, ipaddress.IPv4Network)
+    )
     ip_ranges = [str(ip_range) for ip_range in ipaddress.collapse_addresses(nets)]
     return ip_ranges
 

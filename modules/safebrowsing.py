@@ -305,7 +305,7 @@ class SafeBrowsing:
             for addition in list_update_response.get("additions", []):
                 raw_hash_prefixes_ = addition.get("rawHashes", dict())
                 prefix_size: int = raw_hash_prefixes_.get("prefixSize", 0)
-                if type(prefix_size) != int or prefix_size <= 0:
+                if (not isinstance(prefix_size, int)) or prefix_size <= 0:
                     continue
                 raw_hash_prefixes = base64.b64decode(
                     raw_hash_prefixes_.get("rawHashes", "").encode()

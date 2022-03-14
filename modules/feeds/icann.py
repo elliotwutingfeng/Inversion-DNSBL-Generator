@@ -72,7 +72,7 @@ async def _get_approved_endpoints(access_token: str) -> list[str]:
     )[links_url]
 
     body = json.loads(resp)
-    if type(body) != list:
+    if not isinstance(body, list):
         logger.warning("No user-accessible zone files found.")
         return []
     return body
