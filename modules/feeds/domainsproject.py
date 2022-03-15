@@ -43,9 +43,7 @@ async def _get_local_file_url_list(
         yield set()
 
 
-def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[
-    list[str], list[str]
-]:
+def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[list[str], list[str]]:
     """Scan for Domains Project .txt source files and generate filepaths
     to .txt source files, and database filenames for each .txt source file.
 
@@ -55,35 +53,34 @@ def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[
     """
     # Scan Domains Project's "domains" directory for
     # domainsproject_urls_db_filenames
-    domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
     domainsproject_txt_filepaths: list[str] = []
     domainsproject_urls_db_filenames: list[str] = []
-    for root, _, files in os.walk(domainsproject_dir):
-        for file in files:
-            if file.lower().endswith(".txt"):
-                domainsproject_urls_db_filenames.append(f"{file[:-4]}")
-                domainsproject_txt_filepaths.append(os.path.join(root, file))
+    try:
+        domainsproject_dir = pathlib.Path.cwd().parents[0] / "domains" / "data"
+        for root, _, files in os.walk(domainsproject_dir):
+            for file in files:
+                if file.lower().endswith(".txt"):
+                    domainsproject_urls_db_filenames.append(f"{file[:-4]}")
+                    domainsproject_txt_filepaths.append(os.path.join(root, file))
 
-    # Sort domainsproject_txt_filepaths and
-    # domainsproject_urls_db_filenames by descending filesize
-    domainsproject_filesizes: list[int] = [
-        os.path.getsize(path) for path in domainsproject_txt_filepaths
-    ]
-    [
-        domainsproject_filesizes,
-        domainsproject_txt_filepaths,
-        domainsproject_urls_db_filenames,
-    ] = [
-        list(_)
-        for _ in sort_together(
-            (
-                domainsproject_filesizes,
-                domainsproject_txt_filepaths,
-                domainsproject_urls_db_filenames,
-            ),
-            reverse=True,
+        # Sort domainsproject_txt_filepaths and
+        # domainsproject_urls_db_filenames by descending filesize
+        domainsproject_filesizes: list[int] = [os.path.getsize(path) for path in domainsproject_txt_filepaths]
+        [domainsproject_filesizes, domainsproject_txt_filepaths, domainsproject_urls_db_filenames] = [
+            list(_)
+            for _ in sort_together(
+                (
+                    domainsproject_filesizes,
+                    domainsproject_txt_filepaths,
+                    domainsproject_urls_db_filenames,
+                ),
+                reverse=True,
+            )
+        ]
+    except ValueError as error:
+        logger.error(
+            "Scan for Domains Project source files failed, check if Domains Project folder has been downloaded correctly | %s", repr(error)
         )
-    ]
     return domainsproject_txt_filepaths, domainsproject_urls_db_filenames
 
 
@@ -110,7 +107,5 @@ class DomainsProject:
                         db_filename,
                         {"txt_filepath": txt_filepath},
                     )
-                    for txt_filepath, db_filename in zip(
-                        self.txt_filepaths, self.db_filenames
-                    )
+                    for txt_filepath, db_filename in zip(self.txt_filepaths, self.db_filenames)
                 ]
