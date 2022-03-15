@@ -49,16 +49,10 @@ class SafeBrowsing:
             "Yandex": "https://sba.yandex.net/v4/",
         }
 
-        self.threatMatchesEndpoint = (
-            f"{endpoint_prefixes[vendor]}threatMatches:find?key={SAFEBROWSING_API_KEYS[vendor]}"
-        )
-        self.threatListsEndpoint = (
-            f"{endpoint_prefixes[vendor]}threatLists?key={SAFEBROWSING_API_KEYS[vendor]}"
-        )
+        self.threatMatchesEndpoint = f"{endpoint_prefixes[vendor]}threatMatches:find?key={SAFEBROWSING_API_KEYS[vendor]}"
+        self.threatListsEndpoint = f"{endpoint_prefixes[vendor]}threatLists?key={SAFEBROWSING_API_KEYS[vendor]}"
         self.threatListUpdatesEndpoint = f"{endpoint_prefixes[vendor]}threatListUpdates:fetch?key={SAFEBROWSING_API_KEYS[vendor]}"
-        self.fullHashesEndpoint = (
-            f"{endpoint_prefixes[vendor]}fullHashes:find?key={SAFEBROWSING_API_KEYS[vendor]}"
-        )
+        self.fullHashesEndpoint = f"{endpoint_prefixes[vendor]}fullHashes:find?key={SAFEBROWSING_API_KEYS[vendor]}"
         self.maximum_url_batch_size = {"Google": 500, "Yandex": 200}[vendor]
         # Even though Yandex API docs states maximum batch size limit as 500
         # Tested absolute maximum is batch size 300 (but fails often)
@@ -154,24 +148,12 @@ class SafeBrowsing:
         url_batches = chunked(urls, self.maximum_url_batch_size)
         logger.info("%d batches", -(-len(urls) // self.maximum_url_batch_size))
 
-        results = asyncio.get_event_loop().run_until_complete(
-            self._threat_matches_lookup(url_batches)
-        )
+        results = asyncio.get_event_loop().run_until_complete(self._threat_matches_lookup(url_batches))
 
         malicious = itertools.chain(*(res["matches"] for res in results if "matches" in res))
 
         # Removes `https` and `http` prefixes
-        malicious_urls = list(
-            set(
-                (
-                    x.get("threat", {})
-                    .get("url", "")
-                    .replace("https://", "")
-                    .replace("http://", "")
-                    for x in malicious
-                )
-            )
-        )
+        malicious_urls = list(set((x.get("threat", {}).get("url", "").replace("https://", "").replace("http://", "") for x in malicious)))
 
         logger.info(
             "%d URLs confirmed to be marked malicious by %s Safe Browsing API.",
@@ -188,9 +170,9 @@ class SafeBrowsing:
         Returns:
             list[dict]: Names of currently available Safe Browsing lists from threatLists endpoint
         """
-        threat_lists_endpoint_resp = asyncio.get_event_loop().run_until_complete(
-            get_async([self.threatListsEndpoint])
-        )[self.threatListsEndpoint]
+        threat_lists_endpoint_resp = asyncio.get_event_loop().run_until_complete(get_async([self.threatListsEndpoint]))[
+            self.threatListsEndpoint
+        ]
         url_threatlist_combinations = []  # Empty list if self.threatListsEndpoint is unreachable
         if threat_lists_endpoint_resp != b"{}":
             threatlist_combinations = json.loads(threat_lists_endpoint_resp)["threatLists"]
@@ -263,9 +245,7 @@ class SafeBrowsing:
                 "listUpdateRequests": url_threatlist_combinations,
             }
             payload: bytes = json.dumps(req_body).encode()
-            res = asyncio.get_event_loop().run_until_complete(
-                post_async([self.threatListUpdatesEndpoint], [payload])
-            )[0][1]
+            res = asyncio.get_event_loop().run_until_complete(post_async([self.threatListUpdatesEndpoint], [payload]))[0][1]
 
             res_json = json.loads(res)  # dict_keys(['listUpdateResponses', 'minimumWaitDuration'])
             if "listUpdateResponses" not in res_json:
@@ -306,14 +286,9 @@ class SafeBrowsing:
                 prefix_size: int = raw_hash_prefixes_.get("prefixSize", 0)
                 if (not isinstance(prefix_size, int)) or prefix_size <= 0:
                     continue
-                raw_hash_prefixes = base64.b64decode(
-                    raw_hash_prefixes_.get("rawHashes", "").encode()
-                )
+                raw_hash_prefixes = base64.b64decode(raw_hash_prefixes_.get("rawHashes", "").encode())
 
-                hashes_list = [
-                    raw_hash_prefixes[i : i + prefix_size]  # noqa: E203
-                    for i in range(0, len(raw_hash_prefixes), prefix_size)
-                ]
+                hashes_list = [raw_hash_prefixes[i : i + prefix_size] for i in range(0, len(raw_hash_prefixes), prefix_size)]  # noqa: E203
 
                 hash_prefixes.update(hashes_list)
         logger.info("Downloading %s malicious URL hash prefixes...[DONE]", self.vendor)
@@ -332,12 +307,10 @@ class SafeBrowsing:
             Safe Browsing lists from threatLists endpoint
 
         Returns:
-            set[bytes]: Malicious URL full hashes from Safe Browsing API
+            Iterator[bytes]: Malicious URL full hashes from Safe Browsing API
         """
         logger.info("Downloading %s malicious URL full hashes", self.vendor)
-        b64_encoded_hash_prefixes: list[str] = [
-            base64.b64encode(hash_prefix).decode() for hash_prefix in hash_prefixes
-        ]
+        b64_encoded_hash_prefixes: list[str] = [base64.b64encode(hash_prefix).decode() for hash_prefix in hash_prefixes]
 
         payloads: list[bytes] = [
             json.dumps(
@@ -348,15 +321,9 @@ class SafeBrowsing:
                     },
                     "clientStates": [""],
                     "threatInfo": {
-                        "threatTypes": list(
-                            set(x["threatType"] for x in url_threatlist_combinations)
-                        ),
-                        "platformTypes": list(
-                            set(x["platformType"] for x in url_threatlist_combinations)
-                        ),
-                        "threatEntryTypes": list(
-                            set(x["threatEntryType"] for x in url_threatlist_combinations)
-                        ),
+                        "threatTypes": list(set(x["threatType"] for x in url_threatlist_combinations)),
+                        "platformTypes": list(set(x["platformType"] for x in url_threatlist_combinations)),
+                        "threatEntryTypes": list(set(x["threatEntryType"] for x in url_threatlist_combinations)),
                         "threatEntries": [{"hash": hashPrefix} for hashPrefix in hashPrefixesBatch],
                     },
                 }
@@ -370,9 +337,7 @@ class SafeBrowsing:
         )
         logger.info("Downloading %s malicious URL full hashes...[DONE]", self.vendor)
 
-        threat_matches: Iterator[dict] = flatten(
-            json.loads(x[1]).get("matches", dict()) for x in responses
-        )
+        threat_matches: Iterator[dict] = flatten(json.loads(x[1]).get("matches", dict()) for x in responses)
         fullHashes: Iterator[bytes] = (
             base64.b64decode(x.get("threat", {}).get("hash", "").encode())
             for x in threat_matches

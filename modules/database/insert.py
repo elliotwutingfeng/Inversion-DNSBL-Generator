@@ -34,9 +34,7 @@ async def add_urls(
         for `url_set_fetcher`.
         Defaults to None.
     """
-    urls = url_set_fetcher(
-        **(url_set_fetcher_args if url_set_fetcher_args is not None else {})
-    )
+    urls = url_set_fetcher(**(url_set_fetcher_args if url_set_fetcher_args is not None else {}))
 
     last_listed = update_time
     conn = create_connection(db_filename)
@@ -57,15 +55,11 @@ async def add_urls(
                     ON CONFLICT(url)
                     DO UPDATE SET lastListed=excluded.lastListed
                     """,
-                        (
-                            (url, last_listed, compute_url_hash(url))
-                            for url in url_batch
-                        ),
+                        ((url, last_listed, compute_url_hash(url)) for url in url_batch),
                     )
 
                 logger.info(
-                    "Performing INSERT-UPDATE URLs to "
-                    "urls table of %s...[DONE]",
+                    "Performing INSERT-UPDATE URLs to " "urls table of %s...[DONE]",
                     db_filename,
                 )
         except Error as error:
@@ -110,17 +104,11 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     INSERT INTO urls (url,hash)
                     VALUES (?,?)
                     """,
-                        (
-                            int_addr_to_ip_and_hash(
-                                int_addr + (2 ** 24) * first_octet
-                            )
-                            for int_addr in range(ips_to_generate)
-                        ),
+                        (int_addr_to_ip_and_hash(int_addr + (2 ** 24) * first_octet) for int_addr in range(ips_to_generate)),
                     )
 
                     logger.info(
-                        "INSERT %d ipv4 addresses to "
-                        "urls table of %s...[DONE]",
+                        "INSERT %d ipv4 addresses to " "urls table of %s...[DONE]",
                         ips_to_generate,
                         db_filename,
                     )
@@ -129,9 +117,7 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         conn.close()
 
 
-def replace_malicious_url_hash_prefixes(
-    hash_prefixes: set[bytes], vendor: Vendors
-) -> None:
+def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendors) -> None:
     """Replace maliciousHashPrefixes table contents with latest malicious URL
     hash prefixes from Safe Browsing API
 
@@ -141,9 +127,7 @@ def replace_malicious_url_hash_prefixes(
         vendor (Vendors): Safe Browsing API vendor name
         (e.g. "Google", "Yandex" etc.)
     """
-    logger.info(
-        "Updating database with %s malicious URL hash prefixes", vendor
-    )
+    logger.info("Updating database with %s malicious URL hash prefixes", vendor)
     conn = create_connection("malicious")
     if conn is not None:
         try:
@@ -159,14 +143,10 @@ def replace_malicious_url_hash_prefixes(
                     maliciousHashPrefixes (hashPrefix,prefixSize,vendor)
                     VALUES (?, ?, ?)
                     """,
-                    (
-                        (hashPrefix, len(hashPrefix), vendor)
-                        for hashPrefix in hash_prefixes
-                    ),
+                    ((hashPrefix, len(hashPrefix), vendor) for hashPrefix in hash_prefixes),
                 )
             logger.info(
-                "Updating database with %s "
-                "malicious URL hash prefixes...[DONE]",
+                "Updating database with %s " "malicious URL hash prefixes...[DONE]",
                 vendor,
             )
         except Error as error:
@@ -174,9 +154,7 @@ def replace_malicious_url_hash_prefixes(
         conn.close()
 
 
-def replace_malicious_url_full_hashes(
-    full_hashes: Iterator[bytes], vendor: Vendors
-) -> None:
+def replace_malicious_url_full_hashes(full_hashes: Iterator[bytes], vendor: Vendors) -> None:
     """Replace maliciousFullHashes table contents with latest malicious URL
     full hashes from Safe Browsing API
 
@@ -192,6 +170,7 @@ def replace_malicious_url_full_hashes(
         try:
             cur = conn.cursor()
             with conn:
+                cur.execute("savepoint pt")
                 cur.execute(
                     "DELETE FROM maliciousFullHashes WHERE vendor = ?",
                     (vendor,),
@@ -203,10 +182,20 @@ def replace_malicious_url_full_hashes(
                     """,
                     ((fullHash, vendor) for fullHash in full_hashes),
                 )
-            logger.info(
-                "Updating database with %s malicious URL full hashes...[DONE]",
-                vendor,
-            )
+                # ROLLBACK transaction if no full hashes were added
+                cur = cur.execute("SELECT COUNT(fullHash) from maliciousFullHashes where vendor = ?", (vendor,))
+                fullHash_count: int = cur.fetchall()[0][0]
+                if not fullHash_count:
+                    cur.execute("ROLLBACK to savepoint pt")
+                    logger.info(
+                        "Updating database with %s malicious URL full hashes...[DONE:NO FULL HASHES FOUND, ROLLING BACK]",
+                        vendor,
+                    )
+                else:
+                    logger.info(
+                        "Updating database with %s malicious URL full hashes...[DONE]",
+                        vendor,
+                    )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)
         conn.close()
