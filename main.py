@@ -28,9 +28,7 @@ class MinimumOneAction(Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         if values < 1:
-            parser.error(
-                "Minimum input value for {0} is 1".format(option_string)
-            )
+            parser.error("Minimum input value for {0} is 1".format(option_string))
         setattr(namespace, self.dest, values)
 
 
@@ -108,8 +106,7 @@ if __name__ == "__main__":
         "top10m": "DomCop TOP10M",
         "r01": "Registrar R01 (.ru, .su, .rf)",
         "cubdomain": "CubDomain.com",
-        "icann": "ICANN zone files (ICANN Terms-of-Service "
-        "download limit per zone file: Once every 24 hours)",
+        "icann": "ICANN zone files (ICANN Terms-of-Service " "download limit per zone file: Once every 24 hours)",
         "domainsproject": "domainsproject.org",
         "ec2": "Amazon Web Services EC2 public hostnames",
         "openintel": "OpenINTEL.nl (.nu .se .ee .gov .fed.us)",
@@ -218,11 +215,17 @@ if __name__ == "__main__":
         """,
     )
 
+    parser.add_argument(
+        "--blocklist-suffix",
+        required=False,
+        type=str,
+        help="Suffix to be added to blocklist filenames when uploading to GitHub",
+        default=None,
+    )
+
     args = parser.parse_args()
     args.vendors = sorted([vendor.capitalize() for vendor in args.vendors])
-    if not (
-        args.fetch or args.update_hashes or args.identify or args.retrieve
-    ):
+    if not (args.fetch or args.update_hashes or args.identify or args.retrieve):
         parser.error("No action requested, add -h for help")
 
     process_flags(parser_args=vars(args))

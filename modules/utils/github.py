@@ -5,6 +5,7 @@ Push generated blocklists to GitHub
 """
 
 import os
+from typing import Optional
 
 from dotenv import dotenv_values
 from modules.filewriter import BLOCKLISTS_FOLDER
@@ -16,9 +17,7 @@ import github
 logger = init_logger()
 
 
-def upload_blocklists(
-    vendor: Vendors, blocklist_filenames: tuple[str, ...]
-) -> None:
+def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suffix: Optional[str] = None) -> None:
     """Uploads blocklists to GitHub repository
 
     Args:
@@ -26,15 +25,13 @@ def upload_blocklists(
         (e.g. "Google", "Yandex" etc.)
         blocklist_filenames (tuple[str,...]): Blocklists
         to be uploaded to GitHub
+        suffix (Optional[str], optional): Suffix to be added to
+        blocklist filenames when uploading to GitHub. Defaults to None.
     """
     try:
-        path_list = [
-            f"{BLOCKLISTS_FOLDER}{os.sep}{original_filename}"
-            for original_filename in blocklist_filenames
-        ]
+        path_list = [f"{BLOCKLISTS_FOLDER}{os.sep}{original_filename}" for original_filename in blocklist_filenames]
         file_names = [
-            f"{vendor}_{original_filename.split('_')[1]}.txt"
-            for original_filename in blocklist_filenames
+            f"{vendor}_{original_filename.split('_')[1]}{f'_{suffix}' if suffix else ''}.txt" for original_filename in blocklist_filenames
         ]
 
         access_token = dotenv_values(".env")["GITHUB_ACCESS_TOKEN"]
@@ -42,9 +39,7 @@ def upload_blocklists(
         if access_token is None:
             raise ValueError("Access Token missing from environment file")
         if repo_name is None:
-            raise ValueError(
-                "Blocklist Repository Name missing from environment file"
-            )
+            raise ValueError("Blocklist Repository Name missing from environment file")
 
         g = github.Github(access_token)
         repo = g.get_user().get_repo(repo_name)
@@ -58,10 +53,10 @@ def upload_blocklists(
         for i, entry in enumerate(path_list):
             with open(entry) as input_file:
                 data = input_file.read()
-            element = github.InputGitTreeElement(
-                file_names[i], "100644", "blob", data
-            )
-            element_list.append(element)
+            # Do not commit empty files
+            if data:
+                element = github.InputGitTreeElement(file_names[i], "100644", "blob", data)
+                element_list.append(element)
 
         tree = repo.create_git_tree(element_list, base_tree)
         parent = repo.get_git_commit(main_sha)
@@ -76,7 +71,5 @@ def upload_blocklists(
         else:
             logger.info("No changes found for %s blocklists", vendor)
     except Exception as error:
-        logger.warning(
-            "Failed to update repository with %s blocklists", vendor
-        )
+        logger.warning("Failed to update repository with %s blocklists", vendor)
         logger.warning("%s", repr(error))

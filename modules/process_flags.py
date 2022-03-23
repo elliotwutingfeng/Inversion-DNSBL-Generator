@@ -75,32 +75,23 @@ def process_flags(parser_args: dict) -> None:
         for vendor in parser_args["vendors"]:
             safebrowsing = SafeBrowsing(vendor)
 
-            url_threatlist_combinations: list[
-                dict
-            ] = safebrowsing.retrieve_url_threatlist_combinations()
-            threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(
-                url_threatlist_combinations
-            )
-            hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(
-                threat_list_updates
-            )
+            url_threatlist_combinations: list[dict] = safebrowsing.retrieve_url_threatlist_combinations()
+            threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
+            hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
             if hash_prefixes:
                 replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
             else:
-                logger.warning(
-                    "No hash prefixes downloaded, using existing hash prefixes "
-                    "in database, if any."
-                )
+                logger.warning("No hash prefixes downloaded, using existing hash prefixes " "in database, if any.")
 
             if vendor == "Google":
                 # Download Safe Browsing API Malicious URL full hashes
                 # and update database with full hashes
                 replace_malicious_url_full_hashes(
-                    safebrowsing.get_malicious_url_full_hashes(
-                        hash_prefixes, url_threatlist_combinations
-                    ),
+                    safebrowsing.get_malicious_url_full_hashes(hash_prefixes, url_threatlist_combinations),
                     vendor,
                 )
+
+    blocklist_filenames: tuple[str, ...] = tuple()
 
     if parser_args["identify"]:
         malicious_urls = dict()
@@ -131,10 +122,7 @@ def process_flags(parser_args: dict) -> None:
                         flatten(
                             execute_with_ray(
                                 retrieve_matching_full_hash_urls,
-                                [
-                                    (update_time, filename, vendor)
-                                    for filename in domains_db_filenames + ipv4.db_filenames
-                                ],
+                                [(update_time, filename, vendor) for filename in domains_db_filenames + ipv4.db_filenames],
                             ),
                         )
                     )
@@ -149,10 +137,7 @@ def process_flags(parser_args: dict) -> None:
                     flatten(
                         execute_with_ray(
                             retrieve_matching_hash_prefix_urls,
-                            [
-                                (filename, prefix_sizes, vendor)
-                                for filename in domains_db_filenames + ipv4.db_filenames
-                            ],
+                            [(filename, prefix_sizes, vendor) for filename in domains_db_filenames + ipv4.db_filenames],
                         ),
                     )
                 )
@@ -165,12 +150,10 @@ def process_flags(parser_args: dict) -> None:
                 raise ValueError('vendor must be "Google" or "Yandex"')
 
             malicious_urls[vendor] = vendor_malicious_urls
-            blocklist_filenames: tuple[str, ...] = asyncio.get_event_loop().run_until_complete(
-                write_blocklist_txt(malicious_urls[vendor], vendor)
-            )
+            blocklist_filenames = asyncio.get_event_loop().run_until_complete(write_blocklist_txt(malicious_urls[vendor], vendor))
 
             # Push blocklists to GitHub
-            upload_blocklists(vendor, blocklist_filenames)
+            upload_blocklists(vendor, blocklist_filenames, suffix=parser_args["blocklist_suffix"])
 
         # Update malicious URL statuses in database
         # (only for Lookup+Update API method)
@@ -181,20 +164,19 @@ def process_flags(parser_args: dict) -> None:
                 logger.info("Updating %s malicious URL statuses in database", vendor)
                 execute_with_ray(
                     update_malicious_urls,
-                    [
-                        (update_time, vendor, filename)
-                        for filename in domains_db_filenames + ipv4.db_filenames
-                    ],
+                    [(update_time, vendor, filename) for filename in domains_db_filenames + ipv4.db_filenames],
                     object_store={"malicious_urls": malicious_urls[vendor]},
                 )
 
     # Retrieve malicious URLs from database and write to blocklists
     if parser_args["retrieve"]:
         for vendor in parser_args["vendors"]:
-            asyncio.get_event_loop().run_until_complete(
+            blocklist_filenames = asyncio.get_event_loop().run_until_complete(
                 write_blocklist_txt(
                     retrieve_malicious_urls(domains_db_filenames, vendor),
                     vendor,
                 )
             )
+            # Push blocklists to GitHub
+            upload_blocklists(vendor, blocklist_filenames, suffix=parser_args["blocklist_suffix"])
     ray.shutdown()
