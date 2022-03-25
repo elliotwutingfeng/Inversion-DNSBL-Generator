@@ -10,10 +10,7 @@ from typing import Optional
 
 import cchardet  # noqa: F401
 from bs4 import BeautifulSoup, SoupStrainer
-from modules.utils.feeds import (
-    generate_hostname_expressions,
-    hostname_expression_batch_size,
-)
+from modules.utils.feeds import generate_hostname_expressions
 from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
@@ -151,27 +148,32 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
     Yields:
         AsyncIterator[set[str]]: Batch of URLs as a set
     """
-    for page_urls_ in chunked(page_urls, 30):  # download in small batches to overcome memory constraints
+
+    async def extract_domains(page_url, page_response):
+        if page_response != b"{}":
+            try:
+                only_a_tag_with_cubdomain_site = SoupStrainer("a", href=lambda x: "cubdomain.com/site/" in x)
+                soup = BeautifulSoup(
+                    page_response,
+                    "lxml",
+                    parse_only=only_a_tag_with_cubdomain_site,
+                )
+                res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
+                # Ensure that raw_url is always lowercase
+                return generate_hostname_expressions([tag.string.strip().lower() for tag in res])
+            except Exception as error:
+                logger.error("%s %s", page_url, error, exc_info=True)
+                return set()
+
+    for page_urls_ in chunked(page_urls, 1000):  # download in small batches to overcome memory constraints
         page_responses = await get_async(page_urls_)
 
-        only_a_tag_with_cubdomain_site = SoupStrainer("a", href=lambda x: "cubdomain.com/site/" in x)
-        for page_url, page_response in page_responses.items():
-            if page_response != b"{}":
-                try:
-                    soup = BeautifulSoup(
-                        page_response,
-                        "lxml",
-                        parse_only=only_a_tag_with_cubdomain_site,
-                    )
-                    res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
-                    for raw_urls in chunked(
-                        (tag.string.strip().lower() for tag in res),
-                        hostname_expression_batch_size,
-                    ):  # Ensure that raw_url is always lowercase
-                        yield generate_hostname_expressions(raw_urls)
-                except Exception as error:
-                    logger.error("%s %s", page_url, error, exc_info=True)
-                    yield set()
+        domains = set().union(
+            *execute_with_ray(
+                extract_domains, [(page_url, page_response) for page_url, page_response in page_responses.items()], progress_bar=False
+            )
+        )
+        yield domains
 
 
 class CubDomain:
