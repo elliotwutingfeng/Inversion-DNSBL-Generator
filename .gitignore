@@ -9,3 +9,4 @@ logs/
 blocklists/
 __pycache__/
 databases/
+target/

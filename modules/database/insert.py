@@ -39,15 +39,14 @@ async def add_urls(
     last_listed = update_time
     conn = create_connection(db_filename)
     if conn is not None:
+        logger.info(
+            "Performing INSERT-UPDATE URLs to urls table of %s...",
+            db_filename,
+        )
         try:
-            cur = conn.cursor()
-            with conn:
-                logger.info(
-                    "Performing INSERT-UPDATE URLs to urls table of %s...",
-                    db_filename,
-                )
-
-                async for url_batch in urls:
+            async for url_batch in urls:
+                cur = conn.cursor()
+                with conn:
                     cur.executemany(
                         """
                     INSERT INTO urls (url, lastListed, hash)
@@ -57,14 +56,16 @@ async def add_urls(
                     """,
                         ((url, last_listed, compute_url_hash(url)) for url in url_batch),
                     )
-
-                logger.info(
-                    "Performing INSERT-UPDATE URLs to " "urls table of %s...[DONE]",
-                    db_filename,
-                )
         except Error as error:
             logger.error("filename:%s %s", db_filename, error, exc_info=True)
+        else:
+            logger.info(
+                "Performing INSERT-UPDATE URLs to " "urls table of %s...[DONE]",
+                db_filename,
+            )
         conn.close()
+    else:
+        logger.error("filename:%s %s", db_filename, "Unable to connect to database")
 
 
 async def add_ip_addresses(db_filename: str, first_octet: int) -> None:

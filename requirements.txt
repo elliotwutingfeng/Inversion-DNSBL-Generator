@@ -8,6 +8,7 @@ cchardet==2.1.7
 flake8==4.0.1
 isort==5.10.1
 lxml==4.8.0
+maturin==0.12.11
 more-itertools==8.12.0
 mypy==0.942
 mypy-extensions==0.4.3

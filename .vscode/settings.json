@@ -1,4 +1,8 @@
 {
+    "rust-analyzer.diagnostics.disabled": [
+    "unresolved-macro-call"
+    ],
+    "rust-analyzer.procMacro.enable":false,
     "[python]": {
       "editor.codeActionsOnSave": {
         "source.organizeImports": true
