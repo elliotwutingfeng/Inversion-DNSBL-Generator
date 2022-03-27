@@ -69,7 +69,6 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 
 -   Linux or macOS
 -   Python >= 3.9.12
--   rustc == 1.59.0
 -   Multi-core x86-64 CPU; for Python Ray support
 -   RAM: At least 8GB
 -   SSD Drive Space: At least 700GB required to process all URL sources
@@ -111,9 +110,6 @@ echo "GITHUB_ACCESS_TOKEN=<your-github-personal-access-token-here>" >> .env
 echo "BLOCKLIST_REPOSITORY_NAME=<your-blocklist-repository-name-here>" >> .env
 
 pip3 install -r requirements.txt
-
-# Build rust crate
-maturin develop --release
 
 # Optional (dataset size ~49Gb): Download Domains Project URLs (https://domainsproject.org)
 cd ../

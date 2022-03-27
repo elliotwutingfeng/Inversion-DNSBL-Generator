@@ -10,11 +10,14 @@ from typing import Optional
 
 import cchardet  # noqa: F401
 from bs4 import BeautifulSoup, SoupStrainer
-from modules.utils.feeds import generate_hostname_expressions
+from modules.utils.feeds import (
+    generate_hostname_expressions,
+    hostname_expression_batch_size,
+)
 from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from more_itertools import chunked, flatten
+from more_itertools import chunked
 
 logger = init_logger()
 
@@ -116,8 +119,8 @@ async def _get_page_urls_by_date_str(num_days: Optional[int]) -> dict:
     return page_urls_by_date_str
 
 
-async def _get_cubdomain_page_urls(num_days: Optional[int]) -> list[str]:
-    """Create list of all cubdomain page urls
+async def _get_cubdomain_page_urls_by_db_filename(num_days: Optional[int]) -> dict:
+    """Create list of all domain pages for all db_filenames
 
     Args:
         num_days (Optional[int]): Counting back from current date,
@@ -126,13 +129,15 @@ async def _get_cubdomain_page_urls(num_days: Optional[int]) -> list[str]:
         to 25 June 2017 will be considered.
 
     Returns:
-        list[str]: List of all cubdomain page urls
+        dict: Mapping of db_filename to page_urls
     """
 
     cubdomain_page_urls_by_date_str = await _get_page_urls_by_date_str(num_days)
-    cubdomain_page_urls = list(flatten(cubdomain_page_urls_by_date_str.values()))
+    cubdomain_page_urls_by_db_filename = {
+        f"cubdomain_{date_str}": page_urls for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
+    }
 
-    return cubdomain_page_urls
+    return cubdomain_page_urls_by_db_filename
 
 
 async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
@@ -144,36 +149,32 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
 
     Args:
         page_urls (list[str]): Page URLs containing domains
+        registered on date `date_str`
 
     Yields:
         AsyncIterator[set[str]]: Batch of URLs as a set
     """
 
-    async def extract_domains(page_url, page_response):
+    page_responses = await get_async(page_urls)
+
+    only_a_tag_with_cubdomain_site = SoupStrainer("a", href=lambda x: "cubdomain.com/site/" in x)
+    for page_url, page_response in page_responses.items():
         if page_response != b"{}":
             try:
-                only_a_tag_with_cubdomain_site = SoupStrainer("a", href=lambda x: "cubdomain.com/site/" in x)
                 soup = BeautifulSoup(
                     page_response,
                     "lxml",
                     parse_only=only_a_tag_with_cubdomain_site,
                 )
                 res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
-                # Ensure that raw_url is always lowercase
-                return generate_hostname_expressions([tag.string.strip().lower() for tag in res])
+                for raw_urls in chunked(
+                    (tag.string.strip().lower() for tag in res),
+                    hostname_expression_batch_size,
+                ):  # Ensure that raw_url is always lowercase
+                    yield generate_hostname_expressions(raw_urls)
             except Exception as error:
                 logger.error("%s %s", page_url, error, exc_info=True)
-                return set()
-
-    for page_urls_ in chunked(page_urls, 1000):  # download in small batches to overcome memory constraints
-        page_responses = await get_async(page_urls_)
-
-        domains = set().union(
-            *execute_with_ray(
-                extract_domains, [(page_url, page_response) for page_url, page_response in page_responses.items()], progress_bar=False
-            )
-        )
-        yield domains
+                yield set()
 
 
 class CubDomain:
@@ -184,18 +185,23 @@ class CubDomain:
     def __init__(self, parser_args: dict, update_time: int):
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
-        self.page_urls = list()
+        self.page_urls_by_db_filename = dict()
         self.num_days: Optional[int] = parser_args["cubdomain_num_days"]
         if "cubdomain" in parser_args["sources"]:
-            self.db_filenames = ["cubdomain"]
+            self.db_filenames = [
+                f"cubdomain_{YYYY_MM_DD_STR_FORMAT}".format(dt=date) for date in _generate_dates_and_root_urls(self.num_days)[0]
+            ]
             if parser_args["fetch"]:
                 # Download and Add CubDomain.com URLs to database
-                self.page_urls = asyncio.get_event_loop().run_until_complete(_get_cubdomain_page_urls(self.num_days))
+                self.page_urls_by_db_filename = asyncio.get_event_loop().run_until_complete(
+                    _get_cubdomain_page_urls_by_db_filename(self.num_days)
+                )
                 self.jobs = [
                     (
                         _download_cubdomain,
                         update_time,
-                        self.db_filenames[0],
-                        {"page_urls": self.page_urls},
+                        db_filename,
+                        {"page_urls": page_urls},
                     )
+                    for db_filename, page_urls in self.page_urls_by_db_filename.items()
                 ]
