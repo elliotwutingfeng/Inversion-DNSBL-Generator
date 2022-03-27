@@ -77,7 +77,7 @@ def process_flags(parser_args: dict) -> None:
 
             url_threatlist_combinations: list[dict] = safebrowsing.retrieve_url_threatlist_combinations()
             threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(url_threatlist_combinations)
-            hash_prefixes: set[bytes] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
+            hash_prefixes: set[str] = safebrowsing.get_malicious_url_hash_prefixes(threat_list_updates)
             if hash_prefixes:
                 replace_malicious_url_hash_prefixes(hash_prefixes, vendor)
             else:

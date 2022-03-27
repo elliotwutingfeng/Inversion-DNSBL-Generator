@@ -255,8 +255,8 @@ class SafeBrowsing:
 
         return {}  # Empty dict() if url_threatlist_combinations is empty
 
-    def get_malicious_url_hash_prefixes(self, threat_list_updates: dict) -> set[bytes]:
-        """Download latest malicious URL hash prefixes from Safe Browsing API.
+    def get_malicious_url_hash_prefixes(self, threat_list_updates: dict) -> set[str]:
+        """Download latest b64 encoded malicious URL hash prefixes from Safe Browsing API.
 
         The uncompressed threat entries in hash format of a particular prefix length.
         Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes,
@@ -267,7 +267,7 @@ class SafeBrowsing:
             threatListUpdates.fetch JSON response
 
         Returns:
-            set[bytes]: Malicious URL hash prefixes from Safe Browsing API
+            set[str]: b64 encoded malicious URL hash prefixes from Safe Browsing API
         """
         logger.info("Downloading %s malicious URL hash prefixes", self.vendor)
         if threat_list_updates == {}:
@@ -286,9 +286,13 @@ class SafeBrowsing:
                 prefix_size: int = raw_hash_prefixes_.get("prefixSize", 0)
                 if (not isinstance(prefix_size, int)) or prefix_size <= 0:
                     continue
-                raw_hash_prefixes = base64.b64decode(raw_hash_prefixes_.get("rawHashes", "").encode())
-
-                hashes_list = [raw_hash_prefixes[i : i + prefix_size] for i in range(0, len(raw_hash_prefixes), prefix_size)]  # noqa: E203
+                # decode b64 encoded string
+                raw_hash_prefixes = base64.b64decode(raw_hash_prefixes_.get("rawHashes", ""))
+                # split them up into b64 encoded hash prefixes
+                hashes_list = [
+                    base64.b64encode(raw_hash_prefixes[i : i + prefix_size]).decode()  # noqa: E203
+                    for i in range(0, len(raw_hash_prefixes), prefix_size)
+                ]
 
                 hash_prefixes.update(hashes_list)
         logger.info("Downloading %s malicious URL hash prefixes...[DONE]", self.vendor)
@@ -296,21 +300,21 @@ class SafeBrowsing:
 
     def get_malicious_url_full_hashes(
         self,
-        hash_prefixes: set[bytes],
+        hash_prefixes: set[str],
         url_threatlist_combinations: list[dict],
-    ) -> Iterator[bytes]:
+    ) -> Iterator[str]:
         """Download latest malicious URL full hashes from Safe Browsing API.
 
         Args:
-            hash_prefixes (set[bytes]): Malicious URL hash prefixes from Safe Browsing API
+            hash_prefixes (set[str]): b64 encoded malicious URL hash prefixes from Safe Browsing API
             url_threatlist_combinations (list[dict]): Names of currently available
             Safe Browsing lists from threatLists endpoint
 
         Returns:
-            Iterator[bytes]: Malicious URL full hashes from Safe Browsing API
+            Iterator[str]: b64 encoded malicious URL full hashes from Safe Browsing API
         """
         logger.info("Downloading %s malicious URL full hashes", self.vendor)
-        b64_encoded_hash_prefixes: list[str] = [base64.b64encode(hash_prefix).decode() for hash_prefix in hash_prefixes]
+        b64_encoded_hash_prefixes: list[str] = list(hash_prefixes)
 
         payloads: list[bytes] = [
             json.dumps(
@@ -338,10 +342,8 @@ class SafeBrowsing:
         logger.info("Downloading %s malicious URL full hashes...[DONE]", self.vendor)
 
         threat_matches: Iterator[dict] = flatten(json.loads(x[1]).get("matches", dict()) for x in responses)
-        fullHashes: Iterator[bytes] = (
-            base64.b64decode(x.get("threat", {}).get("hash", "").encode())
-            for x in threat_matches
-            if x.get("threat", {}).get("hash", "") != ""
+        fullHashes: Iterator[str] = (
+            x.get("threat", {}).get("hash", "") for x in threat_matches if x.get("threat", {}).get("hash", "") != ""
         )
 
         return fullHashes

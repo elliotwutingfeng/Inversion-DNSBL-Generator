@@ -29,7 +29,7 @@ async def _create_ips_table(db_filename: str) -> None:
                             url text,
                             lastGoogleMalicious integer,
                             lastYandexMalicious integer,
-                            hash blob
+                            hash text
                             )"""
                 )
                 # To avoid writing redundant SQL queries,
@@ -57,7 +57,7 @@ async def _create_urls_table(db_filename: str) -> None:
                             lastListed integer,
                             lastGoogleMalicious integer,
                             lastYandexMalicious integer,
-                            hash blob
+                            hash text
                             )"""
                 )
         except Error as error:
@@ -81,14 +81,14 @@ def _create_malicious_url_hashes_tables(
             with conn:
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS maliciousHashPrefixes (
-                                                hashPrefix blob,
+                                                hashPrefix text,
                                                 prefixSize integer,
                                                 vendor text
                                                 )"""
                 )
                 cur.execute(
                     """CREATE TABLE IF NOT EXISTS maliciousFullHashes (
-                                                fullHash blob,
+                                                fullHash text,
                                                 vendor text,
                                                 UNIQUE (fullHash,vendor)
                                                 )"""

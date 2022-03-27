@@ -118,12 +118,12 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         conn.close()
 
 
-def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendors) -> None:
+def replace_malicious_url_hash_prefixes(hash_prefixes: set[str], vendor: Vendors) -> None:
     """Replace maliciousHashPrefixes table contents with latest malicious URL
     hash prefixes from Safe Browsing API
 
     Args:
-        hash_prefixes (set[bytes]): Malicious URL hash prefixes
+        hash_prefixes (set[str]): Malicious URL hash prefixes
         from Safe Browsing API
         vendor (Vendors): Safe Browsing API vendor name
         (e.g. "Google", "Yandex" etc.)
@@ -155,12 +155,12 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[bytes], vendor: Vendo
         conn.close()
 
 
-def replace_malicious_url_full_hashes(full_hashes: Iterator[bytes], vendor: Vendors) -> None:
+def replace_malicious_url_full_hashes(full_hashes: Iterator[str], vendor: Vendors) -> None:
     """Replace maliciousFullHashes table contents with latest malicious URL
     full hashes from Safe Browsing API
 
     Args:
-        full_hashes (Iterator[bytes]): Malicious URL full hashes
+        full_hashes (Iterator[str]): Malicious URL full hashes
         from Safe Browsing API
         vendor (Vendors): Safe Browsing API vendor name
         (e.g. "Google", "Yandex" etc.)

@@ -58,16 +58,21 @@ def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suf
                 element = github.InputGitTreeElement(file_names[i], "100644", "blob", data)
                 element_list.append(element)
 
-        tree = repo.create_git_tree(element_list, base_tree)
-        parent = repo.get_git_commit(main_sha)
-        commit = repo.create_git_commit(commit_message, tree, [parent])
-        comparison = repo.compare("main", commit.sha)
-        files_changed: list[github.File.File] = comparison.files
+        files_changed: list[github.File.File] = []
+        if element_list:
+            # create git tree only if there are non-empty files
+            tree = repo.create_git_tree(element_list, base_tree)
+            parent = repo.get_git_commit(main_sha)
+            commit = repo.create_git_commit(commit_message, tree, [parent])
+            comparison = repo.compare("main", commit.sha)
+            files_changed = comparison.files
 
         if files_changed:
             # Push commit to main only if there are files to change
             main_ref.edit(commit.sha)
             logger.info("Updated repository with %s blocklists", vendor)
+        elif not element_list:
+            logger.warning("%s blocklists are empty, won't update repository", vendor)
         else:
             logger.info("No changes found for %s blocklists", vendor)
     except Exception as error:
