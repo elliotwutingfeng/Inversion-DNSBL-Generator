@@ -2,6 +2,7 @@ import base64
 import os
 
 import apsw  # type: ignore
+import ray
 
 from modules.utils.parallel_compute import execute_with_ray
 
@@ -74,4 +75,8 @@ async def proc(db):
     conn.close()
 
 
-execute_with_ray(proc, [(db,) for db in databases])
+if __name__ == "__main__":
+    ray.shutdown()
+    ray.init(include_dashboard=False, num_cpus=None)
+    execute_with_ray(proc, [(db,) for db in databases])
+    ray.shutdown()
