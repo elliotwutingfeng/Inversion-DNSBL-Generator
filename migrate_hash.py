@@ -2,7 +2,8 @@ import base64
 import os
 
 import apsw  # type: ignore
-from tqdm import tqdm
+
+from modules.utils.parallel_compute import execute_with_ray
 
 
 def convert_hash(b):
@@ -10,7 +11,9 @@ def convert_hash(b):
 
 
 databases = [x for x in os.listdir("databases") if x.endswith(".db")]
-for db in tqdm(databases):
+
+
+async def proc(db):
     conn = apsw.Connection(f"databases/{db}")
     conn.setbusytimeout(15000)
     conn.createscalarfunction("convert_hash", convert_hash, 1)
@@ -34,7 +37,7 @@ for db in tqdm(databases):
     if db == "malicious.db":
         if "maliciousHashPrefixes" not in [x[0] for x in cur.fetchall()]:
             conn.close()
-            continue
+            return
 
         # Rename hash column to hash2
         cur.execute("ALTER TABLE maliciousHashPrefixes RENAME COLUMN hashPrefix TO hashPrefix2")
@@ -51,7 +54,7 @@ for db in tqdm(databases):
     else:
         if cur.fetchall()[0][0] != "urls":
             conn.close()
-            continue
+            return
 
         # Rename hash column to hash2
         cur.execute("ALTER TABLE urls RENAME COLUMN hash TO hash2")
@@ -69,3 +72,6 @@ for db in tqdm(databases):
     cur.execute("VACUUM")
 
     conn.close()
+
+
+execute_with_ray(proc, [(db,) for db in databases])
