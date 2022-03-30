@@ -1,17 +1,21 @@
 import base64
-import os
 
 import apsw  # type: ignore
 import ray
 
 from modules.utils.parallel_compute import execute_with_ray
 
+# import os
+
 
 def convert_hash(b):
     return base64.b64encode(b).decode()
 
 
-databases = [x for x in os.listdir("databases") if x.endswith(".db")]
+with open('left_to_go_convert.txt', 'r') as f:
+    databases = f.read().splitlines()
+
+# databases = [x for x in os.listdir("databases") if x.endswith(".db")]
 
 
 async def proc(db):
