@@ -35,9 +35,7 @@ async def get_latest_tarball_url() -> str:
     )
     res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
 
-    latest_year: Optional[int] = (
-        years[-1] if (years := sorted(int(content.string.strip("/")) for content in res)) else None
-    )
+    latest_year: Optional[int] = years[-1] if (years := sorted(int(content.string.strip("/")) for content in res)) else None
 
     if latest_year is None:
         raise ValueError("No year folders found")
@@ -56,9 +54,7 @@ async def get_latest_tarball_url() -> str:
     )
     res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
 
-    latest_tarball: Optional[str] = (
-        tarballs[-1] if (tarballs := sorted(tag_attrs.get("href") for tag_attrs in res)) else None
-    )
+    latest_tarball: Optional[str] = tarballs[-1] if (tarballs := sorted(tag_attrs.get("href") for tag_attrs in res)) else None
 
     if latest_tarball is None:
         raise ValueError("No tarballs found")
@@ -115,10 +111,7 @@ async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIt
                 fo = tar.extractfile(tarinfo.name)
                 hostnames = set()
                 for record in DataFileReader(fo, FastDatumReader()):
-                    hostnames.update(
-                        record[f][:-1] if f in record and record[f] is not None else ""
-                        for f in fields
-                    )
+                    hostnames.update(record[f][:-1] if f in record and record[f] is not None else "" for f in fields)
                 hostnames.discard("")
                 yield list(hostnames)
 

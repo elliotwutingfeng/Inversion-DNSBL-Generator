@@ -1,4 +1,6 @@
 {
+  "editor.formatOnSave": true,
+  "python.formatting.provider": "black",
     "[python]": {
       "editor.codeActionsOnSave": {
         "source.organizeImports": true
@@ -87,13 +89,12 @@
       "WBITS",
       "zfile"
     ],
-    "editor.formatOnSave": true,
+
     "editor.suggestSelection": "first",
     "prettier.tabWidth": 4,
     "python.formatting.blackArgs": [
       "--line-length=140"
     ],
-    "python.formatting.provider": "black",
     "python.linting.banditArgs": [
       "--configfile bandit.yaml"
     ],
@@ -116,9 +117,9 @@
     "vsicons.dontShowNewVersionMessage": true,
     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
     "workbench.editorAssociations": {
-      "*.ipynb": "jupyter.notebook.ipynb"
+      "*.ipynb": "jupyter-notebook"
     },
     "workbench.iconTheme": "vscode-icons",
-    "editor.formatOnType": true
+    "editor.formatOnType": true,
+    "files.trimTrailingWhitespace": true
   }
-  

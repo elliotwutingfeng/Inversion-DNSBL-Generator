@@ -82,7 +82,7 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
     """
     conn = create_connection(db_filename)
     if conn is not None:
-        ips_to_generate = 2 ** 24
+        ips_to_generate = 2**24
         try:
             # Check if there are 2 ** 24 ips in database
             cur = conn.cursor()
@@ -105,7 +105,7 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     INSERT INTO urls (url,hash)
                     VALUES (?,?)
                     """,
-                        (int_addr_to_ip_and_hash(int_addr + (2 ** 24) * first_octet) for int_addr in range(ips_to_generate)),
+                        (int_addr_to_ip_and_hash(int_addr + (2**24) * first_octet) for int_addr in range(ips_to_generate)),
                     )
 
                     logger.info(

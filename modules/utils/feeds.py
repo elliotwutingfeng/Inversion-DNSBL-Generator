@@ -50,13 +50,7 @@ def generate_hostname_expressions(raw_urls: list[str]) -> set[str]:
             # Safe Browsing API-compliant hostname expressions
             # Include [url] for cases where url has a subdirectory
             # (e.g. google.com/<subdirectory>)
-            hostname_expressions.update(
-                [
-                    f"{'.'.join(parts[-i:])}"
-                    for i in range(len(parts) if len(parts) < 5 else 5)
-                ]
-                + [url]
-            )
+            hostname_expressions.update([f"{'.'.join(parts[-i:])}" for i in range(len(parts) if len(parts) < 5 else 5)] + [url])
         except Exception as error:
             logger.error("%s %s", url, error, exc_info=True)
     return hostname_expressions

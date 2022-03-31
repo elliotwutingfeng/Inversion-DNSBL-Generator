@@ -31,8 +31,7 @@ async def _get_sknic_urls() -> AsyncIterator[set[str]]:
             raw_urls = (
                 first_item
                 for row in file.read().decode().splitlines()
-                if (not row.startswith("-"))
-                and (first_item := row.strip().split(";")[0].lower()).endswith(".sk")
+                if (not row.startswith("-")) and (first_item := row.strip().split(";")[0].lower()).endswith(".sk")
             )
 
             for batch in chunked(raw_urls, hostname_expression_batch_size):

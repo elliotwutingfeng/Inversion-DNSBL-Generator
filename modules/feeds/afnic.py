@@ -78,8 +78,7 @@ async def extract_text_string(image: np.ndarray, link: str) -> list[str]:
     try:
         pytesseract_results = pytesseract.image_to_string(
             image,
-            config=r"--oem 0 --psm 7 -c load_system_dawg=0 -c "
-            "load_freq_dawg=0 -c min_characters_to_try=4",
+            config=r"--oem 0 --psm 7 -c load_system_dawg=0 -c " "load_freq_dawg=0 -c min_characters_to_try=4",
         )
         return pytesseract_results.splitlines()
     except pytesseract.pytesseract.TesseractError as error:
@@ -128,8 +127,7 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     line_imgs_before_deflank: list[tuple] = [
         (line_img,)
         for line_img in np.split(main_img, list(lines_to_split_at))
-        if bool((line_img != 255).any())  # line_img must have at least 1 black pixel
-        and all(line_img.shape)  # line_img cannot be empty
+        if bool((line_img != 255).any()) and all(line_img.shape)  # line_img must have at least 1 black pixel  # line_img cannot be empty
     ]
     del main_img
     line_imgs = execute_with_ray(deflank, line_imgs_before_deflank, progress_bar=False)
@@ -148,17 +146,13 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
 
     # Filter away lines with '#', remove spaces, replace '’', "'", "`" with i, I with l
     text_lines = [
-        text_line.replace(" ", "")
-        .translate({ord(chr): "i" for chr in ["’", "'", "`"]})
-        .replace("I", "l")
+        text_line.replace(" ", "").translate({ord(chr): "i" for chr in ["’", "'", "`"]}).replace("I", "l")
         for text_line in text_lines
         if "#" not in text_line
     ]
     # Repair missing '.' in tld suffix
     urls: list[str] = [
-        text_line[:-2] + f".{tld}"
-        if (text_line.endswith(tld) and not text_line.endswith(f".{tld}"))
-        else text_line
+        text_line[:-2] + f".{tld}" if (text_line.endswith(tld) and not text_line.endswith(f".{tld}")) else text_line
         for text_line in text_lines
     ]
 
@@ -190,10 +184,7 @@ async def get_afnic_daily_updates(tld: str, num_days: Optional[int]) -> AsyncIte
     days = [today + relativedelta(days=-x) for x in range(num_days)]
 
     links: list[str] = [
-        f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{YYYYMMDD_STR_FORMAT}_CREA_{tld}.png".format(
-            dt=date
-        )
-        for date in days
+        f"https://www.afnic.fr/wp-sites/uploads/domaineTLD_Afnic/{YYYYMMDD_STR_FORMAT}_CREA_{tld}.png".format(dt=date) for date in days
     ]
 
     for link in links:
@@ -222,9 +213,7 @@ async def get_afnic_monthly_archives() -> AsyncIterator[set[str]]:
 
     # AFNIC.fr monthly archive files
     endpoints: list[str] = [
-        f"https://www.afnic.fr/wp-media/ftp/documentsOpenData/{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip".format(
-            dt=date
-        )
+        f"https://www.afnic.fr/wp-media/ftp/documentsOpenData/{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip".format(dt=date)
         for date in months
     ]
 
@@ -235,9 +224,7 @@ async def get_afnic_monthly_archives() -> AsyncIterator[set[str]]:
                 file.write(resp)
                 file.seek(0)
                 zfile = ZipFile(file)
-                csv_filename = [
-                    filename for filename in zfile.namelist() if filename.endswith(".csv")
-                ][0]
+                csv_filename = [filename for filename in zfile.namelist() if filename.endswith(".csv")][0]
                 with zfile.open(csv_filename) as csvfile:
                     reader = csv.reader(TextIOWrapper(csvfile, "ISO-8859-1"), delimiter=";")
                     next(reader, None)  # skip the headers

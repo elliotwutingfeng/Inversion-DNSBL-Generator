@@ -12,9 +12,7 @@ from modules.utils.types import Vendors
 logger = init_logger()
 
 
-async def retrieve_matching_hash_prefix_urls(
-    db_filename: str, prefix_sizes: list[int], vendor: Vendors
-) -> list[str]:
+async def retrieve_matching_hash_prefix_urls(db_filename: str, prefix_sizes: list[int], vendor: Vendors) -> list[str]:
     """Identify URLs from `db_filename`.db database with sha256 hashes beginning with
     any of the malicious URL hash prefixes in `malicious`.db database.
 
@@ -67,9 +65,7 @@ async def retrieve_matching_hash_prefix_urls(
     return urls
 
 
-async def retrieve_matching_full_hash_urls(
-    update_time: int, db_filename: str, vendor: Vendors
-) -> list[str]:
+async def retrieve_matching_full_hash_urls(update_time: int, db_filename: str, vendor: Vendors) -> list[str]:
     """Identify URLs from `db_filename`.db database with sha256 hashes matching with
     any of the malicious URL full hashes in `malicious`.db database, and updates
     malicious status of URL in `db_filename`.db database
@@ -172,8 +168,7 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
         list[str]: URLs deemed by Safe Browsing API of `vendor` to be malicious
     """
     logger.info(
-        "Retrieving URLs from database most recently "
-        "marked as malicious by %s Safe Browsing API",
+        "Retrieving URLs from database most recently " "marked as malicious by %s Safe Browsing API",
         vendor,
     )
 
@@ -222,8 +217,7 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
         )
     )
     logger.info(
-        "Retrieving URLs from database most recently"
-        " marked as malicious by %s Safe Browsing API...[DONE]",
+        "Retrieving URLs from database most recently" " marked as malicious by %s Safe Browsing API...[DONE]",
         vendor,
     )
     return list(malicious_urls)

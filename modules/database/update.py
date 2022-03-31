@@ -71,8 +71,7 @@ async def update_malicious_urls(
                 cur.execute(vendor_to_update_query[vendor], (update_time,))
                 cur.execute("DROP TABLE malicious_urls")
             logger.info(
-                "Updating %s database with verified "
-                "%s malicious URLs...[DONE]",
+                "Updating %s database with verified " "%s malicious URLs...[DONE]",
                 db_filename,
                 vendor,
             )

@@ -23,13 +23,10 @@ def init_logger(logs_folder: str = "logs") -> logging.Logger:
     # and line number to logging messages
     logging.basicConfig(
         handlers=[
-            logging.FileHandler(
-                f"{logs_folder}{os.sep}progress.log", mode="a"
-            ),
+            logging.FileHandler(f"{logs_folder}{os.sep}progress.log", mode="a"),
             logging.StreamHandler(),
         ],
-        format="%(asctime)s %(levelname)-4s "
-        "[%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s",
+        format="%(asctime)s %(levelname)-4s " "[%(filename)s:%(lineno)s - %(funcName)2s() ] %(message)s",
         level=logging.INFO,
         datefmt="%d-%m-%Y %H:%M:%S",
     )

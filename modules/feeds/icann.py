@@ -136,7 +136,7 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
             d = zlib.decompressobj(zlib.MAX_WBITS | 32)
             last_line: str = ""
 
-            for chunk in iter(lambda: temp_file.read(1024 ** 2) if temp_file else lambda: b"", b""):
+            for chunk in iter(lambda: temp_file.read(1024**2) if temp_file else lambda: b"", b""):
                 # Decompress and decode chunk to `current_chunk_string`
                 current_chunk_string = d.decompress(chunk).decode()
                 # Append `last_line` of previous chunk to
@@ -150,18 +150,11 @@ async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIte
                 last_line = lines.pop()
                 # Yield list of URLs from the cleaned `lines`,
                 # ensuring that all of them are lowercase
-                yield [
-                    url
-                    for line in lines
-                    if (splitted_line := line.split())
-                    and (url := splitted_line[0].lower().rstrip("."))
-                ]
+                yield [url for line in lines if (splitted_line := line.split()) and (url := splitted_line[0].lower().rstrip("."))]
 
             # Yield last remaining URL from `last_line`
             # if splitted_line has a length of at least 1
-            if (splitted_line := last_line.split()) and (
-                url := splitted_line[0].lower().rstrip(".")
-            ):
+            if (splitted_line := last_line.split()) and (url := splitted_line[0].lower().rstrip(".")):
                 yield [url]
 
 
@@ -178,15 +171,9 @@ class ICANN:
         self.jobs: list[tuple] = []
 
         if "icann" in parser_args["sources"]:
-            access_token = asyncio.get_event_loop().run_until_complete(
-                _authenticate(username, password)
-            )
-            endpoints: list[str] = asyncio.get_event_loop().run_until_complete(
-                _get_approved_endpoints(access_token)
-            )
-            self.db_filenames = [
-                f"icann_{url.rsplit('/', 1)[-1].rsplit('.')[-2]}" for url in endpoints
-            ]
+            access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
+            endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
+            self.db_filenames = [f"icann_{url.rsplit('/', 1)[-1].rsplit('.')[-2]}" for url in endpoints]
             if parser_args["fetch"]:
                 # Download and Add ICANN URLs to database
                 self.jobs = [
