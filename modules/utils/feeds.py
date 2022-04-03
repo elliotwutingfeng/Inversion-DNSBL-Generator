@@ -12,7 +12,7 @@ logger = init_logger()
 # in small batches to reduce RAM usage
 hostname_expression_batch_size: int = 40_000
 
-fasttldextract = FastTLDExtract()
+fasttldextract = FastTLDExtract(exclude_private_suffix=True)
 fasttldextract.update()
 
 
