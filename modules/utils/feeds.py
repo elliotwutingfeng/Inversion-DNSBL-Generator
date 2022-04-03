@@ -3,7 +3,7 @@ For generating Safe Browsing API-compliant hostname expressions
 """
 import re
 
-import tldextract  # type: ignore
+from fasttld import FastTLDExtract  # type: ignore
 from modules.utils.log import init_logger
 
 logger = init_logger()
@@ -11,6 +11,9 @@ logger = init_logger()
 # UPSERT hostname expressions into database
 # in small batches to reduce RAM usage
 hostname_expression_batch_size: int = 40_000
+
+fasttldextract = FastTLDExtract()
+fasttldextract.update()
 
 
 def generate_hostname_expressions_(raw_url: str) -> list[str]:
@@ -25,23 +28,23 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
 
     Returns:
         list[str]: Safe Browsing API-compliant
-        hostname expressions for `raw_url`. If `raw_url` is invalid,
-        return empty list.
+        hostname expressions for `raw_url`.
     """
     # Remove zero width spaces from raw_url
     url = re.sub(r"[\u200B-\u200D\uFEFF]", "", raw_url)
+
     try:
-        ext = tldextract.extract(url)
-        if ext.registered_domain == "":
+        subdomain, _, _, domain_name = fasttldextract.extract(url)
+        if domain_name == "":
             # No registered_domain recognised -> do not
             # split url into parts
             parts = []
-        elif ext.subdomain == "":
+        elif subdomain == "":
             # No subdomains found -> extract registered_domain
-            parts = [ext.registered_domain]
+            parts = [domain_name]
         else:
             # Subdomains and registered_domain found -> extract them all
-            parts = ext.subdomain.split(".") + [ext.registered_domain]
+            parts = subdomain.split(".") + [domain_name]
 
         # Safe Browsing API-compliant hostname expressions
         # Include [url] for cases where url has a subdirectory
@@ -49,7 +52,8 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         return [f"{'.'.join(parts[-i:])}" for i in range(len(parts) if len(parts) < 5 else 5)] + [url]
     except Exception as error:
         logger.error("%s %s", url, error, exc_info=True)
-        return []
+        # if tldextract fails, return url as-is.
+        return [url]
 
 
 def generate_hostname_expressions(raw_urls: list[str]) -> set[str]:
