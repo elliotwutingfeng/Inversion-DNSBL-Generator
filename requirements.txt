@@ -3,7 +3,7 @@ aiohttp==3.8.1
 apsw==3.36.0.post1
 bandit==1.7.4
 beautifulsoup4==4.10.0
-black==22.1.0
+black==22.3.0
 cchardet==2.1.7
 flake8==4.0.1
 isort==5.10.1
