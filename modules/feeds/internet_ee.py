@@ -23,30 +23,45 @@ async def get_ee_domains() -> AsyncIterator[set[str]]:
     Yields:
         Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
     """
-    temp_file = tempfile.TemporaryFile(mode="w+", dir=os.getcwd())
-    with temp_file:
-        subprocess.call(
-            [
-                "dig",
-                "@zone.internet.ee",
-                "+noall",
-                "+answer",
-                "+noidnout",
-                "+onesoa",
-                "AXFR",
-                "ee.",
-            ],
-            stdout=temp_file,
-        )
-        temp_file.seek(0)
-        raw_urls: list[str] = [
-            splitted_line[0].lower().rstrip(".")
-            for line in temp_file.read().splitlines()
-            if (splitted_line := line.split())  # if splitted_line has a length of at least 1
-        ]
+    successful = False
+    raw_urls: list[str] = []
+    errors = []
+    for _ in range(2):  # 2 attempts
+        try:
+            temp_file = tempfile.TemporaryFile(mode="w+", dir=os.getcwd())
+            with temp_file:
+                subprocess.run(
+                    [
+                        "dig",
+                        "@zone.internet.ee",
+                        "+noall",
+                        "+answer",
+                        "+noidnout",
+                        "+onesoa",
+                        "AXFR",
+                        "ee.",
+                    ],
+                    stdout=temp_file,
+                    timeout=9000,  # 2 hours
+                )
+                temp_file.seek(0)
+                raw_urls = [
+                    splitted_line[0].lower().rstrip(".")
+                    for line in temp_file.read().splitlines()
+                    if (splitted_line := line.split())  # if splitted_line has a length of at least 1
+                ]
+        except Exception as error:
+            errors.append(error)
+        else:
+            successful = True
+        if successful:
+            break
 
-        for batch in chunked(raw_urls, hostname_expression_batch_size):
-            yield generate_hostname_expressions(batch)
+    if not successful:
+        logger.error("Internet.ee zone transfer failed. | %s", errors)
+
+    for batch in chunked(raw_urls, hostname_expression_batch_size):
+        yield generate_hostname_expressions(batch)
 
 
 class InternetEE:
