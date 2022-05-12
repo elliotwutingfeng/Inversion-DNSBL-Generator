@@ -24,6 +24,7 @@
   <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/watchers"><img src="https://img.shields.io/github/watchers/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub watchers"/></a>
   <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/network/members"><img src="https://img.shields.io/github/forks/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub forks"/></a>
   <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/issues"><img src="https://img.shields.io/github/issues/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub issues"/></a>
+  <a href="https://codeclimate.com/github/elliotwutingfeng/Inversion-DNSBL-Generator"><img src="https://img.shields.io/codeclimate/maintainability/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="Code Climate Maintainability"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge" alt="GitHub license"/></a>
   <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/commits/master)"><img src="https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub commit activity"/></a>
   </p>
@@ -44,7 +45,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 |-|-|-|-|
 | Tranco TOP1M | 1 | https://tranco-list.eu | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
 | DomCop TOP10M | 10 | https://www.domcop.com/top-10-million-domains | Top 10 million domains Based on Open PageRank data |
-| Registrar R01 | 5.9 | https://r01.ru | Zone files for .ru .su .rf domains |
+| Registrar R01 | 6 | https://r01.ru | Zone files for .ru .su .rf domains |
 | CubDomain.com | 184 | https://cubdomain.com | Aggregator that tracks newly registered domains daily |
 | ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
 | Domains Project | 2100 | https://domainsproject.org | World’s single largest Internet domains dataset |
