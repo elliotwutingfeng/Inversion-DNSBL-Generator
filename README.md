@@ -33,9 +33,13 @@
 
 ---
 
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Felliotwutingfeng%2FInversion-DNSBL-Generator.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Felliotwutingfeng%2FInversion-DNSBL-Generator?ref=badge_large)
+
 ## Blocklists available for download
 
 ![Total Blocklist URLs](https://img.shields.io/tokei/lines/github/elliotwutingfeng/Inversion-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Felliotwutingfeng%2FInversion-DNSBL-Generator.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Felliotwutingfeng%2FInversion-DNSBL-Generator?ref=badge_shield)
 
 You may download the blocklists [here](https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists#inversion-dnsbl-domain-name-system-based-blackhole-list-blocklists)
 
