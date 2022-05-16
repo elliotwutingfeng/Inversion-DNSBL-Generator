@@ -74,7 +74,7 @@ async def _request_tlds(access_token: str) -> None:
         return
 
     # TLDs with `currentStatus` equal to any of these `statuses` are available for request
-    statuses = {"available", "expired", "denied", "revoked"}
+    statuses = {"available", "expired"}
     available_tlds = [x["tld"] for x in json.loads(tlds_resp) if "tld" in x and x.get("currentStatus", "") in statuses]
 
     # Skip if there are no available_tlds
