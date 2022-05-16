@@ -47,6 +47,72 @@ async def _authenticate(username: str, password: str) -> str:
     return body.get("accessToken", "")
 
 
+async def _request_tlds(access_token: str) -> None:
+    """Request access to all available TLDs from ICANN CZDS that current
+    user has no access to.
+
+    Args:
+        access_token (str): ICANN CZDS Access Token
+    """
+    authorized_headers = {
+        "Content-Type": "application/json",
+        "Connection": "keep-alive",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+    # Identify available TLDs to request
+    tlds_url = "https://czds-api.icann.org/czds/tlds"
+    tlds_resp = (
+        await get_async(
+            [tlds_url],
+            headers=authorized_headers,
+        )
+    )[tlds_url]
+
+    if tlds_resp == b"{}":
+        logger.error("Failed to retrieve available TLDs")
+        return
+
+    # TLDs with `currentStatus` equal to any of these `statuses` are available for request
+    statuses = {"available", "expired", "denied", "revoked"}
+    available_tlds = [x["tld"] for x in json.loads(tlds_resp) if x["currentStatus"] in statuses]
+
+    # Skip if there are no available_tlds
+    if not available_tlds:
+        logger.info("No TLDs available for access request")
+        return
+
+    # Retrieve terms & conditions
+    terms_url = "https://czds-api.icann.org/czds/terms/condition"
+    terms_resp = (
+        await get_async(
+            [terms_url],
+            headers=authorized_headers,
+        )
+    )[terms_url]
+
+    terms = json.loads(terms_resp)
+    if "version" not in terms:
+        logger.error("Failed to retrieve terms & conditions")
+        return
+
+    # Submit request
+    tld_request_url = "https://czds-api.icann.org/czds/requests/create"
+    reason = "Detection of potentially malicious domains for cybersecurity research"
+    tld_request_resp = (
+        await post_async(
+            [tld_request_url],
+            [json.dumps({"allTlds": True, "tldNames": available_tlds, "reason": reason, "tcVersion": terms["version"]}).encode()],
+            headers=authorized_headers,
+        )
+    )[0][1]
+    if tld_request_resp == b"{}":
+        logger.error("Failed to submit zone file access request")
+        return
+
+    logger.info("Zone file access request submitted.")
+
+
 async def _get_approved_endpoints(access_token: str) -> list[str]:
     """Download a list of zone file endpoints from ICANN CZDS. Only
     zone files which current ICANN CZDS user has approved access
@@ -172,6 +238,8 @@ class ICANN:
 
         if "icann" in parser_args["sources"]:
             access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
+            # Request access to all available TLDs from ICANN CZDS that current user has no access to
+            asyncio.get_event_loop().run_until_complete(_request_tlds(access_token))
             endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
             self.db_filenames = [f"icann_{url.rsplit('/', 1)[-1].rsplit('.')[-2]}" for url in endpoints]
             if parser_args["fetch"]:
