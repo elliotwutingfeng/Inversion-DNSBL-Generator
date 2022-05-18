@@ -98,7 +98,10 @@ async def _request_tlds(access_token: str) -> None:
 
     # Submit request
     tld_request_url = "https://czds-api.icann.org/czds/requests/create"
-    reason = "Detection of potentially malicious domains for cybersecurity research"
+    reason = str(dotenv_values(".env").get("ICANN_REQUEST_REASON", ""))
+    if not reason:
+        logger.error("ICANN_REQUEST_REASON not specified | No zone file access request will be sent")
+        return
     tld_request_resp = (
         await post_async(
             [tld_request_url],

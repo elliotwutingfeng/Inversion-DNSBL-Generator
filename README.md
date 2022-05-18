@@ -43,18 +43,18 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 
 | Name | URL Count (millions) | Source | Description |
 |-|-|-|-|
-| Tranco TOP1M | 1 | https://tranco-list.eu | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
-| DomCop TOP10M | 10 | https://www.domcop.com/top-10-million-domains | Top 10 million domains Based on Open PageRank data |
-| Registrar R01 | 6 | https://r01.ru | Zone files for .ru .su .rf domains |
-| CubDomain.com | 184 | https://cubdomain.com | Aggregator that tracks newly registered domains daily |
-| ICANN CZDS (Centralized Zone Data Service) | 227 | https://czds.icann.org | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
-| Domains Project | 2100 | https://domainsproject.org | World’s single largest Internet domains dataset |
-| Amazon Web Services EC2 | 56 | https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames | Amazon Elastic Compute Cloud hostnames |
-| OpenINTEL.nl | 6 | https://openintel.nl | Zone files for .se .nu .ee domains |
-| Switch.ch | 3.3 | https://switch.ch/open-data | Zone files for .ch .li domains |
-| AFNIC.fr | 7 | https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data | Daily newly registered .fr .re .pm .tf .wf .yt domains |
-| Internet.ee | 0.1 | https://www.internet.ee/domains/ee-zone-file | Estonian Internet Foundation (.ee) |
-| SK-NIC.sk | 0.4 | https://sk-nic.sk/subory/domains.txt | Domain Registry of the Slovak Republic (.sk) |
+| Tranco TOP1M | 1 | <https://tranco-list.eu> | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
+| DomCop TOP10M | 10 | <https://www.domcop.com/top-10-million-domains> | Top 10 million domains Based on Open PageRank data |
+| Registrar R01 | 6 | <https://r01.ru> | Zone files for .ru .su .rf domains |
+| CubDomain.com | 184 | <https://cubdomain.com> | Aggregator that tracks newly registered domains daily |
+| ICANN CZDS (Centralized Zone Data Service) | 227 | <https://czds.icann.org> | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
+| Domains Project | 2100 | <https://domainsproject.org> | World’s single largest Internet domains dataset |
+| Amazon Web Services EC2 | 56 | <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames> | Amazon Elastic Compute Cloud hostnames |
+| OpenINTEL.nl | 6 | <https://openintel.nl> | Zone files for .se .nu .ee domains |
+| Switch.ch | 3.3 | <https://switch.ch/open-data> | Zone files for .ch .li domains |
+| AFNIC.fr | 7 | <https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data> | Daily newly registered .fr .re .pm .tf .wf .yt domains |
+| Internet.ee | 0.1 | <https://www.internet.ee/domains/ee-zone-file> | Estonian Internet Foundation (.ee) |
+| SK-NIC.sk | 0.4 | <https://sk-nic.sk/subory/domains.txt> | Domain Registry of the Slovak Republic (.sk) |
 | IPv4 Addresses | 4294 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
 
 ## Safe Browsing API vendors
@@ -68,27 +68,28 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 
 ### System (mandatory)
 
--   Linux or macOS
--   Python >= 3.9.12
--   Multi-core x86-64 CPU; for Python Ray support
--   RAM: At least 8GB
--   SSD Drive Space: At least 700GB required to process all URL sources
+- Linux or macOS
+- Python >= 3.9.12
+- Multi-core x86-64 CPU; for Python Ray support
+- RAM: At least 8GB
+- SSD Storage Space: At least 700GB required to process all URL sources
 
 ### Safe Browsing API Access (mandatory)
 
 Choose at least one
--   Google: [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
--   Yandex: [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
+
+- Google: [Obtain a Google Developer API key and set it up for the Safe Browsing API](https://developers.google.com/safe-browsing/v4/get-started)
+- Yandex: [Obtain a Yandex Developer API key](https://yandex.com/dev/safebrowsing)
 
 ### URL feed access (optional)
 
--   ICANN Zone Files: [Sign up for a ICANN CZDS account](https://czds.icann.org)
-    - Once registered, turn off email notifications in the user settings,
+- ICANN Zone Files: [Sign up for a ICANN CZDS account](https://czds.icann.org)
+- Once registered, turn off email notifications in the user settings,
 then select `Create New Request` on the Dashboard to request for zone file access.
 
 ### Others (optional)
 
--   GitHub API (for uploading blocklists to GitHub): [Create a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- GitHub API (for uploading blocklists to GitHub): [Create a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
 ### Download limits
 
@@ -97,22 +98,42 @@ then select `Create New Request` on the Dashboard to request for zone file acces
 
 ## Setup instructions
 
-`git clone` and `cd` into the project directory, then run the following
+`git clone` and `cd` into the project directory
+
+### Declare environment variables
 
 ```bash
-# You will need at least one of the following environment variables
-echo "GOOGLE_API_KEY=<your-google-api-key-here>" >> .env
-echo "YANDEX_API_KEY=<your-yandex-api-key-here>" >> .env
+cp .env-dev .env
+```
 
-# These environment variables are optional
-echo "ICANN_ACCOUNT_USERNAME=<your-icann-account-username-here>" >> .env
-echo "ICANN_ACCOUNT_PASSWORD=<your-icann-account-password-here>" >> .env
-echo "GITHUB_ACCESS_TOKEN=<your-github-personal-access-token-here>" >> .env
-echo "BLOCKLIST_REPOSITORY_NAME=<your-blocklist-repository-name-here>" >> .env
+In `.env`, fill in the following variables
 
+```bash
+# Mandatory: At least one of the following Safe Browsing API keys
+GOOGLE_API_KEY=
+YANDEX_API_KEY=
+
+# Optional: ICANN zone file access
+ICANN_ACCOUNT_USERNAME=
+ICANN_ACCOUNT_PASSWORD=
+# Some registrars will not accept your request reason unless you include your name, email, and IP Address
+ICANN_REQUEST_REASON='Detection of potentially malicious domains for cybersecurity research. Name: _ Email: _ IP Address: _'
+
+# Optional: Upload generated blocklists to your GitHub repository
+GITHUB_ACCESS_TOKEN=
+BLOCKLIST_REPOSITORY_NAME=
+```
+
+### Install dependencies
+
+```bash
 pip3 install -r requirements.txt
+```
 
-# Optional (dataset size ~49Gb): Download Domains Project URLs (https://domainsproject.org)
+### Download Domains Project URLs (optional)
+
+```bash
+# Dataset size ~49Gb
 cd ../
 git clone https://github.com/tb0hdan/domains.git
 cd domains
@@ -136,12 +157,12 @@ This is necessary for feeds like `AFNIC.fr` which utilise optical character reco
 
 **Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API
 
--   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
--   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**
--   :shield: Vendors: **Google**
+- :heavy_check_mark: Download/Extract URLs to local database
+- :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
+- :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
+- :heavy_check_mark: Update local database with latest malicious URL statuses
+- :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**
+- :shield: Vendors: **Google**
 
 ```bash
 python3 main.py --fetch-urls --update-hashes --identify-malicious-urls --sources top1m top10m --vendors google
@@ -151,9 +172,9 @@ python3 main.py --fetch-urls --update-hashes --identify-malicious-urls --sources
 
 Fetch Tranco TOP1M and insert its contents to local database (no blocklist will be generated)
 
--   :heavy_check_mark: Download/Extract URLs to local database
--   :memo: Sources: **Tranco TOP1M**
--   :shield: Vendors: **Not Applicable**
+- :heavy_check_mark: Download/Extract URLs to local database
+- :memo: Sources: **Tranco TOP1M**
+- :shield: Vendors: **Not Applicable**
 
 ```bash
 python3 main.py --fetch-urls --sources top1m
@@ -163,12 +184,12 @@ python3 main.py --fetch-urls --sources top1m
 
 Fetch URLs from all sources, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 700GB free space)**
 
--   :heavy_check_mark: Download/Extract URLs to local database
--   :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
--   :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
--   :heavy_check_mark: Update local database with latest malicious URL statuses
--   :memo: Sources: Everything
--   :shield: Vendors: **Google**, **Yandex**
+- :heavy_check_mark: Download/Extract URLs to local database
+- :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
+- :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
+- :heavy_check_mark: Update local database with latest malicious URL statuses
+- :memo: Sources: Everything
+- :shield: Vendors: **Google**, **Yandex**
 
 ```bash
 python3 main.py --fetch-urls --update-hashes --identify-malicious-urls
@@ -178,9 +199,9 @@ python3 main.py --fetch-urls --update-hashes --identify-malicious-urls
 
 Generate a blocklist from local database using malicious URL statuses attained from past scans
 
--   :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate a blocklist
--   :memo: Sources: **DomCop TOP10M**, **Domains Project**
--   :shield: Vendors: **Google**
+- :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate a blocklist
+- :memo: Sources: **DomCop TOP10M**, **Domains Project**
+- :shield: Vendors: **Google**
 
 ```bash
 python3 main.py --retrieve-known-malicious-urls --sources top10m domainsproject --vendors google
@@ -196,7 +217,7 @@ python3 main.py --help
 
 ## Known Issues
 
--   Yandex Safe Browsing Update API appears to be unserviceable. Yandex Technical support has been notified.
+- Yandex Safe Browsing Update API appears to be unserviceable. Yandex Technical support has been notified.
 
 ## Disclaimer
 
@@ -206,12 +227,12 @@ python3 main.py --help
 
 - URLs detected with the Safe Browsing API usually have a malicious validity period of about 5 minutes. As the blocklists are updated only once every 24 hours, the blocklists must not be used to display user warnings.
 
-**More information on Google Safe Browsing API usage limits:** https://developers.google.com/safe-browsing/v4/usage-limits
+**More information on Google Safe Browsing API usage limits:** <https://developers.google.com/safe-browsing/v4/usage-limits>
 
 ## References
 
--   <https://developers.google.com/safe-browsing>
--   <https://yandex.com/dev/safebrowsing>
--   <https://remusao.github.io/posts/few-tips-sqlite-perf.html>
--   <https://github.com/icann/czds-api-client-python>
--   <https://jpmens.net/2021/05/18/dns-open-zone-data>
+- <https://developers.google.com/safe-browsing>
+- <https://yandex.com/dev/safebrowsing>
+- <https://remusao.github.io/posts/few-tips-sqlite-perf.html>
+- <https://github.com/icann/czds-api-client-python>
+- <https://jpmens.net/2021/05/18/dns-open-zone-data>
