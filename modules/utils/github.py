@@ -11,6 +11,7 @@ from dotenv import dotenv_values
 from modules.filewriter import BLOCKLISTS_FOLDER
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
+from urllib3.util.retry import Retry
 
 import github
 
@@ -41,7 +42,7 @@ def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suf
         if repo_name is None:
             raise ValueError("Blocklist Repository Name missing from environment file")
 
-        g = github.Github(access_token)
+        g = github.Github(access_token, retry=Retry(total=5, backoff_factor=1))
         repo = g.get_user().get_repo(repo_name)
 
         commit_message = f"Update {vendor} blocklists"
