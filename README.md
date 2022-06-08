@@ -46,10 +46,10 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 | Tranco TOP1M | 1 | <https://tranco-list.eu> | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
 | DomCop TOP10M | 10 | <https://www.domcop.com/top-10-million-domains> | Top 10 million domains Based on Open PageRank data |
 | Registrar R01 | 6 | <https://r01.ru> | Zone files for .ru .su .rf domains |
-| CubDomain.com | 184 | <https://cubdomain.com> | Aggregator that tracks newly registered domains daily |
-| ICANN CZDS (Centralized Zone Data Service) | 227 | <https://czds.icann.org> | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
+| CubDomain.com | 196 | <https://cubdomain.com> | Aggregator that tracks newly registered domains daily |
+| ICANN CZDS (Centralized Zone Data Service) | 247 | <https://czds.icann.org> | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
 | Domains Project | 2100 | <https://domainsproject.org> | World’s single largest Internet domains dataset |
-| Amazon Web Services EC2 | 56 | <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames> | Amazon Elastic Compute Cloud hostnames |
+| Amazon Web Services EC2 | 57 | <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames> | Amazon Elastic Compute Cloud hostnames |
 | OpenINTEL.nl | 6 | <https://openintel.nl> | Zone files for .se .nu .ee domains |
 | Switch.ch | 3.3 | <https://switch.ch/open-data> | Zone files for .ch .li domains |
 | AFNIC.fr | 7 | <https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data> | Daily newly registered .fr .re .pm .tf .wf .yt domains |
@@ -69,7 +69,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 ### System (mandatory)
 
 - Linux or macOS
-- Python >= 3.9.12
+- Python >= 3.9.13
 - Multi-core x86-64 CPU; for Python Ray support
 - RAM: At least 8GB
 - SSD Storage Space: At least 700GB required to process all URL sources

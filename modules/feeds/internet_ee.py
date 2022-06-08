@@ -42,7 +42,7 @@ async def get_ee_domains() -> AsyncIterator[set[str]]:
                         "ee.",
                     ],
                     stdout=temp_file,
-                    timeout=9000,  # 2 hours
+                    timeout=9000,  # 2.5 hours
                 )
                 temp_file.seek(0)
                 raw_urls = [
