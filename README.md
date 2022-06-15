@@ -87,9 +87,9 @@ Choose at least one
 - Once registered, turn off email notifications in the user settings,
 then select `Create New Request` on the Dashboard to request for zone file access.
 
-### Others (optional)
+### Uploading blocklists to GitHub (optional)
 
-- GitHub API (for uploading blocklists to GitHub): [Create a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- [Create a GitHub API Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
 ### Download limits
 
@@ -153,53 +153,58 @@ This is necessary for feeds like `AFNIC.fr` which utilise optical character reco
 [OpenCV install instructions (Ubuntu)](https://www.itsfoss.net/how-to-install-and-configure-opencv-on-ubuntu-20-04)
 [Tesseract install instructions](https://tesseract-ocr.github.io/tessdoc/Installation.html)
 
-## Usage Examples
+## Getting Started
 
-**Try this first:** Fetch Tranco TOP1M and DomCop TOP10M, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API
+### Download Google Safe Browsing API hashes
 
-- :heavy_check_mark: Download/Extract URLs to local database
-- :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
-- :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
-- :heavy_check_mark: Update local database with latest malicious URL statuses
-- :memo: Sources: **Tranco TOP1M**, **DomCop TOP10M**
+> :warning: As of 15 June 2022, the following command will make around 6000 calls (exact number depends on number of hashes in Google's dataset) to Google Safe Browsing API. As the daily limit is 10,000 calls, `--update-hashes` should be run no more than once every 24 hours.
+
+```bash
+python3 main.py --update-hashes --vendors google
+```
+
+### Download and Identify malicious URLs from Tranco TOP1M
+
+- :heavy_check_mark: Add Tranco TOP1M URLs to database
+- :heavy_check_mark: Identify malicious URLs from database using Safe Browsing API hashes, and generate a blocklist
+- :heavy_check_mark: Update database with latest malicious URL statuses
+- :memo: Sources: **Tranco TOP1M**
 - :shield: Vendors: **Google**
 
 ```bash
-python3 main.py --fetch-urls --update-hashes --identify-malicious-urls --sources top1m top10m --vendors google
+python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google
 ```
 
----
+## Other Examples
 
-Fetch Tranco TOP1M and insert its contents to local database (no blocklist will be generated)
+### Example 1: Download DomCop TOP10M URLs
 
-- :heavy_check_mark: Download/Extract URLs to local database
-- :memo: Sources: **Tranco TOP1M**
+- :heavy_check_mark: Add DomCop TOP10M URLs to database (no blocklist will be generated)
+- :memo: Sources: **DomCop TOP10M**
 - :shield: Vendors: **Not Applicable**
 
 ```bash
-python3 main.py --fetch-urls --sources top1m
+python3 main.py --fetch-urls --sources top10m
 ```
 
----
+### Example 2: Download and Identify malicious URLs from all sources
 
-Fetch URLs from all sources, insert their contents to local database, download Safe Browsing API malicious URL hashes, and generate a blocklist using Google Safe Browsing API and Yandex Safe Browsing API **(:warning: requires at least 700GB free space)**
+> :warning: Requires at least 700GB free space
+> :information_source: If you have not downloaded any Safe Browsing API hashes yet, add the `--update-hashes` flag to the following command.
 
-- :heavy_check_mark: Download/Extract URLs to local database
-- :heavy_check_mark: Download Safe Browsing API malicious URL hashes to local database
-- :heavy_check_mark: Identify malicious URLs from local database using Safe Browsing API hashes, and generate a blocklist
-- :heavy_check_mark: Update local database with latest malicious URL statuses
+- :heavy_check_mark: Add URLs from all sources to database
+- :heavy_check_mark: Identify malicious URLs from database using Safe Browsing API hashes, and generate a blocklist
+- :heavy_check_mark: Update database with latest malicious URL statuses
 - :memo: Sources: Everything
-- :shield: Vendors: **Google**, **Yandex**
+- :shield: Vendors: **Google**
 
 ```bash
-python3 main.py --fetch-urls --update-hashes --identify-malicious-urls
+python3 main.py --fetch-urls --identify-malicious-urls --vendors google
 ```
 
----
+### Example 3: Retrieve URLs marked as malicious from past scans from database
 
-Generate a blocklist from local database using malicious URL statuses attained from past scans
-
-- :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from local database, and generate a blocklist
+- :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from database, and generate a blocklist
 - :memo: Sources: **DomCop TOP10M**, **Domains Project**
 - :shield: Vendors: **Google**
 
@@ -207,9 +212,7 @@ Generate a blocklist from local database using malicious URL statuses attained f
 python3 main.py --retrieve-known-malicious-urls --sources top10m domainsproject --vendors google
 ```
 
----
-
-Show help message
+### Example 4: Display help message
 
 ```bash
 python3 main.py --help
