@@ -1,8 +1,6 @@
 <div align="center">
-
   <h3 align="center">Inversion DNSBL (Domain Name System-based blackhole list) Generator</h3>
   <img src="images/inversion_logo.svg" alt="Logo" width="200" height="200">
-
   <p align="center">
     Generate malicious URL blocklists for <a href="https://en.wikipedia.org/wiki/Domain_Name_System-based_blackhole_list">DNSBL</a> applications like <a href="https://linuxincluded.com/block-ads-malvertising-on-pfsense-using-pfblockerng-dnsbl">pfBlockerNG</a> or <a href="https://pi-hole.net">Pi-hole</a> by scanning various public URL sources using the Safe Browsing API from <a href="https://developers.google.com/safe-browsing">Google</a> and/or <a href="https://yandex.com/dev/safebrowsing">Yandex</a>.
     <br />
@@ -11,33 +9,31 @@
     ·
     <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/issues">Request Feature</a>
   </p>
-
   <p align="center">
-  <a href="https://python.org"><img src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue" alt="Python"/></a>
-  <a href="https://www.sqlite.org"><img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite"/></a>
-  <a href="https://docs.aiohttp.org/en/stable"><img src="https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white" alt="AIOHTTP"/></a>
-  <a href="https://www.ray.io"><img src="https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white" alt="Ray"/></a>
-  <a href="https://opencv.org"><img src="https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV"/></a>
+    <a href="https://python.org"><img src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue" alt="Python"/></a>
+    <a href="https://www.sqlite.org"><img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite"/></a>
+    <a href="https://docs.aiohttp.org/en/stable"><img src="https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white" alt="AIOHTTP"/></a>
+    <a href="https://www.ray.io"><img src="https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white" alt="Ray"/></a>
+    <a href="https://opencv.org"><img src="https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV"/></a>
   </p>
   <p align="center">
-  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/stargazers"><img src="https://img.shields.io/github/stars/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub stars"/></a>
-  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/watchers"><img src="https://img.shields.io/github/watchers/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub watchers"/></a>
-  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/network/members"><img src="https://img.shields.io/github/forks/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub forks"/></a>
-  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/issues"><img src="https://img.shields.io/github/issues/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub issues"/></a>
-  <a href="https://codeclimate.com/github/elliotwutingfeng/Inversion-DNSBL-Generator"><img src="https://img.shields.io/codeclimate/maintainability/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="Code Climate Maintainability"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge" alt="GitHub license"/></a>
-  <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/commits/master)"><img src="https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub commit activity"/></a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/stargazers"><img src="https://img.shields.io/github/stars/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub stars"/></a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/watchers"><img src="https://img.shields.io/github/watchers/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub watchers"/></a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/network/members"><img src="https://img.shields.io/github/forks/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub forks"/></a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/issues"><img src="https://img.shields.io/github/issues/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub issues"/></a>
+    <a href="https://codeclimate.com/github/elliotwutingfeng/Inversion-DNSBL-Generator"><img src="https://img.shields.io/codeclimate/maintainability/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="Code Climate Maintainability"/></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-BSD--3--CLAUSE-GREEN?style=for-the-badge" alt="GitHub license"/></a>
+    <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/commits/master)"><img src="https://img.shields.io/github/commit-activity/w/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub commit activity"/></a>
   </p>
-
 </div>
-
 <details>
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#blocklists-available-for-download">Blocklists available for download</a></li>
     <li><a href="#url-sources">URL sources</a></li>
     <li><a href="#safe-browsing-api-vendors">Safe Browsing API vendors</a></li>
-    <li><a href="#requirements">Requirements</a>
+    <li>
+      <a href="#requirements">Requirements</a>
       <ul>
         <li><a href="#system-mandatory">System (mandatory)</a></li>
         <li><a href="#safe-browsing-api-access-mandatory">Safe Browsing API Access (mandatory)</a></li>
@@ -46,32 +42,34 @@
         <li><a href="#download-limits">Download limits</a></li>
       </ul>
     </li>
-   <li><a href="#setup-instructions">Setup instructions</a>
-
-   <ul>
+    <li>
+      <a href="#setup-instructions">Setup instructions</a>
+      <ul>
         <li><a href="#declare-environment-variables">Declare environment variables</a></li>
         <li><a href="#install-dependencies">Install dependencies</a></li>
         <li><a href="#download-domains-project-urls-optional">Download Domains Project URLs (optional)</a></li>
-         <li><a href="#install-opencv-and-tesseract-ocr-optional">Install OpenCV and Tesseract OCR (optional)</a></li>
-   </ul>
-   </li>
-   <li><a href="#getting-started">Getting Started</a>
+        <li><a href="#install-opencv-and-tesseract-ocr-optional">Install OpenCV and Tesseract OCR (optional)</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#download-google-safe-browsing-api-hashes">Download Google Safe Browsing API hashes</a></li>
         <li><a href="#download-and-identify-malicious-urls-from-tranco-top1m">Download and Identify malicious URLs from Tranco TOP1M</a></li>
-   </ul>
-   </li>
-   <li><a href="#other-examples">Other Examples</a>
+      </ul>
+    </li>
+    <li>
+      <a href="#other-examples">Other Examples</a>
       <ul>
         <li><a href="#download-domcop-top10m-urls">Download DomCop TOP10M URLs</a></li>
         <li><a href="#download-and-identify-malicious-urls-from-all-sources">Download and Identify malicious URLs from all sources</a></li>
         <li><a href="#retrieve-urls-marked-as-malicious-from-past-scans-from-database">Retrieve URLs marked as malicious from past scans from database</a></li>
-          <li><a href="#display-help-message">Display help message</a></li>
-   </ul>
-   </li>
-   <li><a href="#known-issues">Known Issues</a></li>
-   <li><a href="#disclaimer">Disclaimer</a></li>
-   <li><a href="#references">References</a></li>
+        <li><a href="#display-help-message">Display help message</a></li>
+      </ul>
+    </li>
+    <li><a href="#known-issues">Known Issues</a></li>
+    <li><a href="#disclaimer">Disclaimer</a></li>
+    <li><a href="#references">References</a></li>
   </ol>
 </details>
 
