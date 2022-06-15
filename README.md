@@ -31,6 +31,50 @@
 
 </div>
 
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#blocklists-available-for-download">Blocklists available for download</a></li>
+    <li><a href="#url-sources">URL sources</a></li>
+    <li><a href="#safe-browsing-api-vendors">Safe Browsing API vendors</a></li>
+    <li><a href="#requirements">Requirements</a>
+      <ul>
+        <li><a href="#system-mandatory">System (mandatory)</a></li>
+        <li><a href="#safe-browsing-api-access-mandatory">Safe Browsing API Access (mandatory)</a></li>
+        <li><a href="#url-feed-access-optional">URL feed access (optional)</a></li>
+        <li><a href="#uploading-blocklists-to-github-optional">Uploading blocklists to GitHub (optional)</a></li>
+        <li><a href="#download-limits">Download limits</a></li>
+      </ul>
+    </li>
+   <li><a href="#setup-instructions">Setup instructions</a>
+
+   <ul>
+        <li><a href="#declare-environment-variables">Declare environment variables</a></li>
+        <li><a href="#install-dependencies">Install dependencies</a></li>
+        <li><a href="#download-domains-project-urls-optional">Download Domains Project URLs (optional)</a></li>
+         <li><a href="#install-opencv-and-tesseract-ocr-optional">Install OpenCV and Tesseract OCR (optional)</a></li>
+   </ul>
+   </li>
+   <li><a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#download-google-safe-browsing-api-hashes">Download Google Safe Browsing API hashes</a></li>
+        <li><a href="#download-and-identify-malicious-urls-from-tranco-top1m">Download and Identify malicious URLs from Tranco TOP1M</a></li>
+   </ul>
+   </li>
+   <li><a href="#other-examples">Other Examples</a>
+      <ul>
+        <li><a href="#download-domcop-top10m-urls">Download DomCop TOP10M URLs</a></li>
+        <li><a href="#download-and-identify-malicious-urls-from-all-sources">Download and Identify malicious URLs from all sources</a></li>
+        <li><a href="#retrieve-urls-marked-as-malicious-from-past-scans-from-database">Retrieve URLs marked as malicious from past scans from database</a></li>
+          <li><a href="#display-help-message">Display help message</a></li>
+   </ul>
+   </li>
+   <li><a href="#known-issues">Known Issues</a></li>
+   <li><a href="#disclaimer">Disclaimer</a></li>
+   <li><a href="#references">References</a></li>
+  </ol>
+</details>
+
 ---
 
 ## Blocklists available for download
@@ -177,7 +221,7 @@ python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors
 
 ## Other Examples
 
-### Example 1: Download DomCop TOP10M URLs
+### Download DomCop TOP10M URLs
 
 - :heavy_check_mark: Add DomCop TOP10M URLs to database (no blocklist will be generated)
 - :memo: Sources: **DomCop TOP10M**
@@ -187,7 +231,7 @@ python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors
 python3 main.py --fetch-urls --sources top10m
 ```
 
-### Example 2: Download and Identify malicious URLs from all sources
+### Download and Identify malicious URLs from all sources
 
 > :warning: Requires at least 700GB free space
 > :information_source: If you have not downloaded any Safe Browsing API hashes yet, add the `--update-hashes` flag to the following command.
@@ -202,7 +246,7 @@ python3 main.py --fetch-urls --sources top10m
 python3 main.py --fetch-urls --identify-malicious-urls --vendors google
 ```
 
-### Example 3: Retrieve URLs marked as malicious from past scans from database
+### Retrieve URLs marked as malicious from past scans from database
 
 - :heavy_check_mark: Retrieve URLs with malicious statuses (attained from past scans) from database, and generate a blocklist
 - :memo: Sources: **DomCop TOP10M**, **Domains Project**
@@ -212,7 +256,7 @@ python3 main.py --fetch-urls --identify-malicious-urls --vendors google
 python3 main.py --retrieve-known-malicious-urls --sources top10m domainsproject --vendors google
 ```
 
-### Example 4: Display help message
+### Display help message
 
 ```bash
 python3 main.py --help
