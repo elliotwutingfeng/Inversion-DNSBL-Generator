@@ -231,7 +231,8 @@ python3 main.py --fetch-urls --sources top10m
 
 ### Download and Identify malicious URLs from all sources
 
-> :warning: Requires at least 700GB free space
+> :warning: Requires at least 700GB free space.
+>
 > :information_source: If you have not downloaded any Safe Browsing API hashes yet, add the `--update-hashes` flag to the following command.
 
 - :heavy_check_mark: Add URLs from all sources to database
