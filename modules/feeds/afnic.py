@@ -12,8 +12,8 @@ from zipfile import ZipFile
 import cv2
 import numpy as np
 import pytesseract
-import tldextract
 from dateutil.relativedelta import relativedelta
+from fasttld import FastTLDExtract
 from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
@@ -157,7 +157,8 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     ]
 
     # Exclude invalid URLs
-    urls = [u for u in urls if tldextract.extract(u).suffix == tld]
+    fasttldextract = FastTLDExtract(exclude_private_suffix=True)
+    urls = [u for u in urls if fasttldextract.extract(u)[2] == tld]
 
     return urls
 
