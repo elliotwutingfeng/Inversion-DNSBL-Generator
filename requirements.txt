@@ -5,7 +5,7 @@ bandit==1.7.4
 beautifulsoup4==4.11.1
 black==22.3.0
 cchardet==2.1.7
-fasttld==0.2.1
+git+https://github.com/jophy/fasttld@5e7625a7bc603e6d04e9b95fdabb5745904aa7b2#egg=fasttld
 feedparser==6.0.10
 flake8==4.0.1
 isort==5.10.1

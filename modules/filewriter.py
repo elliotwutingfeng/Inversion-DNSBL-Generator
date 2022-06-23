@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 
 import aiofiles  # type:ignore
+from fasttld import FastTLDExtract
 
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
@@ -46,11 +47,13 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
     if not os.path.exists(BLOCKLISTS_FOLDER):
         os.mkdir(BLOCKLISTS_FOLDER)
 
+    fasttldextract = FastTLDExtract(exclude_private_suffix=True)
+
     hostnames: list[str] = []
     ip_addresses: list[str] = []
     for url in urls:
         try:
-            if isinstance(ipaddress.ip_address(url), ipaddress.IPv4Address):
+            if isinstance(ipaddress.ip_address(fasttldextract.extract(url).domain), ipaddress.IPv4Address):
                 ip_addresses.append(url)
             else:
                 raise ValueError("Not an IPv4 Address.")
