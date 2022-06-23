@@ -83,21 +83,22 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 
 ## URL sources
 
-| Name | URL Count (millions) | Source | Description |
+| Name | URL Count | Source | Description |
 |-|-|-|-|
-| Tranco TOP1M | 1 | <https://tranco-list.eu> | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
-| DomCop TOP10M | 10 | <https://www.domcop.com/top-10-million-domains> | Top 10 million domains Based on Open PageRank data |
-| Registrar R01 | 6 | <https://r01.ru> | Zone files for .ru .su .rf domains |
-| CubDomain.com | 196 | <https://cubdomain.com> | Aggregator that tracks newly registered domains daily |
-| ICANN CZDS (Centralized Zone Data Service) | 247 | <https://czds.icann.org> | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
-| Domains Project | 2100 | <https://domainsproject.org> | World’s single largest Internet domains dataset |
-| Amazon Web Services EC2 | 57 | <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames> | Amazon Elastic Compute Cloud hostnames |
-| OpenINTEL.nl | 6 | <https://openintel.nl> | Zone files for .se .nu .ee domains |
-| Switch.ch | 3.3 | <https://switch.ch/open-data> | Zone files for .ch .li domains |
-| AFNIC.fr | 7 | <https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data> | Daily newly registered .fr .re .pm .tf .wf .yt domains |
-| Internet.ee | 0.1 | <https://www.internet.ee/domains/ee-zone-file> | Estonian Internet Foundation (.ee) |
-| SK-NIC.sk | 0.4 | <https://sk-nic.sk/subory/domains.txt> | Domain Registry of the Slovak Republic (.sk) |
-| IPv4 Addresses | 4294 | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
+| Tranco TOP1M | 1M | <https://tranco-list.eu> | A Research-Oriented Top Sites Ranking Hardened Against Manipulation |
+| DomCop TOP10M | 10M | <https://www.domcop.com/top-10-million-domains> | Top 10 million domains Based on Open PageRank data |
+| Registrar R01 | 6M | <https://r01.ru> | Zone files for .ru .su .rf domains |
+| CubDomain.com | 196M | <https://cubdomain.com> | Aggregator that tracks newly registered domains daily |
+| ICANN CZDS (Centralized Zone Data Service) | 247M | <https://czds.icann.org> | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
+| Domains Project | 2.1B | <https://domainsproject.org> | World’s single largest Internet domains dataset |
+| Amazon Web Services EC2 | 57M | <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames> | Amazon Elastic Compute Cloud hostnames |
+| OpenINTEL.nl | 6M | <https://openintel.nl> | Zone files for .se .nu .ee domains |
+| Switch.ch | 3.3M | <https://switch.ch/open-data> | Zone files for .ch .li domains |
+| AFNIC.fr | 7M | <https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data> | Daily newly registered .fr .re .pm .tf .wf .yt domains |
+| Internet.ee | 100K | <https://www.internet.ee/domains/ee-zone-file> | Estonian Internet Foundation (.ee) |
+| SK-NIC.sk | 400K | <https://sk-nic.sk/subory/domains.txt> | Domain Registry of the Slovak Republic (.sk) |
+| Google TAG IOCs | 200 | <https://blog.google/threat-analysis-group> | Google Threat Analysis Group Indicators of Compromise |
+| IPv4 Addresses | 4.2B | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |
 
 ## Safe Browsing API vendors
 

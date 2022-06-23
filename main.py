@@ -114,6 +114,7 @@ if __name__ == "__main__":
         "afnic": "AFNIC.fr (.fr .re .pm .tf .wf .yt)",
         "internet_ee": "Internet.ee (.ee)",
         "sknic": "SK-NIC.sk (.sk)",
+        "googletag": "Google Threat Analysis Group Indicators of Compromise",
         "ipv4": "ipv4 addresses",
     }
 

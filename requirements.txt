@@ -6,13 +6,14 @@ beautifulsoup4==4.11.1
 black==22.3.0
 cchardet==2.1.7
 fasttld==0.2.1
+feedparser==6.0.10
 flake8==4.0.1
 isort==5.10.1
 lxml==4.9.0
 more-itertools==8.13.0
 mypy==0.961
 mypy-extensions==0.4.3
-numpy==1.22.4
+numpy==1.23.0
 opencv-python==4.6.0.66
 PyGithub==1.55
 pytesseract==0.3.9
@@ -27,4 +28,5 @@ tqdm==4.64.0
 typed-ast==1.5.4
 types-aiofiles==0.8.8
 types-beautifulsoup4==4.11.2
-types-python-dateutil==2.8.17
+types-python-dateutil==2.8.18
+urlextract==1.6.0
