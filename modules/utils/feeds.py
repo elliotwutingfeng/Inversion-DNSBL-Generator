@@ -35,7 +35,7 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
 
     try:
         tldresult = fasttldextract.extract(url)
-        subdomain, domain_name = tldresult.subdomain, tldresult.domain_name
+        subdomain, domain_name = tldresult[2], tldresult[7]
         if domain_name == "":
             # No registered_domain recognised -> do not
             # split url into parts

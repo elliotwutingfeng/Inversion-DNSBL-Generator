@@ -53,7 +53,7 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
     ip_addresses: list[str] = []
     for url in urls:
         try:
-            if isinstance(ipaddress.ip_address(fasttldextract.extract(url).domain), ipaddress.IPv4Address):
+            if isinstance(ipaddress.ip_address(fasttldextract.extract(url)[3]), ipaddress.IPv4Address):
                 ip_addresses.append(url)
             else:
                 raise ValueError("Not an IPv4 Address.")

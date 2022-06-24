@@ -158,7 +158,7 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
 
     # Exclude invalid URLs
     fasttldextract = FastTLDExtract(exclude_private_suffix=True)
-    urls = [u for u in urls if fasttldextract.extract(u).suffix == tld]
+    urls = [u for u in urls if fasttldextract.extract(u)[4] == tld]
 
     return urls
 
