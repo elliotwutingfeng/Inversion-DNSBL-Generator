@@ -1,13 +1,12 @@
 aiofiles==0.8.0
 aiohttp==3.8.1
-apsw==3.38.5.post1
+apsw==3.39.2.0
 bandit==1.7.4
 beautifulsoup4==4.11.1
 black==22.6.0
 cchardet==2.1.7
-git+https://github.com/jophy/fasttld@5e7625a7bc603e6d04e9b95fdabb5745904aa7b2#egg=fasttld
 feedparser==6.0.10
-flake8==4.0.1
+flake8==5.0.3
 isort==5.10.1
 lxml==4.9.1
 more-itertools==8.13.0
@@ -24,6 +23,7 @@ python-dateutil==2.8.2
 python-dotenv==0.20.0
 ray[default]==1.13.0
 spavro==1.1.24
+tldextract==3.3.1
 tqdm==4.64.0
 typed-ast==1.5.4
 types-aiofiles==0.8.10

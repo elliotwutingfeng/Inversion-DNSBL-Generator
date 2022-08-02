@@ -3,7 +3,7 @@ For generating Safe Browsing API-compliant hostname expressions
 """
 import re
 
-from fasttld import FastTLDExtract  # type: ignore
+import tldextract
 from modules.utils.log import init_logger
 
 logger = init_logger()
@@ -11,9 +11,6 @@ logger = init_logger()
 # UPSERT hostname expressions into database
 # in small batches to reduce RAM usage
 hostname_expression_batch_size: int = 40_000
-
-fasttldextract = FastTLDExtract(exclude_private_suffix=True)
-fasttldextract.update()
 
 
 def generate_hostname_expressions_(raw_url: str) -> list[str]:
@@ -34,8 +31,8 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
     url = re.sub(r"[\u200B-\u200D\uFEFF]", "", raw_url)
 
     try:
-        tldresult = fasttldextract.extract(url)
-        subdomain, domain_name = tldresult[2], tldresult[7]
+        tldresult = tldextract.extract(url)
+        subdomain, domain_name = tldresult.subdomain, tldresult.registered_domain
         if domain_name == "":
             # No registered_domain recognised -> do not
             # split url into parts
