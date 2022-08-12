@@ -1,8 +1,6 @@
 """
 SQLite utilities for making CREATE TABLE queries
 """
-from typing import Optional
-
 from apsw import Error
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
@@ -99,7 +97,7 @@ def _create_malicious_url_hashes_tables(
 
 
 def initialise_databases(
-    db_filenames: Optional[list[str]] = None,
+    db_filenames: list[str] | None = None,
     mode: DatabaseTableModes = "hashes",
 ) -> None:
     """If `mode` is set to "domains" or "ips", create database for
@@ -109,7 +107,7 @@ def initialise_databases(
     URL hash prefixes and full hashes.
 
     Args:
-        db_filenames (Optional[list[str]]): SQLite database filenames.
+        db_filenames (list[str], optional): SQLite database filenames.
         Defaults to None.
         mode (DatabaseTableModes): If "hashes", create databases for
         malicious URL hash prefixes and full hashes,

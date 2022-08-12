@@ -18,8 +18,8 @@ https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb9
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Awaitable, Optional
+from collections.abc import Awaitable, Callable, Mapping, Sequence
+from typing import Any
 
 import ray
 from ray.actor import ActorHandle
@@ -139,7 +139,7 @@ def run_task_handler(
     task_handler: Callable[..., Awaitable],
     task_args: tuple,
     object_store_ids: Mapping,
-    actor_id: Optional[Any] = None,
+    actor_id: Any | None = None,
 ) -> Any:
     """Runs `task_handler` on `task_args`,
     update progressbar and return the value returned by `task_handler`
@@ -153,7 +153,7 @@ def run_task_handler(
         task_args (tuple): Arguments to be passed into `task_handler`
         object_store_ids (Mapping): Serializable object IDs to be passed
         from Ray object store into `task_handler`
-        actor_id (Optional[Any], optional): Object reference assigned
+        actor_id (Any, optional): Object reference assigned
         to `ProgressBar` actor. Defaults to None.
 
     Returns:
@@ -164,7 +164,7 @@ def run_task_handler(
         task_handler: Callable[..., Awaitable],
         task_args: tuple,
         object_store_ids: Mapping,
-        actor_id: Optional[Any] = None,
+        actor_id: Any | None = None,
     ) -> Any:
         result = await task_handler(*task_args, **{arg: await object_store_ids[arg] for arg in object_store_ids})
 
@@ -178,7 +178,7 @@ def run_task_handler(
 def execute_with_ray(
     task_handler: Callable,
     task_args_list: Sequence[tuple],
-    object_store: Optional[Mapping] = None,
+    object_store: Mapping | None = None,
     progress_bar: bool = True,
 ) -> list:
     """Apply task_handler to list of tasks.
@@ -189,7 +189,7 @@ def execute_with_ray(
         task_handler (Callable): Asynchronous function to parallelise
         task_args_list (Sequence[tuple]): Sequence of tuples of Arguments
         to be passed into each `task_handler` instance
-        object_store (Optional[Mapping], optional): Serializable objects,
+        object_store (Mapping, optional): Serializable objects,
         common to all task instances, to be put into
         Ray object store, if any. Defaults to None.
         progress_bar (bool, optional): If set to True, shows progressbar.

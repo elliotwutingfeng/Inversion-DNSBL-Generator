@@ -5,7 +5,7 @@ import asyncio
 import base64
 import itertools
 import json
-from typing import Iterator
+from collections.abc import Iterator
 
 from dotenv import dotenv_values
 from more_itertools import flatten

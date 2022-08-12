@@ -5,7 +5,6 @@ Push generated blocklists to GitHub
 """
 
 import os
-from typing import Optional
 
 from dotenv import dotenv_values
 from modules.filewriter import BLOCKLISTS_FOLDER
@@ -18,7 +17,7 @@ import github
 logger = init_logger()
 
 
-def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suffix: Optional[str] = None) -> None:
+def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suffix: str | None = None) -> None:
     """Uploads blocklists to GitHub repository
 
     Args:
@@ -26,7 +25,7 @@ def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suf
         (e.g. "Google", "Yandex" etc.)
         blocklist_filenames (tuple[str,...]): Blocklists
         to be uploaded to GitHub
-        suffix (Optional[str], optional): Suffix to be added to
+        suffix (str, optional): Suffix to be added to
         blocklist filenames when uploading to GitHub. Defaults to None.
     """
     try:

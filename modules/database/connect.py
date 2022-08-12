@@ -2,7 +2,6 @@
 SQLite utilities for connecting to databases
 """
 import os
-from typing import Optional
 
 import apsw  # type: ignore
 from apsw import Error
@@ -11,7 +10,7 @@ from modules.utils.log import init_logger
 logger = init_logger()
 
 
-def create_connection(db_filename: str) -> Optional[type[apsw.Connection]]:
+def create_connection(db_filename: str) -> apsw.Connection | None:
     """Create a database connection to the SQLite database at `db_filename`,
      if `db_filename` is None, connect to a new in-memory database.
 
@@ -19,7 +18,7 @@ def create_connection(db_filename: str) -> Optional[type[apsw.Connection]]:
         db_filename (str): SQLite database filename
 
     Returns:
-        Optional[Type[apsw.Connection]]: SQLite database connection
+        apsw.Connection | None: SQLite database connection
     """
     databases_folder = "databases"
     conn = None

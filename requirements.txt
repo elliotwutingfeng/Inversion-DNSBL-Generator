@@ -6,10 +6,10 @@ beautifulsoup4==4.11.1
 black==22.6.0
 cchardet==2.1.7
 feedparser==6.0.10
-flake8==5.0.3
+flake8==5.0.4
 isort==5.10.1
 lxml==4.9.1
-more-itertools==8.13.0
+more-itertools==8.14.0
 mypy==0.971
 mypy-extensions==0.4.3
 numpy==1.23.1
@@ -21,7 +21,7 @@ pytest-cov==3.0.0
 pytest-mock==3.8.2
 python-dateutil==2.8.2
 python-dotenv==0.20.0
-ray[default]==1.13.0
+ray[default]==2.0.0rc0
 spavro==1.1.24
 tldextract==3.3.1
 tqdm==4.64.0

@@ -112,7 +112,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 ### System (mandatory)
 
 - Linux or macOS
-- Python >= 3.9.13
+- Python >= 3.10.5
 - Multi-core x86-64 CPU; for Python Ray support
 - RAM: At least 8GB
 - SSD Storage Space: At least 700GB required to process all URL sources

@@ -1,8 +1,7 @@
 """
 SQLite utilities for making INSERT queries
 """
-from collections.abc import AsyncIterator, Callable, Mapping
-from typing import Iterator, Optional
+from collections.abc import AsyncIterator, Callable, Iterator, Mapping
 
 from apsw import Error
 from modules.database.connect import create_connection
@@ -17,7 +16,7 @@ async def add_urls(
     url_set_fetcher: Callable[..., AsyncIterator[set[str]]],
     update_time: int,
     db_filename: str,
-    url_set_fetcher_args: Optional[Mapping] = None,
+    url_set_fetcher_args: Mapping | None = None,
 ) -> None:
     """Retrieve a set of URLs and UPSERT URLs into
     urls table of SQLite database at `db_filename`.db.
@@ -30,7 +29,7 @@ async def add_urls(
         update_time (int): Time when URLs are added to database in
         UNIX Epoch seconds
         db_filename (str): SQLite database filename
-        url_set_fetcher_args (Optional[Mapping], optional): Arguments
+        url_set_fetcher_args (Mapping, optional): Arguments
         for `url_set_fetcher`.
         Defaults to None.
     """

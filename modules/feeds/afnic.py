@@ -2,11 +2,11 @@
 For fetching and scanning URLs from AFNIC.fr
 """
 import csv
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from datetime import date
 from io import BytesIO, TextIOWrapper
 from itertools import count, groupby
-from typing import Any, Iterator, Optional
+from typing import Any
 from zipfile import ZipFile
 
 import cv2
@@ -162,7 +162,7 @@ def ocr_extract(image_data: bytes, link: str, tld: str) -> list[str]:
     return urls
 
 
-async def get_afnic_daily_updates(tld: str, num_days: Optional[int]) -> AsyncIterator[set[str]]:
+async def get_afnic_daily_updates(tld: str, num_days: int | None) -> AsyncIterator[set[str]]:
     """Download and extract domains from AFNIC.fr daily updates (PNG files) for a given `tld`
     and yield all listed URLs in batches.
 
@@ -243,7 +243,7 @@ class AFNIC:
     def __init__(self, parser_args: dict, update_time: int):
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
-        self.num_days: Optional[int] = parser_args["afnic_num_days"]
+        self.num_days: int | None = parser_args["afnic_num_days"]
 
         if "afnic" in parser_args["sources"]:
             tlds: tuple[str, ...] = ("fr", "re", "pm", "tf", "wf", "yt")

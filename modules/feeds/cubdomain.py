@@ -6,7 +6,6 @@ import asyncio
 from collections import ChainMap
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
-from typing import Optional
 
 import cchardet  # noqa: F401
 from bs4 import BeautifulSoup, SoupStrainer
@@ -24,12 +23,12 @@ logger = init_logger()
 YYYY_MM_DD_STR_FORMAT: str = "{dt:%Y}-{dt:%m}-{dt:%d}"
 
 
-def _generate_dates_and_root_urls(num_days: Optional[int]) -> tuple[list[datetime], list[str]]:
+def _generate_dates_and_root_urls(num_days: int | None) -> tuple[list[datetime], list[str]]:
     """Generate list of dates and corresponding root URLs ranging
     from 25th June 2017 to today inclusive
 
     Args:
-        num_days (Optional[int]): Counting back from current date,
+        num_days (int, optional): Counting back from current date,
         the number of days of CubDomain.com data
         to fetch and/or analyse.
         If set to `None`, all available data
@@ -87,11 +86,11 @@ async def _create_root_url_map(root_url: str, date: datetime, content: bytes) ->
     return root_url_to_last_page_and_date
 
 
-async def _get_page_urls_by_date_str(num_days: Optional[int]) -> dict:
+async def _get_page_urls_by_date_str(num_days: int | None) -> dict:
     """Create list of all domain pages for all dates
 
     Args:
-        num_days (Optional[int]): Counting back from current date,
+        num_days (int, optional): Counting back from current date,
         the number of days of CubDomain.com data to fetch and/or analyse. If set to `None`,
         all available data dating back to 25 June 2017 will be considered.
 
@@ -119,11 +118,11 @@ async def _get_page_urls_by_date_str(num_days: Optional[int]) -> dict:
     return page_urls_by_date_str
 
 
-async def _get_cubdomain_page_urls_by_db_filename(num_days: Optional[int]) -> dict:
+async def _get_cubdomain_page_urls_by_db_filename(num_days: int | None) -> dict:
     """Create list of all domain pages for all db_filenames
 
     Args:
-        num_days (Optional[int]): Counting back from current date,
+        num_days (int, optional): Counting back from current date,
         the number of days of CubDomain.com data to fetch and/or analyse.
         If set to `None`, all available data dating back
         to 25 June 2017 will be considered.
@@ -186,7 +185,7 @@ class CubDomain:
         self.db_filenames: list[str] = []
         self.jobs: list[tuple] = []
         self.page_urls_by_db_filename = dict()
-        self.num_days: Optional[int] = parser_args["cubdomain_num_days"]
+        self.num_days: int | None = parser_args["cubdomain_num_days"]
         if "cubdomain" in parser_args["sources"]:
             self.db_filenames = [
                 f"cubdomain_{YYYY_MM_DD_STR_FORMAT}".format(dt=date) for date in _generate_dates_and_root_urls(self.num_days)[0]

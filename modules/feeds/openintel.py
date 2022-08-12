@@ -3,7 +3,6 @@ For fetching and scanning URLs from OpenINTEL.nl
 """
 import tarfile
 from collections.abc import AsyncIterator
-from typing import Optional
 
 from bs4 import BeautifulSoup, SoupStrainer
 from modules.utils.feeds import generate_hostname_expressions
@@ -35,7 +34,7 @@ async def get_latest_tarball_url() -> str:
     )
     res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
 
-    latest_year: Optional[int] = years[-1] if (years := sorted(int(content.string.strip("/")) for content in res)) else None
+    latest_year: int | None = years[-1] if (years := sorted(int(content.string.strip("/")) for content in res)) else None
 
     if latest_year is None:
         raise ValueError("No year folders found")
@@ -54,7 +53,7 @@ async def get_latest_tarball_url() -> str:
     )
     res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
 
-    latest_tarball: Optional[str] = tarballs[-1] if (tarballs := sorted(tag_attrs.get("href") for tag_attrs in res)) else None
+    latest_tarball: str | None = tarballs[-1] if (tarballs := sorted(tag_attrs.get("href") for tag_attrs in res)) else None
 
     if latest_tarball is None:
         raise ValueError("No tarballs found")
@@ -81,7 +80,7 @@ async def _get_openintel_url_list() -> AsyncIterator[set[str]]:
         yield set()
 
 
-async def extract_openintel_urls(endpoint: str, headers: dict = None) -> AsyncIterator[list[str]]:
+async def extract_openintel_urls(endpoint: str, headers: dict | None = None) -> AsyncIterator[list[str]]:
     """Extract URLs from GET request stream of OpenINTEL.nl tarball
 
     Args:

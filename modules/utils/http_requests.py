@@ -5,7 +5,7 @@ import asyncio
 import os
 import socket
 import tempfile
-from typing import IO, Optional
+from typing import IO
 
 import aiohttp
 from modules.utils.log import init_logger
@@ -181,7 +181,7 @@ async def post_async(
         )
 
 
-async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict = None) -> Optional[IO]:
+async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict = None) -> IO | None:
     """Given a HTTP endpoint, make a HTTP GET request
     asynchronously, stream the response chunks to a
     TemporaryFile, then return it as a file object
@@ -197,7 +197,7 @@ async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict = 
         aiohttp.client_exceptions.ClientError: Stream disrupted
 
     Returns:
-        Optional[IO]: Temporary file object
+        IO | None: Temporary file object
         containing HTTP response contents. Returns None if GET request
         fails to complete after `max_retries`
     """
