@@ -23,7 +23,14 @@ async def _get_sknic_urls() -> AsyncIterator[set[str]]:
     """
     with BytesIO() as file:
         endpoint: str = "https://sk-nic.sk/subory/domains.txt"
-        resp = (await get_async([endpoint]))[endpoint]
+        resp = (
+            await get_async(
+                [endpoint],
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
+                },
+            )
+        )[endpoint]
         if resp != b"{}":
             file.write(resp)
             file.seek(0)
