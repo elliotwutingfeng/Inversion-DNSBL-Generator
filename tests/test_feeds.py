@@ -10,7 +10,10 @@ def test_generate_hostname_expressions_():
     test_cases: list[tuple[str, list[str]]] = [
         ("", []),  # Empty string
         (" ", []),  # Empty space
+        ("1.1.1.1", ["1.1.1.1"]),  # IPv4 Address
+        ("1.1.1.1/a/b/c", ["1.1.1.1/a/b/c"]),  # IPv4 Address + Path
         ("localhost", ["localhost"]),  # Invalid Domain
+        ("localhost/a/b/c", ["localhost/a/b/c"]),  # Invalid Domain + Path
         ("example.com", ["www.example.com", "example.com", "www.example.com", "example.com"]),  # Domain
         ("example.com/a/b/c", ["www.example.com", "example.com", "www.example.com/a/b/c", "example.com/a/b/c"]),  # Domain + Path
         ("www.example.com", ["www.example.com", "example.com", "www.example.com", "example.com"]),  # www SubDomain + Domain
