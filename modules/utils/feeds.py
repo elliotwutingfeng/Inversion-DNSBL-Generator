@@ -36,10 +36,10 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         if domain_name == "":
             # No registered_domain recognised -> do not
             # split url into parts
-            parts = []
+            return [url] if url.strip() else []
         elif subdomain == "":
-            # No subdomains found -> extract registered_domain
-            parts = [domain_name]
+            # No subdomains found
+            return [f"www.{domain_name}", domain_name, f"www.{url}", url]
         else:
             # Subdomains and registered_domain found -> extract them all
             parts = subdomain.split(".") + [domain_name]
@@ -47,7 +47,11 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         # Safe Browsing API-compliant hostname expressions
         # Include [url] for cases where url has a subdirectory
         # (e.g. google.com/<subdirectory>)
-        return [f"{'.'.join(parts[-i:])}" for i in range(len(parts) if len(parts) < 5 else 5)] + [url]
+        return (
+            [f"{'.'.join(parts[-i:])}" for i in range(min(len(parts), 5))]
+            + [url]
+            + [url.split(".", maxsplit=1)[1] if subdomain == "www" else f"www.{domain_name}"]
+        )
     except Exception as error:
         logger.error("%s %s", url, error, exc_info=True)
         # if tldextract fails, return url as-is.
