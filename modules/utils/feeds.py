@@ -1,8 +1,6 @@
 """
 For generating Safe Browsing API-compliant hostname expressions
 """
-import re
-
 import tldextract
 from modules.utils.log import init_logger
 
@@ -28,16 +26,16 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         hostname expressions for `raw_url`.
     """
     # Remove zero width spaces from raw_url
-    url = re.sub(r"[\u200B-\u200D\uFEFF]", "", raw_url)
+    url = raw_url.replace("\u200B", "").replace("\u200C", "").replace("\u200D", "").replace("\uFEFF", "")
 
     try:
         tldresult = tldextract.extract(url)
         subdomain, domain_name = tldresult.subdomain, tldresult.registered_domain
-        if domain_name == "":
+        if not domain_name:
             # No registered_domain recognised -> do not
             # split url into parts
             return [url] if url.strip() else []
-        elif subdomain == "":
+        elif not subdomain:
             # No subdomains found
             return [f"www.{domain_name}", domain_name, f"www.{url}", url]
         else:
@@ -47,11 +45,10 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         # Safe Browsing API-compliant hostname expressions
         # Include [url] for cases where url has a subdirectory
         # (e.g. google.com/<subdirectory>)
-        return (
-            [f"{'.'.join(parts[-i:])}" for i in range(min(len(parts), 5))]
-            + [url]
-            + [url.split(".", maxsplit=1)[1] if subdomain == "www" else f"www.{domain_name}"]
-        )
+        return [f"{'.'.join(parts[-i:])}" for i in range(min(len(parts), 5))] + [
+            url,
+            url.split(".", maxsplit=1)[1] if subdomain == "www" else f"www.{domain_name}",
+        ]
     except Exception as error:
         logger.error("%s %s", url, error, exc_info=True)
         # if tldextract fails, return url as-is.
