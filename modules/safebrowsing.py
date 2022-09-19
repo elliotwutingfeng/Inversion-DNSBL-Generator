@@ -17,8 +17,8 @@ from modules.utils.log import init_logger
 from modules.utils.types import Vendors
 
 SAFEBROWSING_API_KEYS = {
-    "Google": dotenv_values(".env")["GOOGLE_API_KEY"],
-    "Yandex": dotenv_values(".env")["YANDEX_API_KEY"],
+    "Google": dotenv_values(".env").get("GOOGLE_API_KEY", ""),
+    "Yandex": dotenv_values(".env").get("YANDEX_API_KEY", ""),
 }
 
 logger = init_logger()

@@ -112,7 +112,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 ### System (mandatory)
 
 - Linux or macOS
-- Python >= 3.10.5
+- Python >= 3.10.6
 - Multi-core x86-64 CPU; for Python Ray support
 - RAM: At least 8GB
 - SSD Storage Space: At least 700GB required to process all URL sources
@@ -200,7 +200,7 @@ This is necessary for feeds like `AFNIC.fr` which utilise optical character reco
 
 ### Download Google Safe Browsing API hashes
 
-> :warning: As of 15 June 2022, the following command will make around 6000 calls (exact number depends on number of hashes in Google's dataset) to Google Safe Browsing API. As the daily limit is 10,000 calls, `--update-hashes` should be run no more than once every 24 hours.
+> :warning: As of 15 September 2022, the following command will make around 6000 calls (exact number depends on number of hashes in Google's dataset) to Google Safe Browsing API. As the daily limit is 10,000 calls, `--update-hashes` should be run no more than once every 24 hours.
 
 ```bash
 python3 main.py --update-hashes --vendors google

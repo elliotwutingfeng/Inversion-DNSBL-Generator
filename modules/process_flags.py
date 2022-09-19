@@ -153,7 +153,9 @@ def process_flags(parser_args: dict) -> None:
             blocklist_filenames = asyncio.get_event_loop().run_until_complete(write_blocklist_txt(malicious_urls[vendor], vendor))
 
             # Push blocklists to GitHub
-            upload_blocklists(vendor, blocklist_filenames, suffix=parser_args["blocklist_suffix"])
+            asyncio.get_event_loop().run_until_complete(
+                upload_blocklists(vendor, blocklist_filenames, suffix=parser_args["blocklist_suffix"])
+            )
 
         # Update malicious URL statuses in database
         # (only for Lookup+Update API method)
@@ -178,5 +180,7 @@ def process_flags(parser_args: dict) -> None:
                 )
             )
             # Push blocklists to GitHub
-            upload_blocklists(vendor, blocklist_filenames, suffix=parser_args["blocklist_suffix"])
+            asyncio.get_event_loop().run_until_complete(
+                upload_blocklists(vendor, blocklist_filenames, suffix=parser_args["blocklist_suffix"])
+            )
     ray.shutdown()

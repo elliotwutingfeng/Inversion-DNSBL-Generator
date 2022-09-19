@@ -4,6 +4,7 @@ SQLite utilities for making SELECT queries
 import os
 
 from apsw import Error
+from modules.database.common import vacuum_and_close
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
@@ -60,7 +61,7 @@ async def retrieve_matching_hash_prefix_urls(db_filename: str, prefix_sizes: lis
                 error,
                 exc_info=True,
             )
-        conn.close()
+        vacuum_and_close(conn)
 
     return urls
 
@@ -122,7 +123,7 @@ async def retrieve_matching_full_hash_urls(update_time: int, db_filename: str, v
                 error,
                 exc_info=True,
             )
-        conn.close()
+        vacuum_and_close(conn)
 
     return urls
 

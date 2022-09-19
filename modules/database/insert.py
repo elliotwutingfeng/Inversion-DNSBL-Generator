@@ -4,6 +4,7 @@ SQLite utilities for making INSERT queries
 from collections.abc import AsyncIterator, Callable, Iterator, Mapping
 
 from apsw import Error
+from modules.database.common import vacuum_and_close
 from modules.database.connect import create_connection
 from modules.database.hash import compute_url_hash, int_addr_to_ip_and_hash
 from modules.utils.log import init_logger
@@ -62,7 +63,7 @@ async def add_urls(
                 "Performing INSERT-UPDATE URLs to " "urls table of %s...[DONE]",
                 db_filename,
             )
-        conn.close()
+        vacuum_and_close(conn)
     else:
         logger.error("filename:%s %s", db_filename, "Unable to connect to database")
 
@@ -114,7 +115,7 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     )
         except Error as error:
             logger.error("filename:%s %s", db_filename, error, exc_info=True)
-        conn.close()
+        vacuum_and_close(conn)
 
 
 def replace_malicious_url_hash_prefixes(hash_prefixes: set[str], vendor: Vendors) -> None:
@@ -151,7 +152,7 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[str], vendor: Vendors
             )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)
-        conn.close()
+        vacuum_and_close(conn)
 
 
 def replace_malicious_url_full_hashes(full_hashes: Iterator[str], vendor: Vendors) -> None:
@@ -198,4 +199,4 @@ def replace_malicious_url_full_hashes(full_hashes: Iterator[str], vendor: Vendor
                     )
         except Error as error:
             logger.error("vendor:%s %s", vendor, error, exc_info=True)
-        conn.close()
+        vacuum_and_close(conn)

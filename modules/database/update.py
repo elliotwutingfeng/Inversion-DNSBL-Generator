@@ -2,6 +2,7 @@
 SQLite utilities for making UPDATE queries
 """
 from apsw import Error
+from modules.database.common import vacuum_and_close
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
@@ -83,4 +84,4 @@ async def update_malicious_urls(
                 error,
                 exc_info=True,
             )
-        conn.close()
+        vacuum_and_close(conn)
