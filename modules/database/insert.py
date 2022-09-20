@@ -63,7 +63,7 @@ async def add_urls(
                 "Performing INSERT-UPDATE URLs to " "urls table of %s...[DONE]",
                 db_filename,
             )
-        vacuum_and_close(conn)
+        conn.close()
     else:
         logger.error("filename:%s %s", db_filename, "Unable to connect to database")
 

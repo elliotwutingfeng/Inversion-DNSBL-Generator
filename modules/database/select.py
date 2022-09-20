@@ -61,7 +61,7 @@ async def retrieve_matching_hash_prefix_urls(db_filename: str, prefix_sizes: lis
                 error,
                 exc_info=True,
             )
-        vacuum_and_close(conn)
+        conn.close()
 
     return urls
 
@@ -123,7 +123,7 @@ async def retrieve_matching_full_hash_urls(update_time: int, db_filename: str, v
                 error,
                 exc_info=True,
             )
-        vacuum_and_close(conn)
+        conn.close()
 
     return urls
 
