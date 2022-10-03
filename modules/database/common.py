@@ -10,6 +10,6 @@ def vacuum_and_close(conn: apsw.Connection) -> None:
         try:
             cur = conn.cursor()
             cur.execute("VACUUM")
-            conn.close()
         except Error as error:
             logger.error("Vacuum and Close Failed | %s", error)
+        conn.close()

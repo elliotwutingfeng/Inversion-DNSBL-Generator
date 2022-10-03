@@ -77,7 +77,7 @@
 
 ## Blocklists available for download
 
-![Total Blocklist URLs](https://img.shields.io/tokei/lines/github/elliotwutingfeng/Inversion-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
+![Total Blocklist URLs](https://tokei-rs.onrender.com/b1/github/elliotwutingfeng/Inversion-DNSBL-Blocklists?label=Total%20Blocklist%20URLS&style=for-the-badge)
 
 You may download the blocklists [here](https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists#inversion-dnsbl-domain-name-system-based-blackhole-list-blocklists)
 
