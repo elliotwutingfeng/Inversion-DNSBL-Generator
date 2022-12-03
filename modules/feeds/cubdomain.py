@@ -7,8 +7,9 @@ from collections import ChainMap
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
 
-import cchardet  # noqa: F401
 from bs4 import BeautifulSoup, SoupStrainer
+from more_itertools import chunked
+
 from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
@@ -16,7 +17,6 @@ from modules.utils.feeds import (
 from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray
-from more_itertools import chunked
 
 logger = init_logger()
 

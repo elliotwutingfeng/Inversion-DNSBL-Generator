@@ -4,7 +4,6 @@ apsw==3.39.4.0
 bandit==1.7.4
 beautifulsoup4==4.11.1
 black==22.10.0
-cchardet==2.1.7
 feedparser==6.0.10
 flake8==5.0.4
 isort==5.10.1
