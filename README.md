@@ -93,7 +93,8 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 | OpenINTEL.nl | 6M | <https://openintel.nl> | Zone files for .se .nu .ee domains |
 | Switch.ch | 3.3M | <https://switch.ch/open-data> | Zone files for .ch .li domains |
 | AFNIC.fr | 7M | <https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data> | Daily newly registered .fr .re .pm .tf .wf .yt domains |
-| Internet.ee | 100K | <https://www.internet.ee/domains/ee-zone-file> | Estonian Internet Foundation (.ee) |
+| Internet.ee | 153K | <https://www.internet.ee/domains/ee-zone-file> | Estonian Internet Foundation (.ee) |
+| Internetstiftelsen | 1.7M | <https://zonedata.iis.se> | Swedish Internet Foundation |
 | SK-NIC.sk | 400K | <https://sk-nic.sk/subory/domains.txt> | Domain Registry of the Slovak Republic (.sk) |
 | Google TAG IOCs | 200 | <https://blog.google/threat-analysis-group> | Google Threat Analysis Group Indicators of Compromise |
 | IPv4 Addresses | 4.2B | 0.0.0.0 - 255.255.255.255 | Exhaustive list of all IPv4 addresses |

@@ -5,6 +5,7 @@ from modules.feeds.domainsproject import DomainsProject
 from modules.feeds.googletag import GoogleTag
 from modules.feeds.icann import ICANN
 from modules.feeds.internet_ee import InternetEE
+from modules.feeds.internetstiftelsen import Internetstiftelsen
 from modules.feeds.ipv4 import Ipv4
 from modules.feeds.openintel import OpenINTEL
 from modules.feeds.registrar_r01 import RegistrarR01
