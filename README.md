@@ -14,7 +14,6 @@
     <a href="https://www.sqlite.org"><img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite"/></a>
     <a href="https://docs.aiohttp.org/en/stable"><img src="https://img.shields.io/badge/AIOHTTP-2C5BB4?style=for-the-badge&logo=aiohttp&logoColor=white" alt="AIOHTTP"/></a>
     <a href="https://www.ray.io"><img src="https://img.shields.io/badge/Ray-028CF0?style=for-the-badge&logo=ray&logoColor=white" alt="Ray"/></a>
-    <a href="https://opencv.org"><img src="https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV"/></a>
   </p>
   <p align="center">
     <a href="https://github.com/elliotwutingfeng/Inversion-DNSBL-Generator/stargazers"><img src="https://img.shields.io/github/stars/elliotwutingfeng/Inversion-DNSBL-Generator?style=for-the-badge" alt="GitHub stars"/></a>
@@ -48,7 +47,6 @@
         <li><a href="#declare-environment-variables">Declare environment variables</a></li>
         <li><a href="#install-dependencies">Install dependencies</a></li>
         <li><a href="#download-domains-project-urls-optional">Download Domains Project URLs (optional)</a></li>
-        <li><a href="#install-opencv-and-tesseract-ocr-optional">Install OpenCV and Tesseract OCR (optional)</a></li>
       </ul>
     </li>
     <li>
@@ -188,13 +186,6 @@ Edit `unpack.sh` and remove `combine` from the last line, then run:
 ```bash
 ./unpack.sh
 ```
-
-### Install OpenCV and Tesseract OCR (optional)
-
-This is necessary for feeds like `AFNIC.fr` which utilise optical character recognition (OCR)
-
-[OpenCV install instructions (Ubuntu)](https://www.itsfoss.net/how-to-install-and-configure-opencv-on-ubuntu-20-04)
-[Tesseract install instructions](https://tesseract-ocr.github.io/tessdoc/Installation.html)
 
 ## Getting Started
 
