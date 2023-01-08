@@ -8,6 +8,7 @@ import tempfile
 from typing import IO
 
 import aiohttp
+
 from modules.utils.log import init_logger
 
 logger = init_logger()
@@ -54,7 +55,7 @@ async def get_async(
     endpoints: list[str],
     max_concurrent_requests: int = 5,
     max_retries: int = 5,
-    headers: dict = None,
+    headers: dict | None = None,
 ) -> dict[str, bytes]:
     """Given a list of HTTP endpoints, make HTTP GET requests asynchronously
 
@@ -87,8 +88,8 @@ async def get_async(
         tasklist = [sem_task(task) for task in tasks]
         return dict([await f for f in asyncio.as_completed(tasklist)])
 
-    async def get(url, session):
-        errors: list[str] = []
+    async def get(url: str, session: aiohttp.ClientSession) -> tuple[str, bytes]:
+        errors: list[Exception] = []
         for number_of_retries_made in range(max_retries):
             try:
                 async with session.get(url, headers=headers) as response:
@@ -119,7 +120,7 @@ async def post_async(
     payloads: list[bytes],
     max_concurrent_requests: int = 5,
     max_retries: int = 5,
-    headers: dict = None,
+    headers: dict | None = None,
 ) -> list[tuple[str, bytes]]:
     """Given a list of HTTP endpoints and a list of payloads,
     make HTTP POST requests asynchronously
@@ -153,8 +154,8 @@ async def post_async(
         tasklist = [sem_task(task) for task in tasks]
         return [await f for f in asyncio.as_completed(tasklist)]
 
-    async def post(url, payload, session):
-        errors: list[str] = []
+    async def post(url: str, payload: bytes, session: aiohttp.ClientSession) -> tuple[str, bytes]:
+        errors: list[Exception] = []
         for number_of_retries_made in range(max_retries):
             try:
                 async with session.post(url, data=payload, headers=headers) as response:
@@ -181,7 +182,7 @@ async def post_async(
         )
 
 
-async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict = None) -> IO | None:
+async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict | None = None) -> IO | None:
     """Given a HTTP endpoint, make a HTTP GET request
     asynchronously, stream the response chunks to a
     TemporaryFile, then return it as a file object

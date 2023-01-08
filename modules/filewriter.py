@@ -61,7 +61,7 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
     hostnames.sort()
     ip_addresses.sort(key=ipaddress.IPv4Address)
 
-    async def write_hostnames():
+    async def write_hostnames() -> str:
         hostnames_txt_filename = f"{vendor}_hostnames_{current_datetime_str()}.txt"
         async with aiofiles.open(f"{BLOCKLISTS_FOLDER}{os.sep}{hostnames_txt_filename}", "a") as outfile:
             await outfile.writelines("\n".join(hostnames))
@@ -72,7 +72,7 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
             )
         return hostnames_txt_filename
 
-    async def write_ips():
+    async def write_ips() -> str:
         ip_addresses_txt_filename = f"{vendor}_ipv4_{current_datetime_str()}.txt"
         async with aiofiles.open(f"{BLOCKLISTS_FOLDER}{os.sep}{ip_addresses_txt_filename}", "a") as outfile:
             await outfile.writelines("\n".join(ip_addresses))

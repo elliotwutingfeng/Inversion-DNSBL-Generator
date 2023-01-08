@@ -2,6 +2,7 @@
 SQLite utilities for making CREATE TABLE queries
 """
 from apsw import Error
+
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
 from modules.utils.parallel_compute import execute_with_ray

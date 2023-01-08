@@ -4,7 +4,7 @@
 from modules.utils.feeds import generate_hostname_expressions_
 
 
-def test_generate_hostname_expressions_():
+def test_generate_hostname_expressions_() -> None:
     """Test `generate_hostname_expressions_`"""
 
     test_cases: list[tuple[str, list[str]]] = [

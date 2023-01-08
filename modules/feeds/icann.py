@@ -8,6 +8,7 @@ import zlib
 from collections.abc import AsyncIterator
 
 from dotenv import dotenv_values
+
 from modules.utils.feeds import generate_hostname_expressions
 from modules.utils.http_requests import get_async, get_async_stream, post_async
 from modules.utils.log import init_logger
@@ -180,7 +181,7 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
         yield set()
 
 
-async def extract_zonefile_urls(endpoint: str, headers: dict = None) -> AsyncIterator[list[str]]:
+async def extract_zonefile_urls(endpoint: str, headers: dict | None = None) -> AsyncIterator[list[str]]:
     """Extract URLs from GET request stream of ICANN `txt.gz` zone file
 
     https://stackoverflow.com/a/68928891
