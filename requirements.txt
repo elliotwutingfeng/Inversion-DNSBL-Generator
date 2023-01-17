@@ -1,6 +1,6 @@
 aiofiles==22.1.0
 aiohttp==3.8.3
-apsw==3.40.0.0
+apsw==3.40.1.0
 bandit==1.7.4
 beautifulsoup4==4.11.1
 black==22.12.0
@@ -11,7 +11,7 @@ more-itertools==9.0.0
 mypy==0.991
 mypy-extensions==0.4.3
 PyGithub==1.57
-pytest==7.2.0
+pytest==7.2.1
 pytest-cov==4.0.0
 pytest-mock==3.10.0
 python-dateutil==2.8.2
@@ -21,7 +21,7 @@ spavro==1.1.24
 tldextract==3.4.0
 tqdm==4.64.1
 typed-ast==1.5.4
-types-aiofiles==22.1.0
-types-beautifulsoup4==4.11.6
-types-python-dateutil==2.8.19
+types-aiofiles==22.1.0.4
+types-beautifulsoup4==4.11.6.2
+types-python-dateutil==2.8.19.5
 urlextract==1.8.0
