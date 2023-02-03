@@ -126,7 +126,7 @@ Choose at least one
 ### URL feed access (optional)
 
 - ICANN Zone Files: [Sign up for a ICANN CZDS account](https://czds.icann.org)
-- Once registered, turn off email notifications in the user settings,
+- Once registered, turn off email notifications in the user settings (otherwise they will send you hundreds of acknowledgement emails),
 then select `Create New Request` on the Dashboard to request for zone file access.
 
 ### Uploading blocklists to GitHub (optional)
@@ -158,8 +158,8 @@ YANDEX_API_KEY=
 # Optional: ICANN zone file access
 ICANN_ACCOUNT_USERNAME=
 ICANN_ACCOUNT_PASSWORD=
-# Some registrars will not accept your request reason unless you include your name, email, and IP Address
-ICANN_REQUEST_REASON='Detection of potentially malicious domains for cybersecurity research. Name: _ Email: _ IP Address: _'
+# Some registrars will not accept your request reason unless you include your Name, Email, IP Address, Physical Address (Building, Street, Postcode etc.), and Phone Number
+ICANN_REQUEST_REASON='Detection of potentially malicious domains for cybersecurity research. Name: _ Email: _ IP Address: _ Physical Address: _ Phone Number: _'
 
 # Optional: Upload generated blocklists to your GitHub repository
 GITHUB_ACCESS_TOKEN=
