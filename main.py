@@ -109,6 +109,7 @@ if __name__ == "__main__":
         "icann": "ICANN zone files (ICANN Terms-of-Service " "download limit per zone file: Once every 24 hours)",
         "domainsproject": "domainsproject.org",
         "ec2": "Amazon Web Services EC2 public hostnames",
+        "gce": "Google Compute Engine public hostnames",
         "openintel": "OpenINTEL.nl (.nu .se .ee .gov .fed.us)",
         "switch_ch": "Switch.ch (.ch .li)",
         "afnic": "AFNIC.fr (.fr .re .pm .tf .wf .yt)",

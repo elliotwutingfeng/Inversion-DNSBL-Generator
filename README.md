@@ -90,6 +90,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 | ICANN CZDS (Centralized Zone Data Service) | 247M | <https://czds.icann.org> | ICANN's centralized point for interested parties to request access to Zone Files provided by participating Top Level Domain Registries |
 | Domains Project | 2.1B | <https://domainsproject.org> | World’s single largest Internet domains dataset |
 | Amazon Web Services EC2 | 57M | <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames> | Amazon Elastic Compute Cloud hostnames |
+| Google Compute Engine | 11M | <https://www.gstatic.com/ipranges/cloud.json> | Google Compute Engine |
 | OpenINTEL.nl | 6M | <https://openintel.nl> | Zone files for .se .nu .ee domains |
 | Switch.ch | 3.3M | <https://switch.ch/open-data> | Zone files for .ch .li domains |
 | AFNIC.fr | 7M | <https://www.afnic.fr/en/products-and-services/fr-and-associated-services/shared-data-reuse-fr-data> | Daily newly registered .fr .re .pm .tf .wf .yt domains |
