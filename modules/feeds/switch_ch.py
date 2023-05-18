@@ -56,7 +56,9 @@ async def get_switch_ch_domains(tld: str, key: str) -> AsyncIterator[set[str]]:
                 raw_urls = [
                     splitted_line[0].lower().rstrip(".")
                     for line in temp_file.read().splitlines()
-                    if (splitted_line := line.split())  # if splitted_line has a length of at least 1
+                    if (
+                        splitted_line := line.split()
+                    )  # if splitted_line has a length of at least 1
                 ]
         except Exception as error:
             errors.append(error)

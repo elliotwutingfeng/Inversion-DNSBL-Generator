@@ -33,19 +33,33 @@ async def _get_googletag_urls() -> AsyncIterator[set[str]]:
         # IOCs are almost always found within <li> tags; if not, kindly open an issue on the GitHub repo.
         soup = BeautifulSoup(entry["summary"], "lxml")
         # extract only tag contents with defangs (i.e. content with "[:]" or "[.]")
-        tag_text: list[str] = [tag.text for tag in soup.find_all("li") if "[.]" in tag.text or "[:]" in tag.text]
+        tag_text: list[str] = [
+            tag.text
+            for tag in soup.find_all("li")
+            if "[.]" in tag.text or "[:]" in tag.text
+        ]
         # fang all tag text
-        fanged_tag_text: list[str] = [re.sub(r"\[:\]", ":", re.sub(r"\[\.\]", ".", text)).strip().split(" ")[0] for text in tag_text]
+        fanged_tag_text: list[str] = [
+            re.sub(r"\[:\]", ":", re.sub(r"\[\.\]", ".", text)).strip().split(" ")[0]
+            for text in tag_text
+        ]
         # remove all url schemes (i.e. http://, https:// etc.)
         ioc_urls += [
             re.sub(r"(?:[a-zA-Z]+:\/\/)?", "", url, 1)
-            for url in flatten([extractor.find_urls(may_contain_urls) for may_contain_urls in fanged_tag_text])
+            for url in flatten(
+                [
+                    extractor.find_urls(may_contain_urls)
+                    for may_contain_urls in fanged_tag_text
+                ]
+            )
         ]
     if feed.entries:
         for batch in chunked(ioc_urls, hostname_expression_batch_size):
             yield generate_hostname_expressions(batch)
     else:
-        logger.warning("Failed to retrieve Google Threat Analysis Group domains; yielding empty list")
+        logger.warning(
+            "Failed to retrieve Google Threat Analysis Group domains; yielding empty list"
+        )
         yield set()
 
 

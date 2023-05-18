@@ -26,7 +26,9 @@ async def get_internetstiftelsen_domains() -> AsyncIterator[set[str]]:
         "https://raw.githubusercontent.com/elliotwutingfeng/InternetstiftelsenDomains/main/se_domains.txt",
         "https://raw.githubusercontent.com/elliotwutingfeng/InternetstiftelsenDomains/main/nu_domains.txt",
     ]
-    txt_data: dict[str, bytes] = await get_async(sources, max_concurrent_requests=1, max_retries=2)
+    txt_data: dict[str, bytes] = await get_async(
+        sources, max_concurrent_requests=1, max_retries=2
+    )
     for source in txt_data.keys():
         if txt_data[source] != b"{}":
             # Extract URLs from TXT file
@@ -47,4 +49,6 @@ class Internetstiftelsen:
             self.db_filenames = ["internetstiftelsen"]
             if parser_args["fetch"]:
                 # Download and Add Internetstiftelsen URLs to database
-                self.jobs = [(get_internetstiftelsen_domains, update_time, self.db_filenames[0])]
+                self.jobs = [
+                    (get_internetstiftelsen_domains, update_time, self.db_filenames[0])
+                ]

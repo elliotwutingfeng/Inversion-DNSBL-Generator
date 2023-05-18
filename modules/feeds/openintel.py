@@ -34,13 +34,19 @@ async def get_latest_tarball_url() -> str:
     )
     res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
 
-    latest_year: int | None = years[-1] if (years := sorted(int(content.string.strip("/")) for content in res)) else None
+    latest_year: int | None = (
+        years[-1]
+        if (years := sorted(int(content.string.strip("/")) for content in res))
+        else None
+    )
 
     if latest_year is None:
         raise ValueError("No year folders found")
 
     openintel_year_url = f"{openintel_url}/{latest_year}"
-    openintel_year_url_content = (await get_async([openintel_year_url]))[openintel_year_url]
+    openintel_year_url_content = (await get_async([openintel_year_url]))[
+        openintel_year_url
+    ]
 
     only_a_tag_with_tar = SoupStrainer(
         "a",
@@ -53,7 +59,11 @@ async def get_latest_tarball_url() -> str:
     )
     res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
 
-    latest_tarball: str | None = tarballs[-1] if (tarballs := sorted(tag_attrs.get("href") for tag_attrs in res)) else None
+    latest_tarball: str | None = (
+        tarballs[-1]
+        if (tarballs := sorted(tag_attrs.get("href") for tag_attrs in res))
+        else None
+    )
 
     if latest_tarball is None:
         raise ValueError("No tarballs found")
@@ -80,7 +90,9 @@ async def _get_openintel_url_list() -> AsyncIterator[set[str]]:
         yield set()
 
 
-async def extract_openintel_urls(endpoint: str, headers: dict | None = None) -> AsyncIterator[list[str]]:
+async def extract_openintel_urls(
+    endpoint: str, headers: dict | None = None
+) -> AsyncIterator[list[str]]:
     """Extract URLs from GET request stream of OpenINTEL.nl tarball
 
     Args:
@@ -110,7 +122,10 @@ async def extract_openintel_urls(endpoint: str, headers: dict | None = None) -> 
                 fo = tar.extractfile(tarinfo.name)
                 hostnames = set()
                 for record in DataFileReader(fo, FastDatumReader()):
-                    hostnames.update(record[f][:-1] if f in record and record[f] is not None else "" for f in fields)
+                    hostnames.update(
+                        record[f][:-1] if f in record and record[f] is not None else ""
+                        for f in fields
+                    )
                 hostnames.discard("")
                 yield list(hostnames)
 

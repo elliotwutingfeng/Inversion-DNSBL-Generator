@@ -27,7 +27,11 @@ def _collapse_cidrs(list_of_cidr_nets: list[str]) -> list[str]:
     Returns:
         list[str]: IP ranges with overlaps removed
     """
-    nets = (ip for _ip in list_of_cidr_nets if (ip := ipaddress.ip_network(_ip)) and isinstance(ip, ipaddress.IPv4Network))
+    nets = (
+        ip
+        for _ip in list_of_cidr_nets
+        if (ip := ipaddress.ip_network(_ip)) and isinstance(ip, ipaddress.IPv4Network)
+    )
     ip_ranges = [str(ip_range) for ip_range in ipaddress.collapse_addresses(nets)]
     return ip_ranges
 
@@ -44,14 +48,20 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     endpoint: str = "https://ip-ranges.amazonaws.com/ip-ranges.json"
     resp = asyncio.get_event_loop().run_until_complete(get_async([endpoint]))[endpoint]
     if resp == b"{}":
-        logger.warning("Failed to retrieve Amazon Web " "Services IP ranges; returning empty list")
+        logger.warning(
+            "Failed to retrieve Amazon Web " "Services IP ranges; returning empty list"
+        )
         return defaultdict(list)
 
     resp_json = json.loads(resp)
 
     prefixes = resp_json.get("prefixes", [])
     ip_prefixes_and_regions = (
-        (x["ip_prefix"], x["region"]) for x in prefixes if x.get("service", "").upper() == "EC2" and ("ip_prefix" in x) and ("region" in x)
+        (x["ip_prefix"], x["region"])
+        for x in prefixes
+        if x.get("service", "").upper() == "EC2"
+        and ("ip_prefix" in x)
+        and ("region" in x)
     )
 
     region_to_ip_ranges_map = defaultdict(list)
@@ -60,7 +70,9 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     return region_to_ip_ranges_map
 
 
-async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[set[str]]:
+async def _get_ec2_url_list(
+    region: str, ip_ranges: list[str]
+) -> AsyncIterator[set[str]]:
     """Generate Amazon Web Services EC2 URLs located at
     AWS `region` and yield all listed URLs in batches.
 
@@ -75,7 +87,9 @@ async def _get_ec2_url_list(region: str, ip_ranges: list[str]) -> AsyncIterator[
     def _generate_ec2_urls(region: str, ip_ranges: list[str]):
         # Ensure that region is always lowercase
         suffix = f".{'compute-1' if region == 'us-east-1' else region.lower() + '.compute'}.amazonaws.com"
-        collapsed_ip_ranges = _collapse_cidrs(ip_ranges)  # Removes overlapping ip ranges
+        collapsed_ip_ranges = _collapse_cidrs(
+            ip_ranges
+        )  # Removes overlapping ip ranges
         for ip_range in collapsed_ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):
                 yield f"""ec2-{'-'.join(str(ip_address).split('.'))}{suffix}"""
@@ -96,10 +110,14 @@ class AmazonWebServicesEC2:
         self.jobs: list[tuple] = []
 
         if "ec2" in parser_args["sources"]:
-            map_region_to_ip_ranges_per_region = _get_region_to_ip_ranges_per_region_map()
+            map_region_to_ip_ranges_per_region = (
+                _get_region_to_ip_ranges_per_region_map()
+            )
 
             if map_region_to_ip_ranges_per_region:
-                regions, ip_ranges_per_region = zip(*map_region_to_ip_ranges_per_region.items())
+                regions, ip_ranges_per_region = zip(
+                    *map_region_to_ip_ranges_per_region.items()
+                )
             else:
                 regions, ip_ranges_per_region = tuple(), tuple()
 
@@ -114,5 +132,7 @@ class AmazonWebServicesEC2:
                         db_filename,
                         {"region": region, "ip_ranges": ip_ranges},
                     )
-                    for db_filename, region, ip_ranges in zip(self.db_filenames, regions, ip_ranges_per_region)
+                    for db_filename, region, ip_ranges in zip(
+                        self.db_filenames, regions, ip_ranges_per_region
+                    )
                 ]

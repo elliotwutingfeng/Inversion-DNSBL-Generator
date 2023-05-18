@@ -18,7 +18,9 @@ import github
 logger = init_logger()
 
 
-async def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...], suffix: str | None = None) -> None:
+async def upload_blocklists(
+    vendor: Vendors, blocklist_filenames: tuple[str, ...], suffix: str | None = None
+) -> None:
     """Uploads blocklists to GitHub repository
 
     Args:
@@ -29,9 +31,13 @@ async def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...
         suffix (str, optional): Suffix to be added to
         blocklist filenames when uploading to GitHub. Defaults to None.
     """
-    path_list = [f"{BLOCKLISTS_FOLDER}{os.sep}{original_filename}" for original_filename in blocklist_filenames]
+    path_list = [
+        f"{BLOCKLISTS_FOLDER}{os.sep}{original_filename}"
+        for original_filename in blocklist_filenames
+    ]
     file_names = [
-        f"{vendor}_{original_filename.split('_')[1]}{f'_{suffix}' if suffix else ''}.txt" for original_filename in blocklist_filenames
+        f"{vendor}_{original_filename.split('_')[1]}{f'_{suffix}' if suffix else ''}.txt"
+        for original_filename in blocklist_filenames
     ]
     access_token = dotenv_values(".env").get("GITHUB_ACCESS_TOKEN")
     repo_name = dotenv_values(".env").get("BLOCKLIST_REPOSITORY_NAME")
@@ -59,7 +65,9 @@ async def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...
                     data = input_file.read()
                 # Do not commit empty files
                 if data:
-                    element = github.InputGitTreeElement(file_names[i], "100644", "blob", data)
+                    element = github.InputGitTreeElement(
+                        file_names[i], "100644", "blob", data
+                    )
                     element_list.append(element)
 
             files_changed: list[github.File.File] = []
@@ -76,13 +84,23 @@ async def upload_blocklists(vendor: Vendors, blocklist_filenames: tuple[str, ...
                 main_ref.edit(commit.sha)
                 logger.info("Updated repository with %s blocklists", vendor)
             elif not element_list:
-                logger.warning("%s blocklists are empty, won't update repository", vendor)
+                logger.warning(
+                    "%s blocklists are empty, won't update repository", vendor
+                )
             else:
                 logger.info("No changes found for %s blocklists", vendor)
             return
         except Exception as error:
-            logger.warning("Failed to update repository with %s blocklists | Attempt %d failed", vendor, number_of_retries_made)
+            logger.warning(
+                "Failed to update repository with %s blocklists | Attempt %d failed",
+                vendor,
+                number_of_retries_made,
+            )
             logger.warning("%s", repr(error))
-            if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
+            if (
+                number_of_retries_made != max_retries - 1
+            ):  # No delay if final attempt fails
                 await backoff_delay_async(1, number_of_retries_made)
-        logger.error("Failed to update repository with %s blocklists, no retries left...", vendor)
+        logger.error(
+            "Failed to update repository with %s blocklists, no retries left...", vendor
+        )

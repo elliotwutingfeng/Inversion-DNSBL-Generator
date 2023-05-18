@@ -14,17 +14,49 @@ def test_generate_hostname_expressions_() -> None:
         ("1.1.1.1/a/b/c", ["1.1.1.1/a/b/c"]),  # IPv4 Address + Path
         ("localhost", ["localhost"]),  # Invalid Domain
         ("localhost/a/b/c", ["localhost/a/b/c"]),  # Invalid Domain + Path
-        ("example.com", ["www.example.com", "example.com", "www.example.com", "example.com"]),  # Domain
-        ("example.com/a/b/c", ["www.example.com", "example.com", "www.example.com/a/b/c", "example.com/a/b/c"]),  # Domain + Path
-        ("www.example.com", ["www.example.com", "example.com", "www.example.com", "example.com"]),  # www SubDomain + Domain
+        (
+            "example.com",
+            ["www.example.com", "example.com", "www.example.com", "example.com"],
+        ),  # Domain
+        (
+            "example.com/a/b/c",
+            [
+                "www.example.com",
+                "example.com",
+                "www.example.com/a/b/c",
+                "example.com/a/b/c",
+            ],
+        ),  # Domain + Path
+        (
+            "www.example.com",
+            ["www.example.com", "example.com", "www.example.com", "example.com"],
+        ),  # www SubDomain + Domain
         (
             "www.example.com/a/b/c",
-            ["www.example.com", "example.com", "www.example.com/a/b/c", "example.com/a/b/c"],
+            [
+                "www.example.com",
+                "example.com",
+                "www.example.com/a/b/c",
+                "example.com/a/b/c",
+            ],
         ),  # www SubDomain + Domain + Path
-        ("monty.example.com", ["monty.example.com", "example.com", "monty.example.com", "www.example.com"]),  # Non-www SubDomain + Domain
+        (
+            "monty.example.com",
+            [
+                "monty.example.com",
+                "example.com",
+                "monty.example.com",
+                "www.example.com",
+            ],
+        ),  # Non-www SubDomain + Domain
         (
             "monty.example.com/a/b/c",
-            ["monty.example.com", "example.com", "monty.example.com/a/b/c", "www.example.com"],
+            [
+                "monty.example.com",
+                "example.com",
+                "monty.example.com/a/b/c",
+                "www.example.com",
+            ],
         ),  # Non-www SubDomain + Domain + Path
         (
             "monty.pythons.flying.circus.example.com",
@@ -76,4 +108,6 @@ def test_generate_hostname_expressions_() -> None:
         ),  # Length 5 Non-www SubDomain + Domain + Path
     ]
     for url, expected in test_cases:
-        assert generate_hostname_expressions_(url) == expected, f"{url} expressions incorrect"
+        assert (
+            generate_hostname_expressions_(url) == expected
+        ), f"{url} expressions incorrect"

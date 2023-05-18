@@ -23,7 +23,9 @@ async def get_ee_domains() -> AsyncIterator[set[str]]:
         Iterator[AsyncIterator[set[str]]]: Batch of URLs as a set
     """
     source: str = "https://raw.githubusercontent.com/elliotwutingfeng/EstonianInternetFoundationDomains/main/domains.txt"
-    txt_data: bytes = (await get_async([source], max_concurrent_requests=1, max_retries=2))[source]
+    txt_data: bytes = (
+        await get_async([source], max_concurrent_requests=1, max_retries=2)
+    )[source]
     if txt_data != b"{}":
         # Extract URLs from TXT file
         raw_urls = [url.strip() for url in txt_data.decode().splitlines()]

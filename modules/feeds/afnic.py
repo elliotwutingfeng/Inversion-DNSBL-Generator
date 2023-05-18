@@ -41,10 +41,16 @@ def txt_extract(txt_data: bytes) -> list[str]:
     end = lines.index("#EOF")
     if start == -1 or end == -1:
         return []
-    return [url for line in lines[start + 1 : end] if tldextract.extract(url := line.strip()).fqdn]
+    return [
+        url
+        for line in lines[start + 1 : end]
+        if tldextract.extract(url := line.strip()).fqdn
+    ]
 
 
-async def get_afnic_daily_updates(tld: str, num_days: int | None) -> AsyncIterator[set[str]]:
+async def get_afnic_daily_updates(
+    tld: str, num_days: int | None
+) -> AsyncIterator[set[str]]:
     """Download and extract domains from AFNIC.fr daily updates (TXT files) for a given `tld`
     and yield all listed URLs in batches.
 
@@ -66,12 +72,17 @@ async def get_afnic_daily_updates(tld: str, num_days: int | None) -> AsyncIterat
     days = [today + relativedelta(days=-x) for x in range(num_days)]
 
     links: list[str] = [
-        f"https://www.afnic.fr/wp-media/ftp/domaineTLD_Afnic/{YYYYMMDD_STR_FORMAT}_CREA_{tld}.txt".format(dt=date) for date in days
+        f"https://www.afnic.fr/wp-media/ftp/domaineTLD_Afnic/{YYYYMMDD_STR_FORMAT}_CREA_{tld}.txt".format(
+            dt=date
+        )
+        for date in days
     ]
 
     for link in links:
         # Download TXT file to memory
-        txt_data: bytes = (await get_async(links, max_concurrent_requests=1, max_retries=2))[link]
+        txt_data: bytes = (
+            await get_async(links, max_concurrent_requests=1, max_retries=2)
+        )[link]
         if txt_data != b"{}":
             # Extract URLs from TXT file
             raw_urls = txt_extract(txt_data)
@@ -95,20 +106,30 @@ async def get_afnic_monthly_archives() -> AsyncIterator[set[str]]:
 
     # AFNIC.fr monthly archive files
     endpoints: list[str] = [
-        f"https://www.afnic.fr/wp-media/ftp/documentsOpenData/{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip".format(dt=date)
+        f"https://www.afnic.fr/wp-media/ftp/documentsOpenData/{YYYYMM_STR_FORMAT}_OPENDATA_A-NomsDeDomaineEnPointFr.zip".format(
+            dt=date
+        )
         for date in months
     ]
 
     for endpoint in endpoints:
         with BytesIO() as file:
-            resp = (await get_async([endpoint], max_concurrent_requests=1, max_retries=2))[endpoint]
+            resp = (
+                await get_async([endpoint], max_concurrent_requests=1, max_retries=2)
+            )[endpoint]
             if resp != b"{}":
                 file.write(resp)
                 file.seek(0)
                 zfile = ZipFile(file)
-                csv_filename = [filename for filename in zfile.namelist() if filename.endswith(".csv")][0]
+                csv_filename = [
+                    filename
+                    for filename in zfile.namelist()
+                    if filename.endswith(".csv")
+                ][0]
                 with zfile.open(csv_filename) as csvfile:
-                    reader = csv.reader(TextIOWrapper(csvfile, "ISO-8859-1"), delimiter=";")
+                    reader = csv.reader(
+                        TextIOWrapper(csvfile, "ISO-8859-1"), delimiter=";"
+                    )
                     next(reader, None)  # skip the headers
                     for row in reader:
                         raw_urls.append(row[0])
@@ -129,7 +150,9 @@ class AFNIC:
 
         if "afnic" in parser_args["sources"]:
             tlds: tuple[str, ...] = ("fr", "re", "pm", "tf", "wf", "yt")
-            self.db_filenames = [f"afnic_{tld}" for tld in tlds] + ["afnic_monthly_archive"]
+            self.db_filenames = [f"afnic_{tld}" for tld in tlds] + [
+                "afnic_monthly_archive"
+            ]
             if parser_args["fetch"]:
                 # Download and Add AFNIC.fr URLs to database
                 # Use list() otherwise mypy will complain about list invariance

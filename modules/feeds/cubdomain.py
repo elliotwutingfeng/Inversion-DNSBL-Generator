@@ -23,7 +23,9 @@ logger = init_logger()
 YYYY_MM_DD_STR_FORMAT: str = "{dt:%Y}-{dt:%m}-{dt:%d}"
 
 
-def _generate_dates_and_root_urls(num_days: int | None) -> tuple[list[datetime], list[str]]:
+def _generate_dates_and_root_urls(
+    num_days: int | None,
+) -> tuple[list[datetime], list[str]]:
     """Generate list of dates and corresponding root URLs ranging
     from 25th June 2017 to today inclusive
 
@@ -41,7 +43,12 @@ def _generate_dates_and_root_urls(num_days: int | None) -> tuple[list[datetime],
     if num_days is None:
         num_days = (now - datetime.strptime("25 June 2017", "%d %B %Y")).days
     dates = [now - timedelta(days=x) for x in range(num_days)]
-    root_urls = [f"https://www.cubdomain.com/domains-registered-by-date/{YYYY_MM_DD_STR_FORMAT}/".format(dt=date) for date in dates]
+    root_urls = [
+        f"https://www.cubdomain.com/domains-registered-by-date/{YYYY_MM_DD_STR_FORMAT}/".format(
+            dt=date
+        )
+        for date in dates
+    ]
 
     return dates, root_urls
 
@@ -73,10 +80,15 @@ async def _create_root_url_map(root_url: str, date: datetime, content: bytes) ->
                 "lxml",
                 parse_only=only_a_tag_with_page_link,
             )
-            res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
+            res = soup.find_all(
+                lambda tag: tag.string is not None
+            )  # Filter out empty tags
             # Get the highest possible value of
             # {page_number}; the total number of pages for date YYYY-MM-DD
-            last_page = max([1] + [int(x.string.strip()) for x in res if x.string.strip().isnumeric()])
+            last_page = max(
+                [1]
+                + [int(x.string.strip()) for x in res if x.string.strip().isnumeric()]
+            )
             root_url_to_last_page_and_date[root_url] = {
                 "num_pages": last_page,
                 "date": date,
@@ -98,12 +110,15 @@ async def _get_page_urls_by_date_str(num_days: int | None) -> dict:
         dict: Mapping of date string to its page URLs
     """
     dates, root_urls = _generate_dates_and_root_urls(num_days)
-    first_page_url_to_date = dict(zip([root_url + "1" for root_url in root_urls], dates))
+    first_page_url_to_date = dict(
+        zip([root_url + "1" for root_url in root_urls], dates)
+    )
 
     first_page_responses = await get_async([root_url + "1" for root_url in root_urls])
 
     root_urls_dates_and_contents = [
-        (first_page_url[:-1], first_page_url_to_date[first_page_url], content) for first_page_url, content in first_page_responses.items()
+        (first_page_url[:-1], first_page_url_to_date[first_page_url], content)
+        for first_page_url, content in first_page_responses.items()
     ]
 
     root_urls_to_last_page_and_date = dict(
@@ -133,7 +148,8 @@ async def _get_cubdomain_page_urls_by_db_filename(num_days: int | None) -> dict:
 
     cubdomain_page_urls_by_date_str = await _get_page_urls_by_date_str(num_days)
     cubdomain_page_urls_by_db_filename = {
-        f"cubdomain_{date_str}": page_urls for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
+        f"cubdomain_{date_str}": page_urls
+        for date_str, page_urls in cubdomain_page_urls_by_date_str.items()
     }
 
     return cubdomain_page_urls_by_db_filename
@@ -156,7 +172,9 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
 
     page_responses = await get_async(page_urls)
 
-    only_a_tag_with_cubdomain_site = SoupStrainer("a", href=lambda x: "cubdomain.com/site/" in x)
+    only_a_tag_with_cubdomain_site = SoupStrainer(
+        "a", href=lambda x: "cubdomain.com/site/" in x
+    )
     for page_url, page_response in page_responses.items():
         if page_response != b"{}":
             try:
@@ -165,7 +183,9 @@ async def _download_cubdomain(page_urls: list[str]) -> AsyncIterator[set[str]]:
                     "lxml",
                     parse_only=only_a_tag_with_cubdomain_site,
                 )
-                res = soup.find_all(lambda tag: tag.string is not None)  # Filter out empty tags
+                res = soup.find_all(
+                    lambda tag: tag.string is not None
+                )  # Filter out empty tags
                 for raw_urls in chunked(
                     (tag.string.strip().lower() for tag in res),
                     hostname_expression_batch_size,
@@ -188,12 +208,15 @@ class CubDomain:
         self.num_days: int | None = parser_args["cubdomain_num_days"]
         if "cubdomain" in parser_args["sources"]:
             self.db_filenames = [
-                f"cubdomain_{YYYY_MM_DD_STR_FORMAT}".format(dt=date) for date in _generate_dates_and_root_urls(self.num_days)[0]
+                f"cubdomain_{YYYY_MM_DD_STR_FORMAT}".format(dt=date)
+                for date in _generate_dates_and_root_urls(self.num_days)[0]
             ]
             if parser_args["fetch"]:
                 # Download and Add CubDomain.com URLs to database
-                self.page_urls_by_db_filename = asyncio.get_event_loop().run_until_complete(
-                    _get_cubdomain_page_urls_by_db_filename(self.num_days)
+                self.page_urls_by_db_filename = (
+                    asyncio.get_event_loop().run_until_complete(
+                        _get_cubdomain_page_urls_by_db_filename(self.num_days)
+                    )
                 )
                 self.jobs = [
                     (

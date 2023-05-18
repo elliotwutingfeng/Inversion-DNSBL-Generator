@@ -43,7 +43,9 @@ async def _get_local_file_url_list(
         yield set()
 
 
-def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[list[str], list[str]]:
+def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> (
+    tuple[list[str], list[str]]
+):
     """Scan for Domains Project .txt source files and generate filepaths
     to .txt source files, and database filenames for each .txt source file.
 
@@ -65,8 +67,14 @@ def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[list[str]
 
         # Sort domainsproject_txt_filepaths and
         # domainsproject_urls_db_filenames by descending filesize
-        domainsproject_filesizes: list[int] = [os.path.getsize(path) for path in domainsproject_txt_filepaths]
-        [domainsproject_filesizes, domainsproject_txt_filepaths, domainsproject_urls_db_filenames] = [
+        domainsproject_filesizes: list[int] = [
+            os.path.getsize(path) for path in domainsproject_txt_filepaths
+        ]
+        [
+            domainsproject_filesizes,
+            domainsproject_txt_filepaths,
+            domainsproject_urls_db_filenames,
+        ] = [
             list(_)
             for _ in sort_together(
                 (
@@ -79,7 +87,8 @@ def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[list[str]
         ]
     except ValueError as error:
         logger.error(
-            "Scan for Domains Project source files failed, check if Domains Project folder has been downloaded correctly | %s", repr(error)
+            "Scan for Domains Project source files failed, check if Domains Project folder has been downloaded correctly | %s",
+            repr(error),
         )
     return domainsproject_txt_filepaths, domainsproject_urls_db_filenames
 
@@ -107,5 +116,7 @@ class DomainsProject:
                         db_filename,
                         {"txt_filepath": txt_filepath},
                     )
-                    for txt_filepath, db_filename in zip(self.txt_filepaths, self.db_filenames)
+                    for txt_filepath, db_filename in zip(
+                        self.txt_filepaths, self.db_filenames
+                    )
                 ]

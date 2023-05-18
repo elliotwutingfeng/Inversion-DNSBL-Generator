@@ -34,7 +34,9 @@ async def add_urls(
         for `url_set_fetcher`.
         Defaults to None.
     """
-    urls = url_set_fetcher(**(url_set_fetcher_args if url_set_fetcher_args is not None else {}))
+    urls = url_set_fetcher(
+        **(url_set_fetcher_args if url_set_fetcher_args is not None else {})
+    )
 
     last_listed = update_time
     conn = create_connection(db_filename)
@@ -54,7 +56,10 @@ async def add_urls(
                     ON CONFLICT(url)
                     DO UPDATE SET lastListed=excluded.lastListed
                     """,
-                        ((url, last_listed, compute_url_hash(url)) for url in url_batch),
+                        (
+                            (url, last_listed, compute_url_hash(url))
+                            for url in url_batch
+                        ),
                     )
         except Error as error:
             logger.error("filename:%s %s", db_filename, error, exc_info=True)
@@ -105,7 +110,10 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     INSERT INTO urls (url,hash)
                     VALUES (?,?)
                     """,
-                        (int_addr_to_ip_and_hash(int_addr + (2**24) * first_octet) for int_addr in range(ips_to_generate)),
+                        (
+                            int_addr_to_ip_and_hash(int_addr + (2**24) * first_octet)
+                            for int_addr in range(ips_to_generate)
+                        ),
                     )
 
                     logger.info(
@@ -118,7 +126,9 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
         vacuum_and_close(conn)
 
 
-def replace_malicious_url_hash_prefixes(hash_prefixes: set[str], vendor: Vendors) -> None:
+def replace_malicious_url_hash_prefixes(
+    hash_prefixes: set[str], vendor: Vendors
+) -> None:
     """Replace maliciousHashPrefixes table contents with latest malicious URL
     hash prefixes from Safe Browsing API
 
@@ -144,7 +154,10 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[str], vendor: Vendors
                     maliciousHashPrefixes (hashPrefix,prefixSize,vendor)
                     VALUES (?, ?, ?)
                     """,
-                    ((hashPrefix, len(hashPrefix), vendor) for hashPrefix in hash_prefixes),
+                    (
+                        (hashPrefix, len(hashPrefix), vendor)
+                        for hashPrefix in hash_prefixes
+                    ),
                 )
             logger.info(
                 "Updating database with %s " "malicious URL hash prefixes...[DONE]",
@@ -155,7 +168,9 @@ def replace_malicious_url_hash_prefixes(hash_prefixes: set[str], vendor: Vendors
         vacuum_and_close(conn)
 
 
-def replace_malicious_url_full_hashes(full_hashes: Iterator[str], vendor: Vendors) -> None:
+def replace_malicious_url_full_hashes(
+    full_hashes: Iterator[str], vendor: Vendors
+) -> None:
     """Replace maliciousFullHashes table contents with latest malicious URL
     full hashes from Safe Browsing API
 
@@ -184,7 +199,10 @@ def replace_malicious_url_full_hashes(full_hashes: Iterator[str], vendor: Vendor
                     ((fullHash, vendor) for fullHash in full_hashes),
                 )
                 # ROLLBACK transaction if no full hashes were added
-                cur = cur.execute("SELECT COUNT(fullHash) from maliciousFullHashes where vendor = ?", (vendor,))
+                cur = cur.execute(
+                    "SELECT COUNT(fullHash) from maliciousFullHashes where vendor = ?",
+                    (vendor,),
+                )
                 fullHash_count: int = cur.fetchall()[0][0]
                 if not fullHash_count:
                     cur.execute("ROLLBACK to savepoint pt")

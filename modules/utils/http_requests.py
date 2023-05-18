@@ -40,7 +40,9 @@ class KeepAliveClientRequest(aiohttp.client_reqrep.ClientRequest):
         return await super().send(conn)
 
 
-async def backoff_delay_async(backoff_factor: float, number_of_retries_made: int) -> None:
+async def backoff_delay_async(
+    backoff_factor: float, number_of_retries_made: int
+) -> None:
     """Asynchronous time delay that exponentially increases
     with `number_of_retries_made`
 
@@ -77,7 +79,9 @@ async def get_async(
     if headers is None:
         headers = default_headers
 
-    async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> dict[str, bytes]:
+    async def gather_with_concurrency(
+        max_concurrent_requests: int, *tasks
+    ) -> dict[str, bytes]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
 
         async def sem_task(task):
@@ -98,7 +102,9 @@ async def get_async(
                 errors.append(error)
                 # logger.warning("%s | Attempt %d failed",
                 #  error, number_of_retries_made + 1)
-                if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
+                if (
+                    number_of_retries_made != max_retries - 1
+                ):  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
         logger.error("URL: %s GET request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
@@ -112,7 +118,9 @@ async def get_async(
         request_class=KeepAliveClientRequest,
     ) as session:
         # Only one instance of any duplicate endpoint will be used
-        return await gather_with_concurrency(max_concurrent_requests, *[get(url, session) for url in set(endpoints)])
+        return await gather_with_concurrency(
+            max_concurrent_requests, *[get(url, session) for url in set(endpoints)]
+        )
 
 
 async def post_async(
@@ -143,7 +151,9 @@ async def post_async(
     if headers is None:
         headers = default_headers
 
-    async def gather_with_concurrency(max_concurrent_requests: int, *tasks) -> list[tuple[str, bytes]]:
+    async def gather_with_concurrency(
+        max_concurrent_requests: int, *tasks
+    ) -> list[tuple[str, bytes]]:
         semaphore = asyncio.Semaphore(max_concurrent_requests)
 
         async def sem_task(task):
@@ -154,7 +164,9 @@ async def post_async(
         tasklist = [sem_task(task) for task in tasks]
         return [await f for f in asyncio.as_completed(tasklist)]
 
-    async def post(url: str, payload: bytes, session: aiohttp.ClientSession) -> tuple[str, bytes]:
+    async def post(
+        url: str, payload: bytes, session: aiohttp.ClientSession
+    ) -> tuple[str, bytes]:
         errors: list[Exception] = []
         for number_of_retries_made in range(max_retries):
             try:
@@ -164,7 +176,9 @@ async def post_async(
                 errors.append(error)
                 # logger.warning("%s | Attempt %d failed",
                 # error, number_of_retries_made + 1)
-                if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
+                if (
+                    number_of_retries_made != max_retries - 1
+                ):  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
         logger.error("URL: %s POST request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
@@ -178,11 +192,14 @@ async def post_async(
         request_class=KeepAliveClientRequest,
     ) as session:
         return await gather_with_concurrency(
-            max_concurrent_requests, *[post(url, payload, session) for url, payload in zip(endpoints, payloads)]
+            max_concurrent_requests,
+            *[post(url, payload, session) for url, payload in zip(endpoints, payloads)]
         )
 
 
-async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict | None = None) -> IO | None:
+async def get_async_stream(
+    endpoint: str, max_retries: int = 5, headers: dict | None = None
+) -> IO | None:
     """Given a HTTP endpoint, make a HTTP GET request
     asynchronously, stream the response chunks to a
     TemporaryFile, then return it as a file object
@@ -221,7 +238,9 @@ async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict | 
                 async with session.get(endpoint, headers=headers) as response:
                     async for chunk, _ in response.content.iter_chunks():
                         if chunk is None:
-                            raise aiohttp.client_exceptions.ClientError("Stream disrupted")
+                            raise aiohttp.client_exceptions.ClientError(
+                                "Stream disrupted"
+                            )
                         else:
                             temp_file.write(chunk)
             except Exception as error:
@@ -230,7 +249,9 @@ async def get_async_stream(endpoint: str, max_retries: int = 5, headers: dict | 
                 # error, number_of_retries_made + 1)
                 temp_file.close()
                 logger.warning("URL: %s | %s", endpoint, error)
-                if number_of_retries_made != max_retries - 1:  # No delay if final attempt fails
+                if (
+                    number_of_retries_made != max_retries - 1
+                ):  # No delay if final attempt fails
                     await backoff_delay_async(1, number_of_retries_made)
             else:
                 # Seek to beginning of temp_file

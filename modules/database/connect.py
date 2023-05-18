@@ -26,12 +26,20 @@ def create_connection(db_filename: str) -> apsw.Connection | None:
     try:
         if not os.path.exists(databases_folder):
             os.mkdir(databases_folder)
-        conn = apsw.Connection(":memory:" if db_filename is None else f"{databases_folder}{os.sep}{db_filename}.db")
+        conn = apsw.Connection(
+            ":memory:"
+            if db_filename is None
+            else f"{databases_folder}{os.sep}{db_filename}.db"
+        )
         # Retry connection to locked database for maximum of 15000 ms
         conn.setbusytimeout(15000)
         cur = conn.cursor()
-        cur.execute("PRAGMA auto_vacuum = FULL")  # https://www.sqlite.org/pragma.html#pragma_auto_vacuum
-        cur.execute("PRAGMA temp_store = MEMORY")  # https://www.sqlite.org/pragma.html#pragma_temp_store
+        cur.execute(
+            "PRAGMA auto_vacuum = FULL"
+        )  # https://www.sqlite.org/pragma.html#pragma_auto_vacuum
+        cur.execute(
+            "PRAGMA temp_store = MEMORY"
+        )  # https://www.sqlite.org/pragma.html#pragma_temp_store
         cur.execute("PRAGMA journal_mode = WAL")  # https://www.sqlite.org/wal.html
     except Error as error:
         logger.error("filename:%s %s", db_filename, error, exc_info=True)

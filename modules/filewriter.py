@@ -51,7 +51,10 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
     ip_addresses: list[str] = []
     for url in urls:
         try:
-            if isinstance(ipaddress.ip_address(tldextract.extract(url).domain), ipaddress.IPv4Address):
+            if isinstance(
+                ipaddress.ip_address(tldextract.extract(url).domain),
+                ipaddress.IPv4Address,
+            ):
                 ip_addresses.append(url)
             else:
                 raise ValueError("Not an IPv4 Address.")
@@ -63,7 +66,9 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
 
     async def write_hostnames() -> str:
         hostnames_txt_filename = f"{vendor}_hostnames_{current_datetime_str()}.txt"
-        async with aiofiles.open(f"{BLOCKLISTS_FOLDER}{os.sep}{hostnames_txt_filename}", "a") as outfile:
+        async with aiofiles.open(
+            f"{BLOCKLISTS_FOLDER}{os.sep}{hostnames_txt_filename}", "a"
+        ) as outfile:
             await outfile.writelines("\n".join(hostnames))
             logger.info(
                 "%d hostname URLs written to file: %s",
@@ -74,7 +79,9 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
 
     async def write_ips() -> str:
         ip_addresses_txt_filename = f"{vendor}_ipv4_{current_datetime_str()}.txt"
-        async with aiofiles.open(f"{BLOCKLISTS_FOLDER}{os.sep}{ip_addresses_txt_filename}", "a") as outfile:
+        async with aiofiles.open(
+            f"{BLOCKLISTS_FOLDER}{os.sep}{ip_addresses_txt_filename}", "a"
+        ) as outfile:
             await outfile.writelines("\n".join(ip_addresses))
             logger.info(
                 "%d IPv4 addresses written to file: %s",
@@ -89,4 +96,6 @@ async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ..
             asyncio.create_task(write_ips()),
         ]
     )
-    return tuple(filename for filename in blocklist_filenames if isinstance(filename, str))
+    return tuple(
+        filename for filename in blocklist_filenames if isinstance(filename, str)
+    )

@@ -26,7 +26,12 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         hostname expressions for `raw_url`.
     """
     # Remove zero width spaces from raw_url
-    url = raw_url.replace("\u200B", "").replace("\u200C", "").replace("\u200D", "").replace("\uFEFF", "")
+    url = (
+        raw_url.replace("\u200B", "")
+        .replace("\u200C", "")
+        .replace("\u200D", "")
+        .replace("\uFEFF", "")
+    )
 
     try:
         tldresult = tldextract.extract(url)
@@ -47,7 +52,9 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         # (e.g. google.com/<subdirectory>)
         return [f"{'.'.join(parts[-i:])}" for i in range(min(len(parts), 5))] + [
             url,
-            url.split(".", maxsplit=1)[1] if subdomain == "www" else f"www.{domain_name}",
+            url.split(".", maxsplit=1)[1]
+            if subdomain == "www"
+            else f"www.{domain_name}",
         ]
     except Exception as error:
         logger.error("%s %s", url, error, exc_info=True)

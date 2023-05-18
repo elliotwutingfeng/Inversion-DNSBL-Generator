@@ -166,13 +166,17 @@ def run_task_handler(
         object_store_ids: Mapping,
         actor_id: Any | None = None,
     ) -> Any:
-        result = await task_handler(*task_args, **{arg: await object_store_ids[arg] for arg in object_store_ids})
+        result = await task_handler(
+            *task_args, **{arg: await object_store_ids[arg] for arg in object_store_ids}
+        )
 
         if actor_id is not None:
             actor_id.update.remote(1)  # type: ignore
         return result
 
-    return asyncio.get_event_loop().run_until_complete(run_task_handler_(task_handler, task_args, object_store_ids, actor_id))
+    return asyncio.get_event_loop().run_until_complete(
+        run_task_handler_(task_handler, task_args, object_store_ids, actor_id)
+    )
 
 
 def execute_with_ray(
@@ -210,7 +214,11 @@ def execute_with_ray(
 
     # Put large serializable objects common to
     # all task instances into Ray object store
-    object_store_ids: dict[str, Any] = {key: ray.put(object_store[key]) for key in object_store} if object_store else {}
+    object_store_ids: dict[str, Any] = (
+        {key: ray.put(object_store[key]) for key in object_store}
+        if object_store
+        else {}
+    )
 
     tasks_pre_launch: list[Awaitable] = [
         run_task_handler.remote(  # type:ignore

@@ -76,7 +76,11 @@ async def _request_tlds(access_token: str) -> None:
 
     # TLDs with `currentStatus` equal to any of these `statuses` are available for request
     statuses = {"available", "expired"}
-    available_tlds = [x["tld"] for x in json.loads(tlds_resp) if "tld" in x and x.get("currentStatus", "") in statuses]
+    available_tlds = [
+        x["tld"]
+        for x in json.loads(tlds_resp)
+        if "tld" in x and x.get("currentStatus", "") in statuses
+    ]
 
     # Skip if there are no available_tlds
     if not available_tlds:
@@ -101,12 +105,23 @@ async def _request_tlds(access_token: str) -> None:
     tld_request_url = "https://czds-api.icann.org/czds/requests/create"
     reason = str(dotenv_values(".env").get("ICANN_REQUEST_REASON", ""))
     if not reason:
-        logger.error("ICANN_REQUEST_REASON not specified | No zone file access request will be sent")
+        logger.error(
+            "ICANN_REQUEST_REASON not specified | No zone file access request will be sent"
+        )
         return
     tld_request_resp = (
         await post_async(
             [tld_request_url],
-            [json.dumps({"allTlds": True, "tldNames": available_tlds, "reason": reason, "tcVersion": terms["version"]}).encode()],
+            [
+                json.dumps(
+                    {
+                        "allTlds": True,
+                        "tldNames": available_tlds,
+                        "reason": reason,
+                        "tcVersion": terms["version"],
+                    }
+                ).encode()
+            ],
             headers=authorized_headers,
         )
     )[0][1]
@@ -148,7 +163,9 @@ async def _get_approved_endpoints(access_token: str) -> list[str]:
     return body
 
 
-async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[set[str]]:
+async def _get_icann_domains(
+    endpoint: str, access_token: str
+) -> AsyncIterator[set[str]]:
     """Download domains from ICANN zone file endpoint
     and yield all listed URLs in batches.
 
@@ -181,7 +198,9 @@ async def _get_icann_domains(endpoint: str, access_token: str) -> AsyncIterator[
         yield set()
 
 
-async def extract_zonefile_urls(endpoint: str, headers: dict | None = None) -> AsyncIterator[list[str]]:
+async def extract_zonefile_urls(
+    endpoint: str, headers: dict | None = None
+) -> AsyncIterator[list[str]]:
     """Extract URLs from GET request stream of ICANN `txt.gz` zone file
 
     https://stackoverflow.com/a/68928891
@@ -206,7 +225,9 @@ async def extract_zonefile_urls(endpoint: str, headers: dict | None = None) -> A
             d = zlib.decompressobj(zlib.MAX_WBITS | 32)
             last_line: str = ""
 
-            for chunk in iter(lambda: temp_file.read(1024**2) if temp_file else lambda: b"", b""):
+            for chunk in iter(
+                lambda: temp_file.read(1024**2) if temp_file else lambda: b"", b""
+            ):
                 # Decompress and decode chunk to `current_chunk_string`
                 current_chunk_string = d.decompress(chunk).decode()
                 # Append `last_line` of previous chunk to
@@ -220,11 +241,18 @@ async def extract_zonefile_urls(endpoint: str, headers: dict | None = None) -> A
                 last_line = lines.pop()
                 # Yield list of URLs from the cleaned `lines`,
                 # ensuring that all of them are lowercase
-                yield [url for line in lines if (splitted_line := line.split()) and (url := splitted_line[0].lower().rstrip("."))]
+                yield [
+                    url
+                    for line in lines
+                    if (splitted_line := line.split())
+                    and (url := splitted_line[0].lower().rstrip("."))
+                ]
 
             # Yield last remaining URL from `last_line`
             # if splitted_line has a length of at least 1
-            if (splitted_line := last_line.split()) and (url := splitted_line[0].lower().rstrip(".")):
+            if (splitted_line := last_line.split()) and (
+                url := splitted_line[0].lower().rstrip(".")
+            ):
                 yield [url]
 
 
@@ -241,11 +269,17 @@ class ICANN:
         self.jobs: list[tuple] = []
 
         if "icann" in parser_args["sources"]:
-            access_token = asyncio.get_event_loop().run_until_complete(_authenticate(username, password))
+            access_token = asyncio.get_event_loop().run_until_complete(
+                _authenticate(username, password)
+            )
             # Request access to all available TLDs from ICANN CZDS that current user has no access to
             asyncio.get_event_loop().run_until_complete(_request_tlds(access_token))
-            endpoints: list[str] = asyncio.get_event_loop().run_until_complete(_get_approved_endpoints(access_token))
-            self.db_filenames = [f"icann_{url.rsplit('/', 1)[-1].rsplit('.')[-2]}" for url in endpoints]
+            endpoints: list[str] = asyncio.get_event_loop().run_until_complete(
+                _get_approved_endpoints(access_token)
+            )
+            self.db_filenames = [
+                f"icann_{url.rsplit('/', 1)[-1].rsplit('.')[-2]}" for url in endpoints
+            ]
             if parser_args["fetch"]:
                 # Download and Add ICANN URLs to database
                 self.jobs = [
