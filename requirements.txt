@@ -18,10 +18,10 @@ python-dateutil==2.8.2
 python-dotenv==1.0.0
 ray[default]==2.4.0
 spavro==1.1.24
-tldextract==3.4.2
+tldextract==3.4.4
 tqdm==4.65.0
 typed-ast==1.5.4
-types-aiofiles==23.1.0.2
+types-aiofiles==23.1.0.3
 types-beautifulsoup4==4.12.0.5
 types-python-dateutil==2.8.19.13
 urlextract==1.8.0
