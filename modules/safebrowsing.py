@@ -183,7 +183,12 @@ class SafeBrowsing:
 
     # Safe Browsing Update API
     def retrieve_url_threatlist_combinations(self) -> list[dict]:
-        """GET names of currently available Safe Browsing lists from threatLists endpoint
+        """GET names of currently available Safe Browsing lists from threatLists endpoint.
+
+        threatlists with substrings "ALLOWLIST" or "WHITELIST" in their threatType are omitted.
+
+        See https://github.com/googleapis/google-api-go-client/blob/b16a2d3
+        1763144ab92c4eba73aa5fcc5b418789d/safebrowsing/v4/safebrowsing-api.json#L591
 
         Returns:
             list[dict]: Names of currently available Safe Browsing lists from threatLists endpoint
@@ -200,14 +205,13 @@ class SafeBrowsing:
             ]
             if self.vendor == "Google":
                 url_threatlist_combinations = [
-                    x
-                    for x in threatlist_combinations
-                    if "threatEntryType" in x
-                    and x["threatEntryType"]
-                    in (
-                        "URL",
-                        "IP_RANGE",
+                    threatlist
+                    for threatlist in threatlist_combinations
+                    if all(
+                        allowlist_term not in threatlist.get("threatType", "")
+                        for allowlist_term in ("ALLOWLIST", "WHITELIST")
                     )
+                    and threatlist.get("threatEntryType", "") in ("URL", "IP_RANGE")
                 ]
             else:
                 # Yandex API will return status code 204 with no content
