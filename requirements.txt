@@ -1,9 +1,9 @@
 aiofiles==23.2.1
-aiohttp==3.9.1
-apsw==3.44.2.0
-bandit==1.7.6
-beautifulsoup4==4.12.2
-black==23.12.1
+aiohttp==3.9.2
+apsw==3.45.0.0
+bandit==1.7.7
+beautifulsoup4==4.12.3
+black==24.1.1
 feedparser==6.0.11
 flake8==7.0.0
 lxml==5.1.0
@@ -11,12 +11,12 @@ more-itertools==10.2.0
 mypy==1.8.0
 mypy-extensions==1.0.0
 PyGithub==2.1.1
-pytest==7.4.4
+pytest==8.0.0
 pytest-cov==4.1.0
 pytest-mock==3.12.0
 python-dateutil==2.8.2
-python-dotenv==1.0.0
-ray[default]==2.9.0
+python-dotenv==1.0.1
+ray[default]==2.9.1
 spavro @ git+https://github.com/mikepk/spavro.git@e9fee6e395b555b62cd014652c0f8b111f5e3a24
 tldextract==5.1.1
 tqdm==4.66.1

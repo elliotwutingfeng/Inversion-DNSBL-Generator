@@ -112,9 +112,9 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 ### System (mandatory)
 
 - Linux or macOS
-- Python >= 3.10.12
+- Python 3.10+
 - Multi-core x86-64 CPU; for Python Ray support
-- RAM: At least 8GB
+- RAM: At least 32GB
 - SSD Storage Space: At least 700GB required to process all URL sources
 
 ### Safe Browsing API Access (mandatory)
@@ -169,8 +169,12 @@ BLOCKLIST_REPOSITORY_NAME=
 
 ### Install dependencies
 
+According to [PEP 668](https://peps.python.org/pep-0668), use of a virtual environment is [strongly recommended](https://packaging.python.org/en/latest/specifications/externally-managed-environments) as of 2023.
+
 ```bash
-pip3 install -r requirements.txt
+python3 -m venv venv
+venv/bin/python3 -m pip install --upgrade pip
+venv/bin/python3 -m pip install -r requirements.txt
 ```
 
 ### Download Domains Project URLs (optional)
@@ -196,7 +200,7 @@ Edit `unpack.sh` and remove `combine` from the last line, then run:
 > :warning: As of 4 August 2023, the following command will make around 9000 calls (exact number depends on number of hashes in Google's dataset) to Google Safe Browsing API. As the daily limit is 10,000 calls, `--update-hashes` should be run no more than once every 24 hours.
 
 ```bash
-python3 main.py --update-hashes --vendors google
+venv/bin/python3 main.py --update-hashes --vendors google
 ```
 
 ### Download and Identify malicious URLs from Tranco TOP1M
@@ -208,7 +212,7 @@ python3 main.py --update-hashes --vendors google
 - :shield: Vendors: **Google**
 
 ```bash
-python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google
+venv/bin/python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors google
 ```
 
 ## Other Examples
@@ -220,7 +224,7 @@ python3 main.py --fetch-urls --identify-malicious-urls --sources top1m --vendors
 - :shield: Vendors: **Not Applicable**
 
 ```bash
-python3 main.py --fetch-urls --sources top10m
+venv/bin/python3 main.py --fetch-urls --sources top10m
 ```
 
 ### Download and Identify malicious URLs from all sources
@@ -236,7 +240,7 @@ python3 main.py --fetch-urls --sources top10m
 - :shield: Vendors: **Google**
 
 ```bash
-python3 main.py --fetch-urls --identify-malicious-urls --vendors google
+venv/bin/python3 main.py --fetch-urls --identify-malicious-urls --vendors google
 ```
 
 ### Retrieve URLs marked as malicious from past scans from database
@@ -246,13 +250,13 @@ python3 main.py --fetch-urls --identify-malicious-urls --vendors google
 - :shield: Vendors: **Google**
 
 ```bash
-python3 main.py --retrieve-known-malicious-urls --sources top10m domainsproject --vendors google
+venv/bin/python3 main.py --retrieve-known-malicious-urls --sources top10m domainsproject --vendors google
 ```
 
 ### Display help message
 
 ```bash
-python3 main.py --help
+venv/bin/python3 main.py --help
 ```
 
 ## Known Issues
