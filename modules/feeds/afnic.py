@@ -2,8 +2,8 @@
 For fetching and scanning URLs from AFNIC.fr
 """
 import csv
+import datetime
 from collections.abc import AsyncIterator
-from datetime import date
 from io import BytesIO, TextIOWrapper
 from zipfile import ZipFile
 
@@ -65,7 +65,7 @@ async def get_afnic_daily_updates(
     """
     raw_urls: list[str] = []
 
-    today = date.today()
+    today = datetime.date.today()
 
     if num_days is None:
         num_days = 0
@@ -99,7 +99,7 @@ async def get_afnic_monthly_archives() -> AsyncIterator[set[str]]:
     """
     raw_urls: list[str] = []
 
-    today = date.today()
+    today = datetime.date.today()
 
     # Archives files are only kept for the past 24 months, we only need the latest version
     months = [today + relativedelta(months=-x) for x in range(24)]

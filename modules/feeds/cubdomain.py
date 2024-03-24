@@ -3,9 +3,9 @@ For fetching and scanning URLs from cubdomain.com
 """
 
 import asyncio
+import datetime
 from collections import ChainMap
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup, SoupStrainer
 from more_itertools import chunked
@@ -25,7 +25,7 @@ YYYY_MM_DD_STR_FORMAT: str = "{dt:%Y}-{dt:%m}-{dt:%d}"
 
 def _generate_dates_and_root_urls(
     num_days: int | None,
-) -> tuple[list[datetime], list[str]]:
+) -> tuple[list[datetime.datetime], list[str]]:
     """Generate list of dates and corresponding root URLs ranging
     from 25th June 2017 to today inclusive
 
@@ -37,12 +37,12 @@ def _generate_dates_and_root_urls(
         dating back to 25 June 2017 will be considered.
 
     Returns:
-        tuple[list[datetime], list[str]]: (Dates,Root URLs for each date)
+        tuple[list[datetime.datetime], list[str]]: (Dates,Root URLs for each date)
     """
-    now = datetime.now()
+    now = datetime.datetime.now()
     if num_days is None:
-        num_days = (now - datetime.strptime("25 June 2017", "%d %B %Y")).days
-    dates = [now - timedelta(days=x) for x in range(num_days)]
+        num_days = (now - datetime.datetime.strptime("25 June 2017", "%d %B %Y")).days
+    dates = [now - datetime.timedelta(days=x) for x in range(num_days)]
     root_urls = [
         f"https://www.cubdomain.com/domains-registered-by-date/{YYYY_MM_DD_STR_FORMAT}/".format(
             dt=date
@@ -53,13 +53,13 @@ def _generate_dates_and_root_urls(
     return dates, root_urls
 
 
-async def _create_root_url_map(root_url: str, date: datetime, content: bytes) -> dict:
+async def _create_root_url_map(root_url: str, date: datetime.datetime, content: bytes) -> dict:
     """Determine number of available pages for
     `date` YYYY-MM-DD represented by`root_url`.
 
     Args:
         root_url (str): Root URL representing `date`
-        date (datetime): Date for given `root_url`
+        date (datetime.datetime): Date for given `root_url`
         content (bytes): first page content for given `root_url`
 
     Returns:
