@@ -6,13 +6,13 @@ beautifulsoup4==4.12.3
 black==24.3.0
 feedparser==6.0.11
 flake8==7.0.0
-lxml==5.1.0
+lxml==5.2.1
 more-itertools==10.2.0
 mypy==1.9.0
 mypy-extensions==1.0.0
-PyGithub==2.2.0
+PyGithub==2.3.0
 pytest==8.1.1
-pytest-cov==4.1.0
+pytest-cov==5.0.0
 pytest-mock==3.14.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
@@ -21,7 +21,7 @@ spavro @ git+https://github.com/mikepk/spavro.git@e9fee6e395b555b62cd014652c0f8b
 tldextract==5.1.2
 tqdm==4.66.2
 typed-ast==1.5.5
-types-aiofiles==23.2.0.20240311
+types-aiofiles==23.2.0.20240403
 types-beautifulsoup4==4.12.0.20240229
 types-python-dateutil==2.9.0.20240316
 urlextract==1.9.0
