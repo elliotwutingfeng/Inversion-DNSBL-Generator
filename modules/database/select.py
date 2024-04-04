@@ -1,6 +1,7 @@
 """
 SQLite utilities for making SELECT queries
 """
+
 import os
 
 from apsw import Error

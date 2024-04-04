@@ -53,7 +53,9 @@ def _generate_dates_and_root_urls(
     return dates, root_urls
 
 
-async def _create_root_url_map(root_url: str, date: datetime.datetime, content: bytes) -> dict:
+async def _create_root_url_map(
+    root_url: str, date: datetime.datetime, content: bytes
+) -> dict:
     """Determine number of available pages for
     `date` YYYY-MM-DD represented by`root_url`.
 

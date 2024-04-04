@@ -1,6 +1,7 @@
 """
 For generating and scanning Google Compute Engine URLs
 """
+
 import ipaddress
 import json
 from collections.abc import AsyncIterator

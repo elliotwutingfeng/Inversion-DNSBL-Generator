@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from Domains Project
 """
+
 import os
 import pathlib
 from collections.abc import AsyncIterator

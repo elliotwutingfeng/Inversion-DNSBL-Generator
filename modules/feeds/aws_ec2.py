@@ -1,6 +1,7 @@
 """
 For generating and scanning Amazon Web Services EC2 URLs
 """
+
 import asyncio
 import ipaddress
 import json

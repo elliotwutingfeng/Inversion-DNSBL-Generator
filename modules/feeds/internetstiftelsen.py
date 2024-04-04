@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from Internetstiftelsen
 """
+
 from collections.abc import AsyncIterator
 
 from more_itertools import chunked

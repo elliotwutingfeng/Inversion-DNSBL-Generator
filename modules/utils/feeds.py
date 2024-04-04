@@ -1,6 +1,7 @@
 """
 For generating Safe Browsing API-compliant hostname expressions
 """
+
 import tldextract
 from modules.utils.log import init_logger
 
@@ -52,9 +53,11 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
         # (e.g. google.com/<subdirectory>)
         return [f"{'.'.join(parts[-i:])}" for i in range(min(len(parts), 5))] + [
             url,
-            url.split(".", maxsplit=1)[1]
-            if subdomain == "www"
-            else f"www.{domain_name}",
+            (
+                url.split(".", maxsplit=1)[1]
+                if subdomain == "www"
+                else f"www.{domain_name}"
+            ),
         ]
     except Exception as error:
         logger.error("%s %s", url, error, exc_info=True)

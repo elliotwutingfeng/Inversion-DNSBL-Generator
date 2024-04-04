@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from OpenINTEL.nl
 """
+
 import tarfile
 from collections.abc import AsyncIterator
 

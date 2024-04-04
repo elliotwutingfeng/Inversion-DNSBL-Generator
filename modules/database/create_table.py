@@ -1,6 +1,7 @@
 """
 SQLite utilities for making CREATE TABLE queries
 """
+
 from apsw import Error
 
 from modules.database.connect import create_connection

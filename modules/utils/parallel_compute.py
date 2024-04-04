@@ -17,6 +17,7 @@ Inspired by:
 https://github.com/honnibal/spacy-ray/pull/1/files#diff-7ede881ddc3e8456b320afb958362b2aR12-R45
 https://docs.ray.io/en/latest/auto_examples/progress_bar.html
 """
+
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from typing import Any

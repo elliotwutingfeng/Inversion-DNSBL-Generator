@@ -1,6 +1,7 @@
 """
 SQLite utilities for making INSERT queries
 """
+
 from collections.abc import AsyncIterator, Callable, Iterator, Mapping
 
 from apsw import Error

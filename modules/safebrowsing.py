@@ -1,6 +1,7 @@
 """
 Safe Browsing API helper class
 """
+
 import asyncio
 import base64
 import itertools

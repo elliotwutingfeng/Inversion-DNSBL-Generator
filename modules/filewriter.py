@@ -26,7 +26,9 @@ def current_datetime_str() -> str:
     Returns:
         str: Timestamp in strftime format "%d_%b_%Y_%H_%M_%S-UTC"
     """
-    return datetime.datetime.now(datetime.timezone.utc).strftime("%d_%b_%Y_%H_%M_%S-UTC")
+    return datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%d_%b_%Y_%H_%M_%S-UTC"
+    )
 
 
 async def write_blocklist_txt(urls: list[str], vendor: Vendors) -> tuple[str, ...]:

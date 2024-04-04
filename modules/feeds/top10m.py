@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from DomCop TOP10M
 """
+
 from collections.abc import AsyncIterator
 from io import BytesIO
 from zipfile import ZipFile

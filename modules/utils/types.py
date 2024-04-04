@@ -1,5 +1,6 @@
 """Types
 """
+
 from typing import Literal
 
 Vendors = Literal["Google", "Yandex"]

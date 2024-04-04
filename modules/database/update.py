@@ -1,6 +1,7 @@
 """
 SQLite utilities for making UPDATE queries
 """
+
 from apsw import Error
 
 from modules.database.common import vacuum_and_close

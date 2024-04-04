@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from Switch.ch
 """
+
 import os
 import subprocess
 import tempfile

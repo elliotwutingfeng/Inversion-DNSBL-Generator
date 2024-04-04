@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from Registrar R01
 """
+
 import gzip
 from collections.abc import AsyncIterator
 

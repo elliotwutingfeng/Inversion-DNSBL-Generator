@@ -1,6 +1,7 @@
 """
 SQLite utilities for connecting to databases
 """
+
 import os
 
 import apsw  # type: ignore

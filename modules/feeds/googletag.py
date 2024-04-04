@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from Google Threat Analysis Group
 """
+
 import re
 from collections.abc import AsyncIterator
 

@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from SK-NIC.sk
 """
+
 from collections.abc import AsyncIterator
 from io import BytesIO
 

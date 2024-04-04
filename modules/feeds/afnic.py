@@ -1,6 +1,7 @@
 """
 For fetching and scanning URLs from AFNIC.fr
 """
+
 import csv
 import datetime
 from collections.abc import AsyncIterator

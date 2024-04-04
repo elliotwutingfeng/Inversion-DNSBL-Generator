@@ -1,6 +1,7 @@
 """
 Process flags
 """
+
 import asyncio
 import inspect
 import sys
@@ -79,9 +80,9 @@ def process_flags(parser_args: dict) -> None:
         for vendor in parser_args["vendors"]:
             safebrowsing = SafeBrowsing(vendor)
 
-            url_threatlist_combinations: list[
-                dict
-            ] = safebrowsing.retrieve_url_threatlist_combinations()
+            url_threatlist_combinations: list[dict] = (
+                safebrowsing.retrieve_url_threatlist_combinations()
+            )
             threat_list_updates: dict = safebrowsing.retrieve_threat_list_updates(
                 url_threatlist_combinations
             )
