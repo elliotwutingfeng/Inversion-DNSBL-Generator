@@ -4,6 +4,7 @@ SQLite utilities for making INSERT queries
 from collections.abc import AsyncIterator, Callable, Iterator, Mapping
 
 from apsw import Error
+
 from modules.database.common import vacuum_and_close
 from modules.database.connect import create_connection
 from modules.database.hash import compute_url_hash, int_addr_to_ip_and_hash
@@ -65,7 +66,7 @@ async def add_urls(
             logger.error("filename:%s %s", db_filename, error, exc_info=True)
         else:
             logger.info(
-                "Performing INSERT-UPDATE URLs to " "urls table of %s...[DONE]",
+                "Performing INSERT-UPDATE URLs to urls table of %s...[DONE]",
                 db_filename,
             )
         conn.close()
@@ -117,7 +118,7 @@ async def add_ip_addresses(db_filename: str, first_octet: int) -> None:
                     )
 
                     logger.info(
-                        "INSERT %d ipv4 addresses to " "urls table of %s...[DONE]",
+                        "INSERT %d ipv4 addresses to urls table of %s...[DONE]",
                         ips_to_generate,
                         db_filename,
                     )
@@ -160,7 +161,7 @@ def replace_malicious_url_hash_prefixes(
                     ),
                 )
             logger.info(
-                "Updating database with %s " "malicious URL hash prefixes...[DONE]",
+                "Updating database with %s malicious URL hash prefixes...[DONE]",
                 vendor,
             )
         except Error as error:

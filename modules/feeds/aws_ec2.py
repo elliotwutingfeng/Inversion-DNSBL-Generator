@@ -7,13 +7,14 @@ import json
 from collections import defaultdict
 from collections.abc import AsyncIterator
 
+from more_itertools import chunked
+
 from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
 )
 from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
-from more_itertools import chunked
 
 logger = init_logger()
 
@@ -49,7 +50,7 @@ def _get_region_to_ip_ranges_per_region_map() -> dict:
     resp = asyncio.get_event_loop().run_until_complete(get_async([endpoint]))[endpoint]
     if resp == b"{}":
         logger.warning(
-            "Failed to retrieve Amazon Web " "Services IP ranges; returning empty list"
+            "Failed to retrieve Amazon Web Services IP ranges; returning empty list"
         )
         return defaultdict(list)
 

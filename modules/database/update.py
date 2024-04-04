@@ -2,6 +2,7 @@
 SQLite utilities for making UPDATE queries
 """
 from apsw import Error
+
 from modules.database.common import vacuum_and_close
 from modules.database.connect import create_connection
 from modules.utils.log import init_logger
@@ -72,7 +73,7 @@ async def update_malicious_urls(
                 cur.execute(vendor_to_update_query[vendor], (update_time,))
                 cur.execute("DROP TABLE malicious_urls")
             logger.info(
-                "Updating %s database with verified " "%s malicious URLs...[DONE]",
+                "Updating %s database with verified %s malicious URLs...[DONE]",
                 db_filename,
                 vendor,
             )
