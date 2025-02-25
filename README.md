@@ -146,7 +146,7 @@ then select `Create New Request` on the Dashboard to request for zone file acces
 ### Declare environment variables
 
 ```bash
-cp .env-dev .env
+cp --update=none .env-dev .env
 ```
 
 In `.env`, fill in the following variables
