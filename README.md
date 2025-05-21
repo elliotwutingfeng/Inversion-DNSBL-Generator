@@ -113,6 +113,7 @@ You may download the blocklists [here](https://github.com/elliotwutingfeng/Inver
 
 - Linux or macOS
 - Python 3.12+
+- python-dev (See <https://stackoverflow.com/a/21530768>)
 - [uv](https://docs.astral.sh/uv)
 - Multi-core x86-64 CPU; for Python Ray support
 - RAM: At least 32GB
