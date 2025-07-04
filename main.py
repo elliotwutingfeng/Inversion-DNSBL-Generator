@@ -50,6 +50,7 @@ if __name__ == "__main__":
         # if the abbreviation is unambiguous
         allow_abbrev=False,
     )
+    parser.color = True
 
     parser.add_argument(
         "-f",
