@@ -71,7 +71,7 @@ async def _get_googleusercontent_url_list() -> AsyncIterator[set[str]]:
         for ip_range in ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):
                 # Google Compute Engine IP addresses are reversed in the subdomain
-                yield f"""{'.'.join(str(ip_address).split('.')[::-1])}.bc.googleusercontent.com"""
+                yield f"""{".".join(str(ip_address).split(".")[::-1])}.bc.googleusercontent.com"""
 
     gce_url_generator = _generate_gce_urls(ip_ranges)
 

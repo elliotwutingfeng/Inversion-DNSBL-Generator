@@ -94,7 +94,7 @@ async def _get_ec2_url_list(
         )  # Removes overlapping ip ranges
         for ip_range in collapsed_ip_ranges:
             for ip_address in ipaddress.IPv4Network(ip_range.strip()):
-                yield f"""ec2-{'-'.join(str(ip_address).split('.'))}{suffix}"""
+                yield f"""ec2-{"-".join(str(ip_address).split("."))}{suffix}"""
 
     ec2_url_generator = _generate_ec2_urls(region, ip_ranges)
 

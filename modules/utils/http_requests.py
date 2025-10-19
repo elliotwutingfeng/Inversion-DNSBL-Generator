@@ -194,7 +194,7 @@ async def post_async(
     ) as session:
         return await gather_with_concurrency(
             max_concurrent_requests,
-            *[post(url, payload, session) for url, payload in zip(endpoints, payloads)]
+            *[post(url, payload, session) for url, payload in zip(endpoints, payloads)],
         )
 
 

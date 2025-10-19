@@ -1,5 +1,4 @@
-"""Types
-"""
+"""Types"""
 
 from typing import Literal
 

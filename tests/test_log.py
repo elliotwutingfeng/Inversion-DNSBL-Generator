@@ -1,5 +1,4 @@
-"""Tests for log.py
-"""
+"""Tests for log.py"""
 
 import logging
 import os
@@ -37,13 +36,13 @@ def test_init_logger():
 
     logger = init_logger("logs")
 
-    assert (
-        os.mkdir.received_args[0] == "logs"
-    ), "Attempt to create 'logs' folder should be made"
+    assert os.mkdir.received_args[0] == "logs", (
+        "Attempt to create 'logs' folder should be made"
+    )
 
-    assert (
-        logging.getLevelName(logger.getEffectiveLevel()) == "INFO"
-    ), "Logging level should be 'INFO'"
+    assert logging.getLevelName(logger.getEffectiveLevel()) == "INFO", (
+        "Logging level should be 'INFO'"
+    )
 
     os.mkdir = orig_mkdir
     os.path.exists = orig_os_path_exists

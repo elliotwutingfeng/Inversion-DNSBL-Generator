@@ -28,10 +28,10 @@ def generate_hostname_expressions_(raw_url: str) -> list[str]:
     """
     # Remove zero width spaces from raw_url
     url = (
-        raw_url.replace("\u200B", "")
-        .replace("\u200C", "")
-        .replace("\u200D", "")
-        .replace("\uFEFF", "")
+        raw_url.replace("\u200b", "")
+        .replace("\u200c", "")
+        .replace("\u200d", "")
+        .replace("\ufeff", "")
     )
 
     try:

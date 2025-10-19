@@ -1,2 +1,1 @@
-"""Tests for filewriter.py
-"""
+"""Tests for filewriter.py"""

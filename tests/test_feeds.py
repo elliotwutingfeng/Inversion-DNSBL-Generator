@@ -1,5 +1,4 @@
-"""Tests for feeds.py
-"""
+"""Tests for feeds.py"""
 
 from modules.utils.feeds import generate_hostname_expressions_
 
@@ -108,6 +107,6 @@ def test_generate_hostname_expressions_() -> None:
         ),  # Length 5 Non-www SubDomain + Domain + Path
     ]
     for url, expected in test_cases:
-        assert (
-            generate_hostname_expressions_(url) == expected
-        ), f"{url} expressions incorrect"
+        assert generate_hostname_expressions_(url) == expected, (
+            f"{url} expressions incorrect"
+        )

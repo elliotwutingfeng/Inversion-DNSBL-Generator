@@ -44,9 +44,9 @@ async def _get_local_file_url_list(
         yield set()
 
 
-def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> (
-    tuple[list[str], list[str]]
-):
+def _retrieve_domainsproject_txt_filepaths_and_db_filenames() -> tuple[
+    list[str], list[str]
+]:
     """Scan for Domains Project .txt source files and generate filepaths
     to .txt source files, and database filenames for each .txt source file.
 

@@ -197,9 +197,7 @@ class SafeBrowsing:
         threat_lists_endpoint_resp = asyncio.get_event_loop().run_until_complete(
             get_async([self.threatListsEndpoint])
         )[self.threatListsEndpoint]
-        url_threatlist_combinations = (
-            []
-        )  # Empty list if self.threatListsEndpoint is unreachable
+        url_threatlist_combinations = []  # Empty list if self.threatListsEndpoint is unreachable
         if threat_lists_endpoint_resp != b"{}":
             threatlist_combinations = json.loads(threat_lists_endpoint_resp)[
                 "threatLists"
@@ -325,9 +323,7 @@ class SafeBrowsing:
                 )
                 # split them up into b64 encoded hash prefixes
                 hashes_list = [
-                    base64.b64encode(
-                        raw_hash_prefixes[i : i + prefix_size]
-                    ).decode()  # noqa: E203
+                    base64.b64encode(raw_hash_prefixes[i : i + prefix_size]).decode()  # noqa: E203
                     for i in range(0, len(raw_hash_prefixes), prefix_size)
                 ]
 

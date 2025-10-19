@@ -131,8 +131,11 @@ if __name__ == "__main__":
         (OPTIONAL: Omit this flag to use all URL sources)
         Choose 1 or more URL sources
         ----------------------------
-        {os.linesep.join(f"{name} -> {description}"
-        for name,description in sources.items())}
+        {
+            os.linesep.join(
+                f"{name} -> {description}" for name, description in sources.items()
+            )
+        }
         """,
         default=list(sources.keys()),
         type=str,
@@ -189,8 +192,11 @@ if __name__ == "__main__":
         (OPTIONAL: Omit this flag to use all Safe Browsing API vendors)
         Choose 1 or more URL sources
         ----------------------------
-        {os.linesep.join(f"{name} -> {description}"
-        for name,description in choices.items())}
+        {
+            os.linesep.join(
+                f"{name} -> {description}" for name, description in choices.items()
+            )
+        }
         """,
         default=list(choices.keys()),
         type=str,
