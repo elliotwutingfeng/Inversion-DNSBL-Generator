@@ -14,3 +14,22 @@ from modules.feeds.sk_nic import SKNIC
 from modules.feeds.switch_ch import SwitchCH
 from modules.feeds.top1m import Top1M
 from modules.feeds.top10m import Top10M
+
+__all__ = [
+    "AFNIC",
+    "AmazonWebServicesEC2",
+    "CubDomain",
+    "DomainsProject",
+    "GCE",
+    "GoogleTag",
+    "ICANN",
+    "InternetEE",
+    "Internetstiftelsen",
+    "Ipv4",
+    "OpenINTEL",
+    "RegistrarR01",
+    "SKNIC",
+    "SwitchCH",
+    "Top1M",
+    "Top10M",
+]

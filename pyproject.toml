@@ -3,35 +3,35 @@ name = "Inversion-DNSBL-Generator"
 version = "0.0.1"
 description = "Generate malicious URL blocklists for DNSBL applications like pfBlockerNG or Pi-hole by scanning various public URL sources using the Safe Browsing API from Google and/or Yandex."
 authors = [{ name = "Wu Tingfeng", email = "wutingfeng@outlook.com" }]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 readme = "README.md"
 license = "BSD-3-Clause"
 dependencies = [
-    "aiofiles==24.1.0",
-    "aiohttp==3.12.15",
+    "aiofiles==25.1.0",
+    "aiohttp==3.13.1",
     "apsw==3.50.4.0",
     "bandit==1.8.6",
-    "beautifulsoup4==4.13.4",
-    "black==25.1.0",
-    "feedparser==6.0.11",
+    "beautifulsoup4==4.14.2",
+    "black==25.9.0",
+    "feedparser==6.0.12",
     "flake8==7.3.0",
-    "lxml==6.0.0",
-    "more-itertools==10.7.0",
-    "mypy==1.17.1",
+    "lxml==6.0.2",
+    "more-itertools==10.8.0",
+    "mypy==1.18.2",
     "mypy-extensions==1.1.0",
-    "pygithub==2.7.0",
-    "pytest==8.4.1",
-    "pytest-cov==6.2.1",
-    "pytest-mock==3.14.1",
+    "pygithub==2.8.1",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
+    "pytest-mock==3.15.1",
     "python-dateutil==2.9.0.post0",
     "python-dotenv==1.1.1",
-    "ray==2.48.0",
+    "ray==2.50.1",
     "spavro",
     "tldextract==5.3.0",
     "tqdm==4.67.1",
-    "types-aiofiles==24.1.0.20250801",
+    "types-aiofiles==25.1.0.20251011",
     "types-beautifulsoup4==4.12.0.20250516",
-    "types-python-dateutil==2.9.0.20250708",
+    "types-python-dateutil==2.9.0.20251008",
     "urlextract==1.9.0",
 ]
 

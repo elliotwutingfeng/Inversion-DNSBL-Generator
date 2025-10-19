@@ -1,0 +1,13 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    -   id: check-yaml
+        always_run: true
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.13.3
+  hooks:
+    - id: ruff-check
+      always_run: true
+    - id: ruff-format
+      always_run: true
