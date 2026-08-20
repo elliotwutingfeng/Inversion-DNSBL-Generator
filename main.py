@@ -27,7 +27,7 @@ class MinimumOneAction(Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         if values < 1:
-            parser.error("Minimum input value for {0} is 1".format(option_string))
+            parser.error(f"Minimum input value for {option_string} is 1")
         setattr(namespace, self.dest, values)
 
 

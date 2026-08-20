@@ -6,14 +6,14 @@ Push generated blocklists to GitHub
 
 import os
 
+import github
 from dotenv import dotenv_values
+from urllib3.util.retry import Retry
+
 from modules.filewriter import BLOCKLISTS_FOLDER
 from modules.utils.http_requests import backoff_delay_async
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
-from urllib3.util.retry import Retry
-
-import github
 
 logger = init_logger()
 
@@ -59,7 +59,7 @@ async def upload_blocklists(
             main_sha = main_ref.object.sha
             base_tree = repo.get_git_tree(main_sha)
 
-            element_list = list()
+            element_list = []
             for i, entry in enumerate(path_list):
                 with open(entry) as input_file:
                     data = input_file.read()

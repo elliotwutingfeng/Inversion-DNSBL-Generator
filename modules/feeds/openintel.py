@@ -6,11 +6,12 @@ import tarfile
 from collections.abc import AsyncIterator
 
 from bs4 import BeautifulSoup, SoupStrainer
+from spavro.datafile import DataFileReader
+from spavro.io import FastDatumReader
+
 from modules.utils.feeds import generate_hostname_expressions
 from modules.utils.http_requests import get_async, get_async_stream
 from modules.utils.log import init_logger
-from spavro.datafile import DataFileReader
-from spavro.io import FastDatumReader
 
 logger = init_logger()
 
