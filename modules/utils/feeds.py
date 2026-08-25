@@ -3,7 +3,6 @@ For generating Safe Browsing API-compliant hostname expressions
 """
 
 import tldextract
-
 from modules.utils.log import init_logger
 
 logger = init_logger()

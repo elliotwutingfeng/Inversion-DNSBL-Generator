@@ -30,10 +30,10 @@ async def get_internetstiftelsen_domains() -> AsyncIterator[set[str]]:
     txt_data: dict[str, bytes] = await get_async(
         sources, max_concurrent_requests=1, max_retries=2
     )
-    for value in txt_data.values():
-        if value != b"{}":
+    for source in txt_data.keys():
+        if txt_data[source] != b"{}":
             # Extract URLs from TXT file
-            raw_urls = [url.strip() for url in value.decode().splitlines()]
+            raw_urls = [url.strip() for url in txt_data[source].decode().splitlines()]
             for batch in chunked(raw_urls, hostname_expression_batch_size):
                 yield generate_hostname_expressions(batch)
 

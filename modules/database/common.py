@@ -1,6 +1,5 @@
 import apsw
 from apsw import Error
-
 from modules.utils.log import init_logger
 
 logger = init_logger()

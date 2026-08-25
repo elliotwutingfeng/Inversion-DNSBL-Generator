@@ -7,14 +7,13 @@ from collections.abc import AsyncIterator
 
 import feedparser
 from bs4 import BeautifulSoup
-from more_itertools import chunked, flatten
-from urlextract import URLExtract
-
 from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
 )
 from modules.utils.log import init_logger
+from more_itertools import chunked, flatten
+from urlextract import URLExtract
 
 logger = init_logger()
 

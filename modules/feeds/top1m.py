@@ -6,14 +6,13 @@ from collections.abc import AsyncIterator
 from io import BytesIO
 from zipfile import ZipFile
 
-from more_itertools import chunked
-
 from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
 )
 from modules.utils.http_requests import get_async
 from modules.utils.log import init_logger
+from more_itertools import chunked
 
 logger = init_logger()
 
