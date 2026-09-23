@@ -52,7 +52,7 @@ async def get_switch_ch_domains(tld: str, key: str) -> AsyncIterator[set[str]]:
                         f"{tld}.",
                     ],
                     stdout=temp_file,
-                    timeout=9000,  # 2.5 hours
+                    timeout=18000,  # 5 hours
                 )
                 temp_file.seek(0)
                 raw_urls = [

@@ -110,12 +110,12 @@ async def get_async(
         logger.error("URL: %s GET request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
 
-    # GET request timeout of 5 hours (18000 seconds); extended from
+    # GET request timeout of 10 hours (36000 seconds); extended from
     # API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(
         connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
         raise_for_status=True,
-        timeout=aiohttp.ClientTimeout(total=18000),
+        timeout=aiohttp.ClientTimeout(total=36000),
         request_class=KeepAliveClientRequest,
     ) as session:
         # Only one instance of any duplicate endpoint will be used
@@ -184,12 +184,12 @@ async def post_async(
         logger.error("URL: %s POST request failed! | %s", url, errors)
         return (url, b"{}")  # Allow json.loads to parse body if request fails
 
-    # POST request timeout of 1 hour (3600 seconds); extended from
+    # POST request timeout of 5 hours (18000 seconds); extended from
     # API default of 5 minutes to handle large filesizes
     async with aiohttp.ClientSession(
         connector=aiohttp.TCPConnector(limit=0, ttl_dns_cache=300),
         raise_for_status=True,
-        timeout=aiohttp.ClientTimeout(total=3600),
+        timeout=aiohttp.ClientTimeout(total=18000),
         request_class=KeepAliveClientRequest,
     ) as session:
         return await gather_with_concurrency(

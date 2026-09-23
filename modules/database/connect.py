@@ -33,8 +33,8 @@ def create_connection(db_filename: str) -> apsw.Connection | None:
             if db_filename is None
             else f"{databases_folder}{os.sep}{db_filename}.db"
         )
-        # Retry connection to locked database for maximum of 15000 ms
-        conn.setbusytimeout(15000)
+        # Retry connection to locked database for maximum of 60000 ms
+        conn.setbusytimeout(60000)
         cur = conn.cursor()
         cur.execute(
             "PRAGMA auto_vacuum = FULL"
