@@ -216,7 +216,7 @@ def retrieve_malicious_urls(urls_db_filenames: list[str], vendor: Vendors) -> li
                         )
                     else:
                         raise ValueError('vendor must be "Google" or "Yandex"')
-                    malicious_urls.update((x[0] for x in cur.fetchall()))
+                    malicious_urls.update(x[0] for x in cur.fetchall())
             except Error as error:
                 logger.error("filename:%s %s", urls_db_filename, error, exc_info=True)
             conn.close()

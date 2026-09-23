@@ -30,7 +30,7 @@ async def get_internetstiftelsen_domains() -> AsyncIterator[set[str]]:
     txt_data: dict[str, bytes] = await get_async(
         sources, max_concurrent_requests=1, max_retries=2
     )
-    for source in txt_data.keys():
+    for source in txt_data:
         if txt_data[source] != b"{}":
             # Extract URLs from TXT file
             raw_urls = [url.strip() for url in txt_data[source].decode().splitlines()]

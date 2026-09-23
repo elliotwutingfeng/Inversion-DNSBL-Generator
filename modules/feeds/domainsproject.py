@@ -6,12 +6,13 @@ import os
 import pathlib
 from collections.abc import AsyncIterator
 
+from more_itertools.more import chunked, sort_together
+
 from modules.utils.feeds import (
     generate_hostname_expressions,
     hostname_expression_batch_size,
 )
 from modules.utils.log import init_logger
-from more_itertools.more import chunked, sort_together
 
 logger = init_logger()
 
@@ -30,7 +31,7 @@ async def _get_local_file_url_list(
     try:
         with open(txt_filepath, "r") as file:
             for raw_urls in chunked(
-                (_.strip() for _ in file.readlines()),
+                (_.strip() for _ in file),
                 hostname_expression_batch_size,
             ):
                 yield generate_hostname_expressions(raw_urls)

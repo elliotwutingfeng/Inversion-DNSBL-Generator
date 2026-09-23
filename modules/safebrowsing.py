@@ -164,13 +164,13 @@ class SafeBrowsing:
         # Removes `https` and `http` prefixes
         malicious_urls = list(
             set(
-                (
+                
                     x.get("threat", {})
                     .get("url", "")
                     .replace("https://", "")
                     .replace("http://", "")
                     for x in malicious
-                )
+                
             )
         )
 
@@ -323,7 +323,7 @@ class SafeBrowsing:
                 )
                 # split them up into b64 encoded hash prefixes
                 hashes_list = [
-                    base64.b64encode(raw_hash_prefixes[i : i + prefix_size]).decode()  # noqa: E203
+                    base64.b64encode(raw_hash_prefixes[i : i + prefix_size]).decode()
                     for i in range(0, len(raw_hash_prefixes), prefix_size)
                 ]
 

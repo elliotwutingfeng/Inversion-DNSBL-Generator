@@ -6,14 +6,14 @@ Push generated blocklists to GitHub
 
 import os
 
+import github
 from dotenv import dotenv_values
+from urllib3.util.retry import Retry
+
 from modules.filewriter import BLOCKLISTS_FOLDER
 from modules.utils.http_requests import backoff_delay_async
 from modules.utils.log import init_logger
 from modules.utils.types import Vendors
-from urllib3.util.retry import Retry
-
-import github
 
 logger = init_logger()
 
